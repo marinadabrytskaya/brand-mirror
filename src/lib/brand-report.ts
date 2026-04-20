@@ -1414,30 +1414,27 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
     scorecard: [
       {
         label: "Positioning clarity",
-        score: read.clarityScore,
+        score: read.positioningClarity,
         note: "How quickly the offer becomes legible on the homepage.",
       },
       {
         label: "Tone coherence",
-        score: read.cohesionScore,
+        score: read.toneCoherence,
         note: "How well the written voice supports the visual impression.",
       },
       {
         label: "Visual credibility",
-        score: read.premiumScore,
+        score: read.visualCredibility,
         note: "How strongly the visual system implies quality and trust.",
       },
       {
         label: "Offer specificity",
-        score: Math.max(0, read.clarityScore - 8),
+        score: read.offerSpecificity,
         note: "How directly the brand explains what it does and why it matters.",
       },
       {
         label: "Conversion readiness",
-        score: Math.max(
-          0,
-          Math.min(100, Math.round((read.clarityScore + read.cohesionScore) / 2)),
-        ),
+        score: read.conversionReadiness,
         note: "How prepared the page feels to turn interest into a confident next step.",
       },
     ],
@@ -2309,6 +2306,13 @@ Important rules:
 - If a sentence sounds like a memo, rewrite it until it sounds like an observation a smart person would actually say aloud.
 - A good line should make the reader feel seen, slightly exposed, and clear on what to do next.
 - The writing should move like this: attention -> interest -> trust -> action.
+- Match descriptive vocabulary to the brand's actual category. This matters for every prose field.
+  - For financial, investment, legal, advisory, consulting, or B2B-service brands: use discipline, rigor, conviction, judgment, authority, restraint, fluency. Do NOT use performance, athletic, physical, driven, muscular, or kinetic language.
+  - For performance, sport, outdoor, or athletic brands: use drive, pressure, stamina, physicality. Do NOT use clinical, advisory, or academic vocabulary.
+  - For wellness, therapy, health, or care brands: use steadiness, warmth, attention, competence. Do NOT use combative or performance vocabulary.
+  - For luxury, lifestyle, fashion, or hospitality brands: use taste, composure, desirability, selectiveness. Do NOT use technical or clinical vocabulary.
+  - For creative studios, editorial, design, or cultural brands: use point of view, authorship, intelligence, taste. Do NOT use SaaS or growth-hack vocabulary.
+  - When in doubt about industry, default to neutral language (considered, intentional, controlled) rather than borrowing energy from the wrong category.
 - Write every user-facing sentence in ${targetLanguage}.
 - Keep structural enums and machine-readable fields stable:
   - Keep screenshotCallouts.zone values in English.
@@ -2332,9 +2336,11 @@ Existing first-read:
 - Next move: ${firstRead.direction}
 - Strongest signal: ${firstRead.strongestSignal}
 - Main friction: ${firstRead.mainFriction}
-- Clarity score: ${firstRead.clarityScore}
-- Premium score: ${firstRead.premiumScore}
-- Cohesion score: ${firstRead.cohesionScore}
+- Clarity score (positioning): ${firstRead.positioningClarity}
+- Visual credibility: ${firstRead.visualCredibility}
+- Tone coherence: ${firstRead.toneCoherence}
+- Offer specificity: ${firstRead.offerSpecificity}
+- Conversion readiness: ${firstRead.conversionReadiness}
 
 Website context:
 - Title: ${websiteContext.title || "n/a"}

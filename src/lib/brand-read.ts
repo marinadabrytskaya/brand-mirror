@@ -61,9 +61,13 @@ export type BrandReadResult = {
   direction: string;
   amplify: string;
   drop: string;
-  clarityScore: number;
-  premiumScore: number;
-  cohesionScore: number;
+  // Five canonical axes. Names match src/lib/score-band.ts DIMENSIONS so the
+  // same vocabulary carries from first-read through the paid report and PDF.
+  positioningClarity: number;
+  toneCoherence: number;
+  visualCredibility: number;
+  offerSpecificity: number;
+  conversionReadiness: number;
   strongestSignal: string;
   mainFriction: string;
   nextMove: string;
@@ -97,6 +101,11 @@ type CategoryLens =
 type RawBrandReadResult = Partial<BrandReadResult> & {
   visualWorld?: string;
   symbol?: string;
+  // Legacy field names — accepted for backward compatibility if Gemini still
+  // returns the old JSON shape. Not part of BrandReadResult anymore.
+  clarityScore?: unknown;
+  premiumScore?: unknown;
+  cohesionScore?: unknown;
 };
 
 type TensionType =
@@ -137,9 +146,11 @@ const SAMPLE_READS: BrandReadResult[] = [
       "Amplify the restraint, the visual discipline, and the premium pacing. Those are already working in the brand's favor and should remain central.",
     drop:
       "Drop any copy that sounds decorative but vague. If a line contributes mood without adding meaning, it weakens the commercial read.",
-    clarityScore: 72,
-    premiumScore: 88,
-    cohesionScore: 64,
+    positioningClarity: 72,
+    toneCoherence: 70,
+    visualCredibility: 88,
+    offerSpecificity: 68,
+    conversionReadiness: 72,
     strongestSignal:
       "The brand already looks controlled, premium, and visually intentional.",
     mainFriction:
@@ -178,9 +189,11 @@ const SAMPLE_READS: BrandReadResult[] = [
       "Amplify the personality, the texture, and the authored feel. Those are the signals that make the brand memorable rather than interchangeable.",
     drop:
       "Drop copy that lingers in suggestion without commitment. If it sounds lovely but leaves the reader guessing, it is not earning its place.",
-    clarityScore: 66,
-    premiumScore: 79,
-    cohesionScore: 68,
+    positioningClarity: 66,
+    toneCoherence: 74,
+    visualCredibility: 79,
+    offerSpecificity: 62,
+    conversionReadiness: 68,
     strongestSignal:
       "The brand has a clear point of view and does not feel generic.",
     mainFriction:
@@ -219,9 +232,11 @@ const SAMPLE_READS: BrandReadResult[] = [
       "Amplify the emotional pull, the polish, and the sense of selectiveness. Those are the parts people will remember quickly.",
     drop:
       "Drop filler language and any sentence that softens the promise unnecessarily. If it reduces certainty, it reduces value.",
-    clarityScore: 69,
-    premiumScore: 91,
-    cohesionScore: 61,
+    positioningClarity: 69,
+    toneCoherence: 73,
+    visualCredibility: 91,
+    offerSpecificity: 61,
+    conversionReadiness: 65,
     strongestSignal:
       "The brand already feels desirable, composed, and visually premium.",
     mainFriction:
@@ -490,9 +505,11 @@ function buildHeuristicRead(url: string, websiteContext: WebsiteContext, hints: 
         "Amplify the movement, determination, and high-standard feel. Those are the signals that make the brand feel leader-like rather than merely stylish.",
       drop:
         "Drop language that softens the competitive edge or delays the core value proposition. If it slows the brand down, it should not lead.",
-      clarityScore: 82,
-      premiumScore: 88,
-      cohesionScore: 84,
+      positioningClarity: 82,
+      toneCoherence: 84,
+      visualCredibility: 88,
+      offerSpecificity: 76,
+      conversionReadiness: 82,
       strongestSignal:
         "The brand already feels driven, physical, and built around performance.",
       mainFriction:
@@ -700,24 +717,38 @@ function buildPosterGenre(world: VisualWorld, lens: CategoryLens) {
   return GENRE_BY_ARCHETYPE[world];
 }
 
-function determineTensionType(result: Pick<BrandReadResult, "clarityScore" | "premiumScore" | "cohesionScore" | "voice" | "drop" | "mainFriction">): TensionType {
-  const lowest = Math.min(result.clarityScore, result.premiumScore, result.cohesionScore);
+function determineTensionType(result: Pick<BrandReadResult, "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness" | "voice" | "drop" | "mainFriction">): TensionType {
+  // Five axes map to four tension types:
+  //   clarity gap      = positioning or offer is the weakest link
+  //   credibility gap  = visual is the weakest link
+  //   courage gap      = tone or conversion is the weakest link (voice flinches)
+  //   visibility gap   = visual high but commercial framing (positioning+offer) low
+  const positioning = result.positioningClarity;
+  const tone = result.toneCoherence;
+  const visual = result.visualCredibility;
+  const offer = result.offerSpecificity;
+  const conversion = result.conversionReadiness;
   const voiceSignal = `${result.voice} ${result.drop} ${result.mainFriction}`.toLowerCase();
 
-  if (result.premiumScore >= 82 && result.clarityScore <= 72) {
+  // Visibility gap — strong visuals, commercial framing lagging behind.
+  const commercialAvg = (positioning + offer) / 2;
+  if (visual >= 82 && commercialAvg <= 72) {
     return "visibility gap";
   }
 
-  if (lowest === result.clarityScore) {
+  const lowest = Math.min(positioning, tone, visual, offer, conversion);
+
+  if (lowest === positioning || lowest === offer) {
     return "clarity gap";
   }
 
-  if (lowest === result.premiumScore) {
+  if (lowest === visual) {
     return "credibility gap";
   }
 
   if (
-    lowest === result.cohesionScore ||
+    lowest === tone ||
+    lowest === conversion ||
     /(safe|careful|generic|soft|cautious|polite|withheld|broad)/.test(voiceSignal)
   ) {
     return "courage gap";
@@ -726,13 +757,11 @@ function determineTensionType(result: Pick<BrandReadResult, "clarityScore" | "pr
   return "clarity gap";
 }
 
-function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<BrandReadResult, "brandName" | "clarityScore" | "premiumScore" | "cohesionScore" | "strongestSignal" | "mainFriction" | "direction" | "summary">) {
-  const lowMetric =
-    result.clarityScore <= result.premiumScore && result.clarityScore <= result.cohesionScore
-      ? "clarity"
-      : result.premiumScore <= result.cohesionScore
-        ? "credibility"
-        : "cohesion";
+function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<BrandReadResult, "brandName" | "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness" | "strongestSignal" | "mainFriction" | "direction" | "summary">) {
+  // Kept for side-effect parity with the old buildTagline — variable unused in
+  // the lookup table below but retained so future line variants can branch on
+  // which axis is weakest.
+  void result;
 
   const lines: Record<VisualWorld, Record<TensionType, string>> = {
     hero: {
@@ -815,6 +844,18 @@ function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<Bra
     return trimmed;
   }
 
+  // Compact fallback lines keyed by which of three *broad* buckets is weakest:
+  //   clarity       = positioning or offer
+  //   credibility   = visual
+  //   cohesion      = tone or conversion
+  const broadLows = {
+    clarity: Math.min(result.positioningClarity, result.offerSpecificity),
+    credibility: result.visualCredibility,
+    cohesion: Math.min(result.toneCoherence, result.conversionReadiness),
+  };
+  const lowMetric = (Object.entries(broadLows).sort((a, b) => a[1] - b[1])[0]?.[0] ??
+    "clarity") as "clarity" | "credibility" | "cohesion";
+
   return lowMetric === "clarity"
     ? "The quality is visible. The offer still needs a sharper line."
     : lowMetric === "credibility"
@@ -822,8 +863,14 @@ function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<Bra
       : "The impression is strong. The through-line still drifts.";
 }
 
-function computePosterScore(result: Pick<BrandReadResult, "clarityScore" | "premiumScore" | "cohesionScore">) {
-  return Math.round((result.clarityScore + result.premiumScore + result.cohesionScore) / 3);
+function computePosterScore(result: Pick<BrandReadResult, "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness">) {
+  const sum =
+    result.positioningClarity +
+    result.toneCoherence +
+    result.visualCredibility +
+    result.offerSpecificity +
+    result.conversionReadiness;
+  return Math.round(sum / 5);
 }
 
 // Canonical 4-tier band name: FLATLINING / UNSTABLE / STABLE / LEADING.
@@ -833,19 +880,20 @@ function getScoreBand(score: number) {
   return scoreBandLabel(score);
 }
 
-function buildScoreModifier(result: Pick<BrandReadResult, "clarityScore" | "premiumScore" | "cohesionScore">) {
-  // Weakest dimension gets the spotlight — the modifier should name the weakest
-  // link, not the overall band. We use the lowest sub-score to pick a line,
-  // then fall back to the canonical band modifier if somehow everything ties.
-  const lowest = Math.min(result.clarityScore, result.premiumScore, result.cohesionScore);
-  if (lowest === result.clarityScore) {
-    return "They can feel the standard. The reason to step closer is still quieter than it should be.";
-  }
-  if (lowest === result.premiumScore) {
-    return "The belief is there. The world around it has not fully caught up yet.";
-  }
-  if (lowest === result.cohesionScore) {
-    return "The voice is strong. It still slips between versions of itself.";
+function buildScoreModifier(result: Pick<BrandReadResult, "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness">): string {
+  // The modifier names the single weakest axis so the reader knows where the
+  // drag is. If two tie, the earlier one in this order wins — chosen so the
+  // most commonly weak axis for premium brands (offer specificity) lands first.
+  const axes = [
+    { key: "offerSpecificity" as const, value: result.offerSpecificity, line: "The quality is visible. The exact offer still arrives a beat late." },
+    { key: "positioningClarity" as const, value: result.positioningClarity, line: "They can feel the standard. The reason to step closer is still quieter than it should be." },
+    { key: "conversionReadiness" as const, value: result.conversionReadiness, line: "The interest is there. The next step has not been earned cleanly enough." },
+    { key: "toneCoherence" as const, value: result.toneCoherence, line: "The voice is strong. It still slips between versions of itself." },
+    { key: "visualCredibility" as const, value: result.visualCredibility, line: "The belief is there. The world around it has not fully caught up yet." },
+  ];
+  const weakest = axes.reduce((acc, cur) => (cur.value < acc.value ? cur : acc), axes[0]);
+  if (weakest.value <= Math.min(...axes.map((a) => a.value))) {
+    return weakest.line;
   }
   return bandModifier(computePosterScore(result));
 }
@@ -1459,9 +1507,20 @@ function normalizeResult(
       drop:
         truncate(normalizeWhitespace(data.drop || ""), 760) ||
         "Drop anything vague, padded, or over-explained. If it weakens the main impression, it should probably go.",
-      clarityScore: normalizeScore(data.clarityScore, 71),
-      premiumScore: normalizeScore(data.premiumScore, 84),
-      cohesionScore: normalizeScore(data.cohesionScore, 67),
+      positioningClarity: normalizeScore(
+        data.positioningClarity ?? data.clarityScore,
+        72,
+      ),
+      toneCoherence: normalizeScore(
+        data.toneCoherence ?? data.cohesionScore,
+        72,
+      ),
+      visualCredibility: normalizeScore(
+        data.visualCredibility ?? data.premiumScore,
+        84,
+      ),
+      offerSpecificity: normalizeScore(data.offerSpecificity, 68),
+      conversionReadiness: normalizeScore(data.conversionReadiness, 72),
       strongestSignal:
         truncate(normalizeWhitespace(data.strongestSignal || ""), 220) ||
         "The brand already creates a considered, premium impression quickly.",
@@ -1515,6 +1574,13 @@ Important rules:
   strategy = controlled, foundational, clear
   story = unfolding, exploratory, layered
   spectacle = reveal, threshold, dramatic impact
+- Match descriptive vocabulary to the brand's actual category. This matters for every prose field. Specifically:
+  - For financial, investment, legal, advisory, consulting, or B2B-service brands: use discipline, rigor, conviction, judgment, authority, restraint, fluency. Do NOT use performance, athletic, physical, driven, muscular, or kinetic language.
+  - For performance, sport, outdoor, or athletic brands: use drive, pressure, stamina, physicality. Do NOT use clinical, advisory, or academic vocabulary.
+  - For wellness, therapy, health, or care brands: use steadiness, warmth, attention, competence. Do NOT use combative or performance vocabulary.
+  - For luxury, lifestyle, fashion, or hospitality brands: use taste, composure, desirability, selectiveness. Do NOT use technical or clinical vocabulary.
+  - For creative studios, editorial, design, or cultural brands: use point of view, authorship, intelligence, taste. Do NOT use SaaS or growth-hack vocabulary.
+  - When in doubt about industry, default to neutral language (considered, intentional, controlled) rather than borrowing energy from the wrong category.
 - Write all user-facing values in ${targetLanguage}.
 - Keep the JSON keys exactly as requested.
 - Return ONLY valid JSON.
@@ -1541,25 +1607,37 @@ Likely dominant visual world based on lexical brand signals:
 
 Scoring rubric. Each score is an integer 0-100. Anchor your numbers to the bands below, not to a gut feeling. A brand you would call "strong" usually lives in the 70-85 range, not 90+. 85+ is reserved for pages that already convert before the copy has to do any explaining.
 
-clarityScore — how quickly the offer becomes legible on the homepage.
-- 0-40   the visitor cannot say what this company does after 10 seconds of scrolling. Hero copy is mood-only or the promise is buried.
-- 40-70  the visitor can guess the category but not the exact offer. The page relies on industry shorthand the new buyer may not have.
-- 70-85  the visitor understands what is for sale and roughly who it is for before the first scroll.
-- 85-100  the offer, audience, and reason-to-care are all readable inside the hero frame without a second read.
+positioningClarity — how quickly the homepage makes the offer legible to a first-time visitor.
+- 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
+- 40-70  category is guessable, exact offer is not. Page leans on insider shorthand.
+- 70-85  offer and audience are legible inside the hero frame.
+- 85-100 offer, audience, and reason-to-care all land before the first scroll.
 
-premiumScore — how strongly the brand signals quality, taste, and trust.
-- 0-40   the visual system undercuts the price the brand wants to charge. Stock imagery, inconsistent type, template feel.
-- 40-70  the design is competent but generic. Nothing says "category leader" visually.
-- 70-85  the design signals considered, intentional, on-brand. A buyer would accept a premium price without flinching.
-- 85-100  the visual system is already doing conversion work. Unmistakable, controlled, category-defining.
+toneCoherence — whether the written voice supports the visual impression and stays consistent across the page.
+- 0-40   copy and visuals sound like two different brands. Voice drifts inside the same scroll.
+- 40-70  voice fits the category but slides between registers (editorial then salesy, or confident then cautious).
+- 70-85  voice supports the visual impression most of the time; one or two sections slip.
+- 85-100 one clear voice from first word to last. Visual and verbal are a single point of view.
 
-cohesionScore — whether the written voice and the visual impression agree on the same brand.
-- 0-40   copy and design feel like two different brands. One is loud, the other polite, or vice versa.
-- 40-70  they are in the same family but disagree on tempo. Visuals move faster than the sentences, or the other way around.
-- 70-85  voice and visuals reinforce each other most of the time. Minor slips in specific sections.
-- 85-100  voice and visuals sound like one clear point of view from first pixel to last word.
+visualCredibility — whether the design signals quality, control, and category trust.
+- 0-40   template feel, stock imagery, typographic inconsistency. The design undercuts the price.
+- 40-70  competent but generic. Nothing marks this as category-leader.
+- 70-85  considered, intentional, on-brand. A buyer would accept a premium price without flinching.
+- 85-100 unmistakable. Visual system does conversion work before copy has to help.
 
-Return JSON with exactly these keys. Do not omit clarityScore, premiumScore, or cohesionScore under any circumstance — if you are genuinely uncertain, estimate to the nearest 5 and commit. Do not return "null", "0", or an empty string for any score.
+offerSpecificity — how directly the page states what exactly is sold, to whom, and why it matters now.
+- 0-40   offer is implied, never stated. Reader leaves still unsure what they would be buying.
+- 40-70  the what is present but the for-whom and why-now are vague.
+- 70-85  what / who / why are on the page, even if the reader moves past the hero to find them.
+- 85-100 the first screen states the offer concretely, with who it is for and what it resolves.
+
+conversionReadiness — whether the page has earned a confident next step by the time a motivated buyer looks for one.
+- 0-40   no clear next step, or a generic "learn more" that does not match intent.
+- 40-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
+- 70-85  next step is clear and earned for the most likely buyer; minor friction on edge cases.
+- 85-100 the CTA is obvious, proof is within reach, and the commitment level matches the page's promise.
+
+Return JSON with exactly these keys. Do not omit any of the five scores under any circumstance — if you are genuinely uncertain, estimate to the nearest 5 and commit. Do not return "null", "0", or an empty string for any score.
 {
   "brandName": "brand name as it should appear on the poster",
   "visualWorld": "one of the allowed visual worlds",
@@ -1577,9 +1655,11 @@ Return JSON with exactly these keys. Do not omit clarityScore, premiumScore, or 
   "direction": "what to do next, 4-6 sentences",
   "amplify": "what to lean into more, 3-5 sentences",
   "drop": "what to reduce, simplify, or remove, 3-5 sentences",
-  "clarityScore": 72,
-  "premiumScore": 84,
-  "cohesionScore": 67,
+  "positioningClarity": 72,
+  "toneCoherence": 74,
+  "visualCredibility": 84,
+  "offerSpecificity": 68,
+  "conversionReadiness": 72,
   "strongestSignal": "one precise sentence in the requested language",
   "mainFriction": "one precise sentence in the requested language",
   "nextMove": "one precise sentence in the requested language"

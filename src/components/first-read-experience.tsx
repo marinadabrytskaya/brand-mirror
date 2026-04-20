@@ -4,7 +4,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { type BrandReadResult } from "@/lib/brand-read";
-import { bandFor, type Band } from "@/lib/score-band";
+import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
 
@@ -89,9 +89,11 @@ const defaultResult: BrandReadResult = {
     "Amplify the restraint, the visual control, and the premium pacing. Those are already working.",
   drop:
     "Drop filler language and any sentence that sounds polished but not precise.",
-  clarityScore: 72,
-  premiumScore: 88,
-  cohesionScore: 64,
+  positioningClarity: 72,
+  toneCoherence: 70,
+  visualCredibility: 88,
+  offerSpecificity: 64,
+  conversionReadiness: 72,
   strongestSignal:
     "The brand already feels controlled, premium, and visually intentional.",
   mainFriction:
@@ -157,11 +159,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   }, []);
 
   const posterBand = bandFor(result.posterScore);
-  const scoreRows = [
-    { label: "CLARITY", value: result.clarityScore },
-    { label: "PREMIUM", value: result.premiumScore },
-    { label: "COHESION", value: result.cohesionScore },
-  ];
+  const scoreRows = DIMENSIONS.map((d) => ({
+    label: d.shortLabel,
+    value: result[d.key] as number,
+  }));
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -486,6 +487,148 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               {result.current}
             </p>
+          </div>
+        </section>
+
+        <hr
+          className="mt-16"
+          style={{ border: 0, height: "0.5px", background: COLOR.line }}
+        />
+
+        {/* =================== How to read the scan — legend =================== */}
+        <section className="mt-12 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p style={metaLabel}>HOW&nbsp;TO&nbsp;READ&nbsp;THE&nbsp;SCAN</p>
+            <h3
+              className="mt-4 leading-[1.08] tracking-[-0.02em]"
+              style={{
+                fontFamily: "var(--font-cormorant), Georgia, serif",
+                fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+                fontWeight: 500,
+                color: COLOR.text,
+              }}
+            >
+              Four indicator tiers. Five dimensions of the signal.
+            </h3>
+            <p
+              className="mt-5 max-w-md leading-7"
+              style={{ color: COLOR.textSoft, fontSize: "14.5px" }}
+            >
+              Each dimension is scored 0&ndash;100 and placed into one of four
+              tiers. The colour tells you how alive that signal is right now,
+              not just whether it is red or green.
+            </p>
+          </div>
+
+          {/* Tier legend with blurbs */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {BANDS.map((b) => (
+              <div
+                key={b.key}
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: `${b.color}40`,
+                  background: `${b.color}0D`,
+                }}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span
+                    style={{
+                      fontFamily:
+                        "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "10.5px",
+                      letterSpacing: "0.26em",
+                      color: b.color,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {b.label}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily:
+                        "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "10.5px",
+                      letterSpacing: "0.14em",
+                      color: b.color,
+                      opacity: 0.8,
+                    }}
+                  >
+                    {b.lo}&ndash;{b.hi}
+                  </span>
+                </div>
+                <p
+                  className="mt-3 leading-6"
+                  style={{ color: COLOR.textSoft, fontSize: "13.5px" }}
+                >
+                  {b.blurb}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* What each dimension measures */}
+        <section className="mt-14">
+          <p style={metaLabel}>WHAT&nbsp;WE&nbsp;MEASURE</p>
+          <div className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
+            {DIMENSIONS.map((d) => {
+              const score = result[d.key] as number;
+              const band = bandFor(score);
+              return (
+                <div key={d.key} className="min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span
+                      style={{
+                        fontFamily:
+                          "var(--font-mono), ui-monospace, monospace",
+                        fontSize: "10px",
+                        letterSpacing: "0.22em",
+                        color: "rgba(237,237,242,0.55)",
+                      }}
+                    >
+                      {d.shortLabel}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: 500,
+                        color: band.color,
+                        fontFamily:
+                          "var(--font-sans), Inter, system-ui, sans-serif",
+                      }}
+                    >
+                      {score}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-2 overflow-hidden rounded-full"
+                    style={{
+                      height: 2,
+                      background: "rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${Math.max(0, Math.min(100, score))}%`,
+                        background: band.color,
+                        borderRadius: 999,
+                      }}
+                    />
+                  </div>
+                  <p
+                    className="mt-3 leading-5"
+                    style={{
+                      color: "rgba(237,237,242,0.62)",
+                      fontSize: "12.5px",
+                    }}
+                  >
+                    {d.summary}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -953,14 +1096,7 @@ function ScannerReadout({
       <div className="mt-6">
         <div style={{ ...metaLabel, fontSize: 9.5 }}>INDICATOR&nbsp;SCALE</div>
         <div className="mt-2 grid grid-cols-4 gap-1.5">
-          {(
-            [
-              { lo: 0, hi: 40, color: "#F2495C", label: "FLATLINING" },
-              { lo: 40, hi: 70, color: "#E8B04C", label: "UNSTABLE" },
-              { lo: 70, hi: 85, color: "#6FE0C2", label: "STABLE" },
-              { lo: 85, hi: 100, color: "#2FDCA0", label: "LEADING" },
-            ] as const
-          ).map((item) => {
+          {BANDS.map((item) => {
             const active = pct >= item.lo && pct <= item.hi;
             return (
               <div
