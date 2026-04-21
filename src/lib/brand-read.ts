@@ -1939,7 +1939,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
   // Try gemini-2.5-flash first (3 attempts), then fallback to 2.0-flash (2 attempts)
   let response: Response;
   try {
-    response = await attemptGeminiCall("gemini-2.5-flash-latest", 3);
+    response = await attemptGeminiCall("gemini-2.0-flash-exp", 3);
   } catch (error) {
     // If 2.5-flash completely failed, try 2.0-flash as fallback
     console.warn("gemini-2.5-flash failed, falling back to gemini-2.0-flash", error);
