@@ -297,6 +297,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           >
             {copy.startBody}
           </p>
+
+          {/* Decorative visual break */}
+          <div className="mt-8 flex items-center gap-2">
+            <div style={{ flex: 1, height: "0.5px", background: `linear-gradient(to right, ${COLOR.line}, transparent)` }} />
+            <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: COLOR.accent }} />
+            <div style={{ flex: 1, height: "0.5px", background: `linear-gradient(to left, ${COLOR.line}, transparent)` }} />
+          </div>
         </div>
 
         {/* =================== What we measure — horizontal strip =================== */}

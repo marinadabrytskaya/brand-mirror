@@ -1505,10 +1505,145 @@ function normalizeScore(value: unknown, fallback: number) {
   return fallback;
 }
 
+// --- Calibration post-processing --------------------------------------------
+// The LLM consistently over-scores visual credibility when a site is on a
+// no-code template (WordPress, WooCommerce, Squarespace, Wix) or carries
+// obvious "template" smell. No amount of prompt instruction has been reliable
+// for this. So we enforce caps after the fact from deterministic evidence.
+
+type PlatformSignals = {
+  isTemplatePlatform: boolean;       // WordPress / WooCommerce / Squarespace / Wix
+  platformName: string | null;
+  hasPhpExtension: boolean;          // *.php in URL — strong no-code signal
+  looksGenericB2B: boolean;          // generic stock-photo B2B corporate feel
+};
+
+function detectPlatformSignals(
+  websiteContext: WebsiteContext,
+  sourceUrl: string,
+): PlatformSignals {
+  const hay = [
+    websiteContext.title,
+    websiteContext.description,
+    websiteContext.visibleText,
+    websiteContext.icon,
+    websiteContext.ogImage,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  let platformName: string | null = null;
+  if (/\bwp-content\b|\bwordpress\b|\bwp-includes\b/.test(hay)) platformName = "WordPress";
+  else if (/\bwoocommerce\b/.test(hay)) platformName = "WooCommerce";
+  else if (/\bsquarespace\b/.test(hay)) platformName = "Squarespace";
+  else if (/\bwix\b/.test(hay)) platformName = "Wix";
+  else if (/\bshopify\b/.test(hay)) platformName = "Shopify";
+
+  const hasPhpExtension = /\.php($|[?#])/i.test(sourceUrl || "");
+
+  // Rough B2B-generic sniffer — lots of "solution / leverage / enterprise /
+  // transformation / synergy" without a clear product noun. Weak signal on its
+  // own, combined with a template platform it becomes a strong signal.
+  const genericPhrases = [
+    "end-to-end solution",
+    "future-ready",
+    "cutting-edge",
+    "best-in-class",
+    "synergy",
+    "leverage",
+    "drive transformation",
+    "digital transformation",
+    "tailored solutions",
+    "your trusted partner",
+  ];
+  const genericHits = genericPhrases.reduce(
+    (acc, phrase) => acc + (hay.includes(phrase) ? 1 : 0),
+    0,
+  );
+  const looksGenericB2B = genericHits >= 2;
+
+  return {
+    isTemplatePlatform: platformName !== null,
+    platformName,
+    hasPhpExtension,
+    looksGenericB2B,
+  };
+}
+
+type FiveAxisScores = {
+  positioningClarity: number;
+  toneCoherence: number;
+  visualCredibility: number;
+  offerSpecificity: number;
+  conversionReadiness: number;
+};
+
+// Take the raw LLM scores and apply deterministic caps based on evidence.
+// Rules are intentionally few and blunt — we would rather slightly under-score
+// a good site than inflate a weak one.
+function applyCalibrationCaps(
+  scores: FiveAxisScores,
+  signals: PlatformSignals,
+): FiveAxisScores {
+  let { visualCredibility, positioningClarity, toneCoherence, offerSpecificity, conversionReadiness } = scores;
+
+  // Template platforms or *.php URLs → visual ceiling 75. A WordPress theme,
+  // however clean, cannot be LEADING (85+) by our own rubric. This is the
+  // anchor the LLM keeps ignoring; we enforce it here.
+  if (signals.isTemplatePlatform || signals.hasPhpExtension) {
+    visualCredibility = Math.min(visualCredibility, 75);
+  }
+
+  // Generic B2B phrasing cap — when the copy is a pile of corporate cliches,
+  // positioning and offer cannot be LEADING either.
+  if (signals.looksGenericB2B) {
+    positioningClarity = Math.min(positioningClarity, 75);
+    offerSpecificity = Math.min(offerSpecificity, 72);
+  }
+
+  // No-more-than-one-LEADING rule (from the rubric but never followed by
+  // the model). Enforce: if more than one axis is above 85 but others are
+  // not all above 75, soft-demote the excess leaders to 84.
+  const axes: Array<["positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness", number]> = [
+    ["positioningClarity", positioningClarity],
+    ["toneCoherence", toneCoherence],
+    ["visualCredibility", visualCredibility],
+    ["offerSpecificity", offerSpecificity],
+    ["conversionReadiness", conversionReadiness],
+  ];
+  const above85 = axes.filter(([, v]) => v > 85);
+  const below75 = axes.filter(([, v]) => v < 75);
+
+  if (above85.length > 1 && below75.length > 0) {
+    // Keep the single strongest axis at its LEADING value, demote the rest
+    // to the top of STABLE (84).
+    const sorted = [...above85].sort((a, b) => b[1] - a[1]);
+    const [topKey] = sorted[0];
+    for (const [key] of sorted.slice(1)) {
+      if (key === "positioningClarity") positioningClarity = 84;
+      if (key === "toneCoherence") toneCoherence = 84;
+      if (key === "visualCredibility") visualCredibility = 84;
+      if (key === "offerSpecificity") offerSpecificity = 84;
+      if (key === "conversionReadiness") conversionReadiness = 84;
+    }
+    void topKey;
+  }
+
+  return {
+    positioningClarity,
+    toneCoherence,
+    visualCredibility,
+    offerSpecificity,
+    conversionReadiness,
+  };
+}
+
 function normalizeResult(
   data: RawBrandReadResult,
   hints: VisualHints,
   websiteContext: WebsiteContext,
+  sourceUrl: string = "",
 ): BrandReadResult {
   const rawWorld = String(data.visualWorld || "").toLowerCase();
   const modelWorld = VISUAL_WORLDS.includes(rawWorld as VisualWorld)
@@ -1518,6 +1653,26 @@ function normalizeResult(
   const symbol = ["strategy", "story", "spectacle"].includes(String(data.symbol))
     ? (String(data.symbol) as ReadSymbol)
     : "strategy";
+
+  // Raw scores from the model (or fallbacks), then deterministic caps.
+  const rawScores: FiveAxisScores = {
+    positioningClarity: normalizeScore(
+      data.positioningClarity ?? data.clarityScore,
+      72,
+    ),
+    toneCoherence: normalizeScore(
+      data.toneCoherence ?? data.cohesionScore,
+      72,
+    ),
+    visualCredibility: normalizeScore(
+      data.visualCredibility ?? data.premiumScore,
+      84,
+    ),
+    offerSpecificity: normalizeScore(data.offerSpecificity, 68),
+    conversionReadiness: normalizeScore(data.conversionReadiness, 72),
+  };
+  const platformSignals = detectPlatformSignals(websiteContext, sourceUrl);
+  const calibratedScores = applyCalibrationCaps(rawScores, platformSignals);
 
   return enrichPosterSystem(
     {
@@ -1565,20 +1720,11 @@ function normalizeResult(
       drop:
         truncate(normalizeWhitespace(data.drop || ""), 760) ||
         "Drop anything vague, padded, or over-explained. If it weakens the main impression, it should probably go.",
-      positioningClarity: normalizeScore(
-        data.positioningClarity ?? data.clarityScore,
-        72,
-      ),
-      toneCoherence: normalizeScore(
-        data.toneCoherence ?? data.cohesionScore,
-        72,
-      ),
-      visualCredibility: normalizeScore(
-        data.visualCredibility ?? data.premiumScore,
-        84,
-      ),
-      offerSpecificity: normalizeScore(data.offerSpecificity, 68),
-      conversionReadiness: normalizeScore(data.conversionReadiness, 72),
+      positioningClarity: calibratedScores.positioningClarity,
+      toneCoherence: calibratedScores.toneCoherence,
+      visualCredibility: calibratedScores.visualCredibility,
+      offerSpecificity: calibratedScores.offerSpecificity,
+      conversionReadiness: calibratedScores.conversionReadiness,
       strongestSignal:
         truncate(normalizeWhitespace(data.strongestSignal || ""), 220) ||
         "The brand already creates a considered, premium impression quickly.",
@@ -1675,6 +1821,7 @@ CALIBRATION GUARDS — read these before you assign any score.
 - Do not place more than ONE axis above 85 unless at least three other axes are already comfortably above 75. A brand cannot be "leading" on a single thing while being ordinary on the rest.
 - Default to 60-80 for most brands. Outliers exist in both directions, but if your instinct is "this feels solid", that is STABLE (70-85), not LEADING. Move the number down if you catch yourself being generous.
 - A score of exactly 85 is a commitment. Assigning it means "this site could hang on the wall at a design-of-the-year awards and not look out of place". If that sentence feels wrong about the brand you are reading, the number is below 85.
+- Solo practitioner sites, personal coach sites, one-person therapy/wellness practices typically cap Visual at 65 unless the design is demonstrably exceptional (custom branding, professional photography, deliberate art direction). Do not compare a personal practice to a funded wellness brand like Equinox or Goop. Similarly, pages without a clear booking flow, transparent pricing, or concrete next-step proof cap Conversion at 65.
 
 positioningClarity — how quickly the homepage makes the offer legible to a first-time visitor.
 - 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
@@ -1735,31 +1882,69 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
 }
 `;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  // Retry helper with fallback to older model when 2.5-flash is overloaded
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [
+  async function attemptGeminiCall(modelName: string, retries: number): Promise<Response> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
           {
-            role: "user",
-            parts: [{ text: prompt }],
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: prompt }],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                responseMimeType: "application/json",
+              },
+            }),
           },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-        },
-      }),
-    },
-  ).finally(() => clearTimeout(timeout));
+        ).finally(() => clearTimeout(timeout));
+
+        // If 503 and we have retries left, wait and try again
+        if (response.status === 503 && attempt < retries) {
+          const delay = attempt * 1500; // 1.5s, 3s, etc.
+          await sleep(delay);
+          continue;
+        }
+
+        return response;
+      } catch (error) {
+        clearTimeout(timeout);
+        if (attempt < retries) {
+          await sleep(attempt * 1500);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    // This should never be reached due to the loop logic, but TypeScript needs it
+    throw new Error("Retry logic exhausted");
+  }
+
+  // Try gemini-2.5-flash first (3 attempts), then fallback to 2.0-flash (2 attempts)
+  let response: Response;
+  try {
+    response = await attemptGeminiCall("gemini-2.5-flash-latest", 3);
+  } catch (error) {
+    // If 2.5-flash completely failed, try 2.0-flash as fallback
+    console.warn("gemini-2.5-flash failed, falling back to gemini-2.0-flash", error);
+    response = await attemptGeminiCall("gemini-2.0-flash-latest", 2);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -1776,7 +1961,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
     throw new Error("Gemini returned an empty response");
   }
 
-  return normalizeResult(extractJson(text), hints, websiteContext);
+  return normalizeResult(extractJson(text), hints, websiteContext, url);
 }
 
 async function localizeBrandReadResult(
