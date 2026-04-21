@@ -299,6 +299,58 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </p>
         </div>
 
+        {/* =================== What we measure — horizontal strip =================== */}
+        <section className="mt-12 border-y py-7" style={{ borderColor: COLOR.line }}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <p style={metaLabel}>WHAT&nbsp;WE&nbsp;MEASURE</p>
+            <p
+              className="max-w-xl leading-6"
+              style={{ color: COLOR.textSoft, fontSize: "13.5px" }}
+            >
+              Five things we look at on a homepage. Each gets a score from 0 to 100.
+              The colour tells you whether it is working, wobbling, or in trouble.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+            {DIMENSIONS.map((d, idx) => (
+              <div key={d.key} className="min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "10px",
+                      letterSpacing: "0.2em",
+                      color: "rgba(237,237,242,0.4)",
+                    }}
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "10.5px",
+                      letterSpacing: "0.24em",
+                      color: COLOR.text,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {d.shortLabel}
+                  </span>
+                </div>
+                <p
+                  className="mt-3 leading-5"
+                  style={{
+                    color: "rgba(237,237,242,0.72)",
+                    fontSize: "13px",
+                  }}
+                >
+                  {d.summary}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* =================== Form + scanner =================== */}
         <section className="mt-14 grid gap-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-start">
 
@@ -565,70 +617,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 </p>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* What each dimension measures */}
-        <section className="mt-14">
-          <p style={metaLabel}>WHAT&nbsp;WE&nbsp;MEASURE</p>
-          <div className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
-            {DIMENSIONS.map((d) => {
-              const score = result[d.key] as number;
-              const band = bandFor(score);
-              return (
-                <div key={d.key} className="min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span
-                      style={{
-                        fontFamily:
-                          "var(--font-mono), ui-monospace, monospace",
-                        fontSize: "10px",
-                        letterSpacing: "0.22em",
-                        color: "rgba(237,237,242,0.55)",
-                      }}
-                    >
-                      {d.shortLabel}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 500,
-                        color: band.color,
-                        fontFamily:
-                          "var(--font-sans), Inter, system-ui, sans-serif",
-                      }}
-                    >
-                      {score}
-                    </span>
-                  </div>
-                  <div
-                    className="mt-2 overflow-hidden rounded-full"
-                    style={{
-                      height: 2,
-                      background: "rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${Math.max(0, Math.min(100, score))}%`,
-                        background: band.color,
-                        borderRadius: 999,
-                      }}
-                    />
-                  </div>
-                  <p
-                    className="mt-3 leading-5"
-                    style={{
-                      color: "rgba(237,237,242,0.62)",
-                      fontSize: "12.5px",
-                    }}
-                  >
-                    {d.summary}
-                  </p>
-                </div>
-              );
-            })}
           </div>
         </section>
 

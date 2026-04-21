@@ -96,6 +96,7 @@ type CategoryLens =
   | "events"
   | "performance"
   | "outdoors"
+  | "finance"
   | "default";
 
 type RawBrandReadResult = Partial<BrandReadResult> & {
@@ -603,6 +604,7 @@ function inferCategoryLens(websiteContext: WebsiteContext): CategoryLens {
     ["events", ["event", "events", "party", "experience", "wedding", "celebration", "festival"]],
     ["performance", ["performance", "training", "sport", "sports", "athlete", "fitness", "endurance"]],
     ["outdoors", ["outdoor", "adventure", "travel", "journey", "trail", "roam", "explore"]],
+    ["finance", ["capital", "venture", "fund", "investment", "investor", "asset", "equity", "portfolio", "wealth", "financing", "bank", "banking", "credit", "debt", "advisory", "valuation", "pe firm", "vc firm", "lp", "limited partner"]],
   ];
 
   let best: [CategoryLens, number] = ["default", 0];
@@ -617,6 +619,62 @@ function inferCategoryLens(websiteContext: WebsiteContext): CategoryLens {
   }
 
   return best[1] > 0 ? best[0] : "default";
+}
+
+// Turn a detected category into an explicit vocabulary brief for Gemini.
+// Delivered at the very top of the prompt so it cannot be lost in the noise
+// of the rest of the instructions. Each brief names the industry, the words
+// that should be used, and the words that must not.
+function buildIndustryBrief(lens: CategoryLens): string {
+  switch (lens) {
+    case "finance":
+      return `This brand is in financial services (venture capital, private equity, asset management, advisory, banking, or a related investment business).
+Required vocabulary set: discipline, rigor, conviction, judgment, authority, composure, restraint, fluency, track record, stewardship, risk posture, capital allocation, thesis, partnership.
+Forbidden vocabulary: performance, athletic, physical, driven, muscular, kinetic, movement, momentum (only use "momentum" in the literal financial sense, never as an energy metaphor), forward motion, ambition as bodily force, competitive edge as physical posture. Do not describe a financial brand with words that belong to a sportswear or athlete brand.`;
+
+    case "wellness":
+      return `This brand is in wellness, therapy, health, or care.
+Required vocabulary set: steadiness, attention, warmth, competence, presence, patience, reassurance, clinical calm, recovery, continuity of care.
+Forbidden vocabulary: combative, aggressive, dominant, performance, hustle, win, conquest, drive. Do not borrow language from sport or business-as-battle.`;
+
+    case "luxury":
+      return `This brand is in luxury, lifestyle, fashion, hospitality, or interiors.
+Required vocabulary set: taste, composure, selectiveness, desirability, discretion, material intelligence, considered, unhurried, crafted, restraint.
+Forbidden vocabulary: growth-hack, conversion funnel, MRR, stack, ship, optimize. Do not borrow SaaS vocabulary.`;
+
+    case "performance":
+      return `This brand is in performance, sport, outdoor, or athletic categories.
+Required vocabulary set: drive, pressure, stamina, physical, kinetic, momentum, readiness, competitive edge, earned. Performance-led language is correct here and should carry the brand.
+Forbidden vocabulary: clinical, advisory, academic, compliance. Do not soften a performance brand into a wellness brand.`;
+
+    case "strategy":
+      return `This brand is a strategy-led studio, creative studio, editorial brand, or premium design business.
+Required vocabulary set: point of view, authorship, intelligence, taste, clarity, craft, composition, editorial discipline.
+Forbidden vocabulary: performance-led, athletic, growth-hack, funnel, SaaS, stack. Do not flatten a studio into an agency or a startup.`;
+
+    case "kids":
+      return `This brand is directed at children or families.
+Required vocabulary set: warmth, clarity, play, trust, safety, imagination, family.
+Forbidden vocabulary: growth-hack, conversion, pipeline, KPI. Do not borrow corporate vocabulary.`;
+
+    case "retail":
+      return `This brand is in mass retail, daily-use, household, or convenience categories.
+Required vocabulary set: clarity, reliability, everyday, practical, dependable, accessible.
+Forbidden vocabulary: editorial, elevated, cinematic, magical. Do not borrow luxury vocabulary.`;
+
+    case "events":
+      return `This brand is in events, celebration, experience, or hospitality categories.
+Required vocabulary set: occasion, orchestration, craft, warmth, considered, hosted, memorable.
+Forbidden vocabulary: SaaS vocabulary. Do not flatten an event brand into a booking app.`;
+
+    case "outdoors":
+      return `This brand is in outdoor, adventure, or travel categories.
+Required vocabulary set: terrain, readiness, range, distance, weather, self-reliance, journey.
+Forbidden vocabulary: clinical, advisory. Do not soften an outdoor brand into a wellness brand.`;
+
+    default:
+      return `The industry is not strongly signaled. Default to neutral, observational vocabulary: considered, intentional, controlled, direct, clear. Do not borrow energy from categories that are not obviously the right one. Do not describe a services brand with sportswear words or an investment brand with wellness words.`;
+  }
 }
 
 function formatTitlePattern(pattern: string, brandName: string) {
@@ -1548,6 +1606,13 @@ async function requestGeminiBrandRead(
     return buildHeuristicRead(url, websiteContext, hints);
   }
 
+  // Pre-compute the industry lens so we can tell Gemini explicitly which
+  // vocabulary to use and which to avoid. This is stronger than asking the
+  // model to figure out the industry on its own — that instruction was being
+  // ignored in the middle of a long prompt.
+  const detectedLens = inferCategoryLens(websiteContext);
+  const industryBrief = buildIndustryBrief(detectedLens);
+
   const prompt = `
 You are BrandMirror, a premium standalone brand diagnostic product built by SAHAR Studio.
 
@@ -1555,12 +1620,16 @@ Your task is to read a website homepage and produce:
 1. A free first read that feels elegant, intelligent, and commercially useful.
 2. A poster-like brand framing that feels cinematic but never silly.
 
+INDUSTRY BRIEF (read this first, use it in every prose field):
+${industryBrief}
+
 Important rules:
+- WRITE FOR THE COMPANY OWNER, NOT A MARKETER. The reader is a founder, partner, or CEO who paid for a diagnosis, not a consultant reading a memo. Every sentence must survive this test: "Would the owner understand this line without a glossary?" If the answer is no, rewrite it.
+- Do NOT use these words in the prose: "signal" (except in internal metadata), "leverage", "commercial narrative", "brand architecture", "surface", "converts" (as jargon — say "turns readers into buyers"), "legibility", "ideation", "synergy", "activation", "positioning stack", "messaging architecture", "brand equity". If you catch yourself writing one of these, say the same thing in plain words.
+- When you describe a problem, name it in concrete terms. Instead of "the positioning lacks clarity", say "the hero headline does not say what you sell". Instead of "the tone drifts", say "the words sound like a different brand than the pictures".
 - Be specific, not generic.
-- Sound premium, editorial, and intelligent.
-- Use plain English. Avoid consultant jargon and abstract waffle.
+- Sound premium and intelligent without sounding consultant-y. Plain English, short sentences.
 - Never mention archetypes, frameworks, AI, scraping, or missing data.
-- Short sentences are better than grand speeches.
 - The result should feel calm, observant, and commercially sharp.
 - The free result should feel useful on its own, but not like the whole audit.
 - Use scores only as directional signals, not scientific measurements.
@@ -1574,13 +1643,7 @@ Important rules:
   strategy = controlled, foundational, clear
   story = unfolding, exploratory, layered
   spectacle = reveal, threshold, dramatic impact
-- Match descriptive vocabulary to the brand's actual category. This matters for every prose field. Specifically:
-  - For financial, investment, legal, advisory, consulting, or B2B-service brands: use discipline, rigor, conviction, judgment, authority, restraint, fluency. Do NOT use performance, athletic, physical, driven, muscular, or kinetic language.
-  - For performance, sport, outdoor, or athletic brands: use drive, pressure, stamina, physicality. Do NOT use clinical, advisory, or academic vocabulary.
-  - For wellness, therapy, health, or care brands: use steadiness, warmth, attention, competence. Do NOT use combative or performance vocabulary.
-  - For luxury, lifestyle, fashion, or hospitality brands: use taste, composure, desirability, selectiveness. Do NOT use technical or clinical vocabulary.
-  - For creative studios, editorial, design, or cultural brands: use point of view, authorship, intelligence, taste. Do NOT use SaaS or growth-hack vocabulary.
-  - When in doubt about industry, default to neutral language (considered, intentional, controlled) rather than borrowing energy from the wrong category.
+- The INDUSTRY BRIEF above is authoritative. Use its required vocabulary. Do not use its forbidden vocabulary under any circumstance.
 - Write all user-facing values in ${targetLanguage}.
 - Keep the JSON keys exactly as requested.
 - Return ONLY valid JSON.
@@ -1607,35 +1670,41 @@ Likely dominant visual world based on lexical brand signals:
 
 Scoring rubric. Each score is an integer 0-100. Anchor your numbers to the bands below, not to a gut feeling. A brand you would call "strong" usually lives in the 70-85 range, not 90+. 85+ is reserved for pages that already convert before the copy has to do any explaining.
 
+CALIBRATION GUARDS — read these before you assign any score.
+- 85-100 is rare. It is reserved for brands that are visually indistinguishable from a top-10 player in their category. If a WordPress theme, a template-generated dark gradient hero, a Squarespace out-of-the-box look, or a "chatgpt-ish" generic landing is visible — the ceiling is 75. Full stop.
+- Do not place more than ONE axis above 85 unless at least three other axes are already comfortably above 75. A brand cannot be "leading" on a single thing while being ordinary on the rest.
+- Default to 60-80 for most brands. Outliers exist in both directions, but if your instinct is "this feels solid", that is STABLE (70-85), not LEADING. Move the number down if you catch yourself being generous.
+- A score of exactly 85 is a commitment. Assigning it means "this site could hang on the wall at a design-of-the-year awards and not look out of place". If that sentence feels wrong about the brand you are reading, the number is below 85.
+
 positioningClarity — how quickly the homepage makes the offer legible to a first-time visitor.
 - 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
 - 40-70  category is guessable, exact offer is not. Page leans on insider shorthand.
 - 70-85  offer and audience are legible inside the hero frame.
-- 85-100 offer, audience, and reason-to-care all land before the first scroll.
+- 85-100 offer, audience, and reason-to-care all land before the first scroll. Anchor: Stripe homepage hero, Linear hero, Notion hero. Not: most corporate homepages.
 
 toneCoherence — whether the written voice supports the visual impression and stays consistent across the page.
 - 0-40   copy and visuals sound like two different brands. Voice drifts inside the same scroll.
 - 40-70  voice fits the category but slides between registers (editorial then salesy, or confident then cautious).
 - 70-85  voice supports the visual impression most of the time; one or two sections slip.
-- 85-100 one clear voice from first word to last. Visual and verbal are a single point of view.
+- 85-100 one clear voice from first word to last. Visual and verbal are a single point of view. Anchor: Aesop, Arc Browser, Monocle.
 
 visualCredibility — whether the design signals quality, control, and category trust.
 - 0-40   template feel, stock imagery, typographic inconsistency. The design undercuts the price.
-- 40-70  competent but generic. Nothing marks this as category-leader.
-- 70-85  considered, intentional, on-brand. A buyer would accept a premium price without flinching.
-- 85-100 unmistakable. Visual system does conversion work before copy has to help.
+- 40-70  competent but generic. A clean WordPress/Webflow theme with decent photography sits around 55-70. Nothing marks this as category-leader.
+- 70-85  considered, intentional, on-brand. Custom type choices, deliberate composition, controlled colour. A buyer would accept a premium price without flinching.
+- 85-100 unmistakable. Visual system does conversion work before copy has to help. Anchor: Stripe, Linear, Aesop, Hermès, Arc Browser, Framer, Apple. NOT anchors: a generic dark-with-gradient SaaS page, a WordPress theme however clean, a stock-photo-heavy B2B site, a "ChatGPT suggested this layout" page. If in doubt between 80 and 90, pick 80.
 
 offerSpecificity — how directly the page states what exactly is sold, to whom, and why it matters now.
 - 0-40   offer is implied, never stated. Reader leaves still unsure what they would be buying.
 - 40-70  the what is present but the for-whom and why-now are vague.
 - 70-85  what / who / why are on the page, even if the reader moves past the hero to find them.
-- 85-100 the first screen states the offer concretely, with who it is for and what it resolves.
+- 85-100 the first screen states the offer concretely, with who it is for and what it resolves. Anchor: Ramp ("corporate cards and spend management for growing businesses"), Gusto, Linear.
 
 conversionReadiness — whether the page has earned a confident next step by the time a motivated buyer looks for one.
 - 0-40   no clear next step, or a generic "learn more" that does not match intent.
 - 40-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
 - 70-85  next step is clear and earned for the most likely buyer; minor friction on edge cases.
-- 85-100 the CTA is obvious, proof is within reach, and the commitment level matches the page's promise.
+- 85-100 the CTA is obvious, proof is within reach, and the commitment level matches the page's promise. Anchor: any best-in-class SaaS pricing page with clear plan, clear value, clear start button.
 
 Return JSON with exactly these keys. Do not omit any of the five scores under any circumstance — if you are genuinely uncertain, estimate to the nearest 5 and commit. Do not return "null", "0", or an empty string for any score.
 {

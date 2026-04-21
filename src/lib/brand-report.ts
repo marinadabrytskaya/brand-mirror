@@ -2359,6 +2359,11 @@ Scorecard rules. The scorecard MUST contain exactly five items, in this order: P
 
 Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-40 FLATLINING, 40-70 UNSTABLE, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
 
+CALIBRATION GUARDS — apply these before every score.
+- 85-100 is rare. Reserved for brands visually indistinguishable from a top-10 player in their category (Stripe, Linear, Aesop, Arc, Hermès, Apple). A WordPress theme, Squarespace template, generic dark-gradient SaaS hero, or stock-photo-heavy B2B page caps at 75.
+- Do not place more than ONE axis above 85 unless at least three other axes are already comfortably above 75. A brand cannot be "leading" on one thing while being ordinary on the rest.
+- Default to 60-80 for most brands. If your instinct says "this feels solid", that is STABLE (70-85), not LEADING. Move the number down if you catch yourself being generous.
+
 Positioning clarity — how quickly the homepage makes the offer legible to a first-time visitor.
 - 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
 - 40-70  category is guessable, exact offer is not. Page leans on insider shorthand.

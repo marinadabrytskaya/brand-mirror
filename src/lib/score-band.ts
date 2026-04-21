@@ -32,7 +32,7 @@ export const BANDS: readonly Band[] = [
     color: "#F2495C",
     lo: 0,
     hi: 40,
-    blurb: "Signal is weak. The page is losing trust before the offer lands.",
+    blurb: "Something is wrong. People leave before they understand what you sell.",
   },
   {
     key: "unstable",
@@ -40,7 +40,7 @@ export const BANDS: readonly Band[] = [
     color: "#E8B04C",
     lo: 40,
     hi: 70,
-    blurb: "Signal fires in bursts. Trust builds and breaks within the same scroll.",
+    blurb: "It works in bursts. The site wins people over, then loses them again.",
   },
   {
     key: "stable",
@@ -48,7 +48,7 @@ export const BANDS: readonly Band[] = [
     color: "#6FE0C2",
     lo: 70,
     hi: 85,
-    blurb: "Signal holds. The page earns attention, with room to tighten the ask.",
+    blurb: "It works. The page holds attention — there is just room to push harder.",
   },
   {
     key: "leading",
@@ -56,7 +56,7 @@ export const BANDS: readonly Band[] = [
     color: "#2FDCA0",
     lo: 85,
     hi: 100,
-    blurb: "Signal commands the room. The page converts before copy explains.",
+    blurb: "It sells. The page does the hard work before the copy has to explain.",
   },
 ] as const;
 
@@ -113,31 +113,31 @@ export const DIMENSIONS: readonly Dimension[] = [
     key: "positioningClarity",
     label: "Positioning clarity",
     shortLabel: "POSITIONING",
-    summary: "How quickly the offer becomes legible on the homepage.",
+    summary: "Can a first-time visitor say what you do in ten seconds?",
   },
   {
     key: "toneCoherence",
     label: "Tone coherence",
     shortLabel: "TONE",
-    summary: "Whether the written voice supports the visual impression.",
+    summary: "Do your words and your visuals sound like the same brand?",
   },
   {
     key: "visualCredibility",
     label: "Visual credibility",
     shortLabel: "VISUAL",
-    summary: "Whether the design signals quality and category trust.",
+    summary: "Does the design look like it deserves the price you charge?",
   },
   {
     key: "offerSpecificity",
     label: "Offer specificity",
     shortLabel: "OFFER",
-    summary: "How directly the page states what is sold and to whom.",
+    summary: "Is it obvious what you sell, to whom, and why it matters?",
   },
   {
     key: "conversionReadiness",
     label: "Conversion readiness",
     shortLabel: "CONVERSION",
-    summary: "Whether the page has earned a confident next step.",
+    summary: "When a buyer is ready, is there a clear next step for them?",
   },
 ] as const;
 
