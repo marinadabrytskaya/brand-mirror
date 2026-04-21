@@ -17,6 +17,7 @@ import {
   resolveWorldPoster,
   DEFAULT_MODEL,
 } from "@/lib/brand-read";
+import { requestOpenAIJsonText } from "@/lib/openai-json";
 import {
   captureWebsiteSurface,
   type SiteCapture,
@@ -1362,6 +1363,9 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
     ],
   };
 
+  const aiDiscoverabilityRead =
+    "AI can only recommend what it can classify quickly and restate without guessing. Right now the brand is clear enough to intrigue, but not yet explicit enough on category, audience, and retrieval cues to be effortlessly recommended in a real answer engine query. The site needs sharper language around who it is for, what it specifically does, and what proof supports that claim.";
+
   return {
     url,
     brandName: read.brandName,
@@ -1418,19 +1422,19 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
         note: "How quickly the offer becomes legible on the homepage.",
       },
       {
-        label: "Tone coherence",
+        label: "Offer specificity",
+        score: read.offerSpecificity,
+        note: "How directly the brand explains what it does and why it matters.",
+      },
+      {
+        label: "AI discoverability",
         score: read.toneCoherence,
-        note: "How well the written voice supports the visual impression.",
+        note: "How easily AI could classify, retrieve, and recommend this business.",
       },
       {
         label: "Visual credibility",
         score: read.visualCredibility,
         note: "How strongly the visual system implies quality and trust.",
-      },
-      {
-        label: "Offer specificity",
-        score: read.offerSpecificity,
-        note: "How directly the brand explains what it does and why it matters.",
       },
       {
         label: "Conversion readiness",
@@ -1439,7 +1443,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       },
     ],
     positioningRead: read.current,
-    toneCheck: read.voice,
+    toneCheck: aiDiscoverabilityRead,
     visualIdentityRead: read.strength,
     aboveTheFold: read.gap,
     conversionRead:
@@ -2281,7 +2285,8 @@ async function requestGeminiBrandReport(
   language: SiteLocale,
 ) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  if (!hasOpenAI && !apiKey) return null;
   const targetLanguage = LANGUAGE_NAMES[language];
 
   const prompt = `
@@ -2317,7 +2322,7 @@ Important rules:
 - Keep structural enums and machine-readable fields stable:
   - Keep screenshotCallouts.zone values in English.
   - Keep surfaceCaptures.kind and captureMethod values in English.
-  - Keep scorecard labels exactly as: Positioning clarity, Tone coherence, Visual credibility, Offer specificity, Conversion readiness.
+  - Keep scorecard labels exactly as: Positioning clarity, Offer specificity, AI discoverability, Visual credibility, Conversion readiness.
 - Return only valid JSON.
 
 Website URL:
@@ -2338,7 +2343,7 @@ Existing first-read:
 - Main friction: ${firstRead.mainFriction}
 - Clarity score (positioning): ${firstRead.positioningClarity}
 - Visual credibility: ${firstRead.visualCredibility}
-- Tone coherence: ${firstRead.toneCoherence}
+- AI discoverability: ${firstRead.toneCoherence}
 - Offer specificity: ${firstRead.offerSpecificity}
 - Conversion readiness: ${firstRead.conversionReadiness}
 
@@ -2355,7 +2360,7 @@ ${websiteContext.callsToAction.map((item) => `  - ${item}`).join("\n") || "  - n
 - Visible text:
 ${websiteContext.visibleText || "n/a"}
 
-Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, Tone coherence, Visual credibility, Offer specificity, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
+Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, Offer specificity, AI discoverability, Visual credibility, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
 
 Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-40 FLATLINING, 40-70 UNSTABLE, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
 
@@ -2370,11 +2375,11 @@ Positioning clarity — how quickly the homepage makes the offer legible to a fi
 - 70-85  offer and audience are legible inside the hero frame.
 - 85-100  offer, audience, and reason-to-care all land before the first scroll.
 
-Tone coherence — whether the written voice supports the visual impression and stays consistent across the page.
-- 0-40   copy and visuals sound like two different brands. Voice drifts inside the same scroll.
-- 40-70  voice fits the category but slides between registers (editorial then salesy, or confident then cautious).
-- 70-85  voice supports the visual impression most of the time; one or two sections slip.
-- 85-100  one clear voice from first word to last. Visual and verbal are a single point of view.
+AI discoverability — whether AI systems could confidently discover, classify, and recommend this business in response to a real user query.
+- 0-40   AI cannot reliably tell who this business is for, what it specifically offers, where it operates, or in which queries it should appear.
+- 40-70  AI can roughly infer the category, but recommendation would still be generic or hesitant because the service, audience, geography, or proof are too weak or too implied.
+- 70-85  The site gives clear enough signals for AI to match the business to relevant user queries with reasonable confidence. Category, audience, service scope, and trust cues are present in language the model can restate without guessing.
+- 85-100  The business is highly discoverable and recommendable by AI. The site makes category, audience, location or service scope, differentiation, and proof immediately legible.
 
 Visual credibility — whether the design signals quality, control, and category trust.
 - 0-40   template feel, stock imagery, typographic inconsistency. The design undercuts the price.
@@ -2416,9 +2421,9 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
   ],
   "scorecard": [
     { "label": "Positioning clarity", "score": 78, "note": "short note" },
-    { "label": "Tone coherence", "score": 82, "note": "short note" },
-    { "label": "Visual credibility", "score": 86, "note": "short note" },
     { "label": "Offer specificity", "score": 71, "note": "short note" },
+    { "label": "AI discoverability", "score": 82, "note": "short note" },
+    { "label": "Visual credibility", "score": 86, "note": "short note" },
     { "label": "Conversion readiness", "score": 74, "note": "short note" }
   ],
   "positioningRead": "2-4 sentences, specific and human",
@@ -2518,6 +2523,14 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
   "strategicNextMove": "2 blunt, useful sentences"
 }
 `;
+
+  if (hasOpenAI) {
+    const text = await requestOpenAIJsonText(prompt, {
+      timeoutMs: 110000,
+    });
+
+    return extractJson(text) as RawBrandReport;
+  }
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`,
@@ -3129,7 +3142,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "PROOF AND CTA ZONE",
         methodologyBullets: [
           "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-          "Tone Coherence measures whether the written voice supports the visual impression.",
+          "AI Discoverability measures whether AI could confidently classify and recommend the business.",
           "Visual Credibility measures whether the design signals quality and control.",
           "Offer Specificity measures how directly the page explains what it does and why it matters.",
           "Conversion Readiness measures whether the page has earned a confident next step.",
@@ -3211,7 +3224,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "Tone Coherence mide si la voz escrita sostiene la impresión visual.",
+          "AI Discoverability mide si la IA podría clasificar y recomendar el negocio con confianza.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
@@ -3293,7 +3306,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ЗОНА PROOF И CTA",
         methodologyBullets: [
           "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "Tone Coherence измеряет, поддерживает ли письменный голос визуальное впечатление.",
+          "AI Discoverability измеряет, сможет ли ИИ уверенно классифицировать и рекомендовать этот бизнес.",
           "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
           "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
           "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
@@ -3546,8 +3559,15 @@ export async function generateBrandReportPdf(
         implication: report.headlineCorrection.currentProblem,
       },
       {
-        label: "Tone coherence",
-        title: "Tone Coherence",
+        label: "Offer specificity",
+        title: "Offer Specificity",
+        diagnosis: report.aboveTheFold,
+        quote: report.namingFit.correction,
+        implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
+      },
+      {
+        label: "AI discoverability",
+        title: "AI Discoverability",
         diagnosis: report.toneCheck,
         quote: report.audienceMismatch[1] || report.toneCheck,
         implication: report.verbalImage.firstScreenTone,
@@ -3558,13 +3578,6 @@ export async function generateBrandReportPdf(
         diagnosis: report.visualIdentityRead,
         quote: report.whatWorks[0] || report.visualIdentityRead,
         implication: report.mixedSignals,
-      },
-      {
-        label: "Offer specificity",
-        title: "Offer Specificity",
-        diagnosis: report.aboveTheFold,
-        quote: report.namingFit.correction,
-        implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
       },
       {
         label: "Conversion readiness",

@@ -56,10 +56,10 @@ export const siteCopy = {
             "BrandMirror reads how clearly your offer lands, where your promise becomes vague, and whether your positioning feels premium, specific, or too polished to convert.",
         },
         {
-          label: "Tone",
-          title: "How your brand voice behaves under pressure",
+          label: "AI Discoverability",
+          title: "Whether AI would know when to recommend you",
           body:
-            "It checks whether your language feels sharp, calm, indulgent, distant, generic, or overly careful. Tone is treated as a commercial signal, not a copywriting exercise.",
+            "It checks whether AI systems can clearly classify the business, match it to real user queries, and recommend it without guessing. Category, audience, geography, trust signals, and plain-language specificity all matter here.",
         },
         {
           label: "Visual identity",
@@ -262,6 +262,8 @@ export const siteCopy = {
         "Format: private web report with downloadable PDF.",
         "Built as the paid layer above the first read, not as a generic upsell wall.",
       ],
+      downloadPdfIdle: "Download free read PDF",
+      downloadPdfBusy: "Exporting free PDF...",
       unlockCta: "Unlock full report — $197",
       unlockSecondary: "See full report structure",
     },
@@ -323,9 +325,9 @@ export const siteCopy = {
       secondaryCta: "Return to landing page",
       scoreRows: [
         { label: "Positioning clarity", score: "72", note: "Strong premise, soft edge." },
-        { label: "Tone coherence", score: "81", note: "Elegant and controlled." },
-        { label: "Visual credibility", score: "89", note: "Highly trusted on sight." },
         { label: "Offer specificity", score: "58", note: "Too delayed." },
+        { label: "AI discoverability", score: "81", note: "Easy to classify and recommend." },
+        { label: "Visual credibility", score: "89", note: "Highly trusted on sight." },
       ],
       sections: [
         {
@@ -397,10 +399,10 @@ export const siteCopy = {
             "BrandMirror lee qué tan clara aterriza tu oferta, dónde tu promesa se vuelve vaga y si tu posicionamiento se siente premium, específico o demasiado pulido para convertir.",
         },
         {
-          label: "Tono",
-          title: "Cómo se comporta la voz de tu marca bajo presión",
+          label: "Descubribilidad IA",
+          title: "Si la IA sabría cuándo recomendarte",
           body:
-            "Revisa si tu lenguaje se siente agudo, calmado, indulgente, distante, genérico o demasiado cuidadoso. El tono se trata como una señal comercial, no como un ejercicio de copy.",
+            "Evalúa si los sistemas de IA pueden clasificar el negocio, conectarlo con consultas reales de usuarios y recomendarlo sin tener que adivinar. Aquí importan categoría, audiencia, geografía, señales de confianza y lenguaje explícito.",
         },
         {
           label: "Identidad visual",
@@ -591,6 +593,8 @@ export const siteCopy = {
         "Formato: reporte web privado con PDF descargable.",
         "Construido como la capa pagada encima de la primera lectura, no como un simple muro de upsell.",
       ],
+      downloadPdfIdle: "Descargar PDF del first read",
+      downloadPdfBusy: "Exportando PDF gratis...",
       unlockCta: "Desbloquear reporte completo — $197",
       unlockSecondary: "Ver estructura del reporte completo",
     },
@@ -652,9 +656,9 @@ export const siteCopy = {
       secondaryCta: "Volver a la landing",
       scoreRows: [
         { label: "Claridad de posicionamiento", score: "72", note: "Premisa fuerte, filo suave." },
-        { label: "Coherencia de tono", score: "81", note: "Elegante y controlado." },
-        { label: "Credibilidad visual", score: "89", note: "Genera mucha confianza a primera vista." },
         { label: "Especificidad de oferta", score: "58", note: "Demasiado tardía." },
+        { label: "Descubribilidad IA", score: "81", note: "Fácil de clasificar y recomendar." },
+        { label: "Credibilidad visual", score: "89", note: "Genera mucha confianza a primera vista." },
       ],
       sections: [
         {
@@ -726,10 +730,10 @@ export const siteCopy = {
             "BrandMirror читает, насколько ясно приземляется твой оффер, где обещание становится размытым и ощущается ли позиционирование премиальным, точным или слишком polished, чтобы конвертировать.",
         },
         {
-          label: "Тон",
-          title: "Как ведёт себя голос бренда под давлением",
+          label: "AI discoverability",
+          title: "Поймёт ли ИИ, когда вас рекомендовать",
           body:
-            "Он проверяет, звучит ли язык остро, спокойно, indulgent, отстранённо, слишком generic или чрезмерно осторожно. Тон рассматривается как коммерческий сигнал, а не как упражнение по копирайтингу.",
+            "Эта ось смотрит, смогут ли ИИ-системы чётко классифицировать бизнес, сопоставить его с реальным пользовательским запросом и рекомендовать без догадок. Важны категория, аудитория, география, trust signals и прямой язык.",
         },
         {
           label: "Визуальная идентичность",
@@ -920,6 +924,8 @@ export const siteCopy = {
         "Формат: приватный web-report с downloadable PDF.",
         "Сделано как платный слой поверх first read, а не как generic upsell wall.",
       ],
+      downloadPdfIdle: "Скачать PDF first read",
+      downloadPdfBusy: "Экспортирую бесплатный PDF...",
       unlockCta: "Открыть полный отчёт — $197",
       unlockSecondary: "Посмотреть структуру полного отчёта",
     },
@@ -981,9 +987,9 @@ export const siteCopy = {
       secondaryCta: "Вернуться на лендинг",
       scoreRows: [
         { label: "Ясность позиционирования", score: "72", note: "Сильная premise, мягкий edge." },
-        { label: "Цельность тона", score: "81", note: "Элегантно и собранно." },
-        { label: "Визуальная достоверность", score: "89", note: "Очень доверительно с первого взгляда." },
         { label: "Точность оффера", score: "58", note: "Слишком поздно." },
+        { label: "AI discoverability", score: "81", note: "Легко понять и рекомендовать." },
+        { label: "Визуальная достоверность", score: "89", note: "Очень доверительно с первого взгляда." },
       ],
       sections: [
         {

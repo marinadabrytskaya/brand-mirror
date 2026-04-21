@@ -3,8 +3,9 @@
 // Two things live in this file and nowhere else:
 //   1. The 4-tier color-banded indicator system (FLATLINING / UNSTABLE /
 //      STABLE / LEADING) that encodes a numeric score as a vital sign.
-//   2. The 5-axis dimension model — positioningClarity, toneCoherence,
-//      visualCredibility, offerSpecificity, conversionReadiness — with
+//   2. The 5-axis dimension model — positioningClarity, offerSpecificity,
+//      toneCoherence (used as AI discoverability), visualCredibility,
+//      conversionReadiness — with
 //      canonical labels and rendering order.
 //
 // Every surface (first-read, full-report, PDF generator) imports from here
@@ -94,9 +95,9 @@ export function bandModifier(score: number): string {
 
 export type DimensionKey =
   | "positioningClarity"
+  | "offerSpecificity"
   | "toneCoherence"
   | "visualCredibility"
-  | "offerSpecificity"
   | "conversionReadiness";
 
 export type Dimension = {
@@ -116,22 +117,22 @@ export const DIMENSIONS: readonly Dimension[] = [
     summary: "Can a first-time visitor say what you do in ten seconds?",
   },
   {
+    key: "offerSpecificity",
+    label: "Offer specificity",
+    shortLabel: "OFFER",
+    summary: "Is it obvious what you sell, to whom, and why it matters?",
+  },
+  {
     key: "toneCoherence",
-    label: "Tone coherence",
-    shortLabel: "TONE",
-    summary: "Do your words and your visuals sound like the same brand?",
+    label: "AI discoverability",
+    shortLabel: "AI DISCOVERY",
+    summary: "Could AI confidently discover and recommend this business?",
   },
   {
     key: "visualCredibility",
     label: "Visual credibility",
     shortLabel: "VISUAL",
     summary: "Does the design look like it deserves the price you charge?",
-  },
-  {
-    key: "offerSpecificity",
-    label: "Offer specificity",
-    shortLabel: "OFFER",
-    summary: "Is it obvious what you sell, to whom, and why it matters?",
   },
   {
     key: "conversionReadiness",

@@ -139,6 +139,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Real clock, client-side only to avoid SSR/CSR hydration mismatch.
@@ -210,6 +211,47 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         setStatus("");
       }
     });
+  }
+
+  async function handleDownloadPdf() {
+    if (!currentUrl) return;
+    setIsDownloading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/brand-read/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: currentUrl, language: locale, result }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(
+          payload.detail || payload.error || "Unable to export the PDF right now.",
+        );
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `${result.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (downloadError) {
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Unable to export the PDF right now.",
+      );
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   const prodCode = productionCode(result.brandName, result.posterScore);
@@ -549,6 +591,40 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </div>
         </section>
 
+        {currentUrl ? (
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isDownloading}
+              className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                borderColor: "rgba(111,224,194,0.35)",
+                color: "#6FE0C2",
+                fontSize: "12.5px",
+                letterSpacing: "0.18em",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontWeight: 500,
+              }}
+            >
+              {isDownloading
+                ? copy.downloadPdfBusy.toUpperCase()
+                : copy.downloadPdfIdle.toUpperCase()}
+            </button>
+            <p
+              style={{
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontSize: "10.5px",
+                letterSpacing: "0.14em",
+                color: COLOR.textMuted,
+                textTransform: "uppercase",
+              }}
+            >
+              {copy.freeBadge} / PDF
+            </p>
+          </div>
+        ) : null}
+
         <hr
           className="mt-16"
           style={{ border: 0, height: "0.5px", background: COLOR.line }}
@@ -673,7 +749,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 color: COLOR.text,
               }}
             >
-              $69
+              $197
             </div>
             <p
               className="mt-5 max-w-md leading-7"
