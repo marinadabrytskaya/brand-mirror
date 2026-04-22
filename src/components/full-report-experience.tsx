@@ -3,10 +3,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { type BrandReport } from "@/lib/brand-report";
 import DiagnosticEvidenceBoard from "@/components/diagnostic-evidence-board";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
+import { bandFor } from "@/lib/score-band";
 
 type SiteLocale = "en" | "es" | "ru";
 
@@ -19,28 +21,6 @@ type ErrorResponse = {
   error?: string;
   detail?: string;
 };
-
-type CheckoutResponse = {
-  ok: boolean;
-  checkoutUrl: string;
-  sessionId: string;
-};
-
-function triggerPdfDownload(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = filename;
-  link.rel = "noopener";
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-
-  window.setTimeout(() => {
-    link.remove();
-    URL.revokeObjectURL(objectUrl);
-  }, 60_000);
-}
 
 function ReportSection({
   label,
@@ -370,20 +350,34 @@ function MoodboardChipGroup({
 
 function ReportCoverCard({
   brandName,
+  whatItDoes,
   snapshot,
   reportId,
 }: {
   brandName: string;
+  whatItDoes: string;
   snapshot: string;
   reportId: string;
 }) {
+  const isLongName = brandName.length > 24;
   return (
     <section className="pb-10">
       <div className="ink-panel report-cover-card rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-7 sm:p-10">
         <p className="section-label text-[rgba(243,236,223,0.6)]">BrandMirror report</p>
-        <h2 className="mt-5 font-serif text-[clamp(3.4rem,8vw,6.4rem)] leading-[0.92] tracking-[-0.06em] text-[#f6efe2]">
+        <h2
+          className="mt-5 font-serif leading-[0.92] tracking-[-0.06em] text-[#f6efe2]"
+          style={{
+            fontSize: isLongName ? "clamp(2rem, 5vw, 3.6rem)" : "clamp(3.4rem, 8vw, 6.4rem)",
+            wordBreak: "break-word",
+          }}
+        >
           {brandName}
         </h2>
+        {whatItDoes ? (
+          <p className="mt-4 max-w-3xl text-base leading-7 text-[rgba(243,236,223,0.58)]">
+            {whatItDoes}
+          </p>
+        ) : null}
         <p className="mt-6 max-w-3xl text-lg leading-8 text-[rgba(243,236,223,0.78)]">
           {snapshot}
         </p>
@@ -436,9 +430,9 @@ function HowWeReadBrandsBlock({
             </p>
             <div className="editorial-rule mt-5 space-y-4 border-[rgba(243,236,223,0.12)] pt-5 text-sm leading-7 text-[rgba(243,236,223,0.68)]">
               <p>Positioning Clarity — can someone explain the offer without your help?</p>
-              <p>Offer Specificity — does the proposition arrive fast enough to buy?</p>
-              <p>AI Discoverability — would AI know when to recommend this business?</p>
+              <p>AI Discoverability — can AI tools find and recommend your brand?</p>
               <p>Visual Credibility — does the surface match the price being asked?</p>
+              <p>Offer Specificity — does the proposition arrive fast enough to buy?</p>
               <p>Conversion Readiness — is there a clear next step when the buyer is ready?</p>
             </div>
           </div>
@@ -459,6 +453,7 @@ function ScoreDashboardBlock({
   scoreModifier: string;
   scorecard: { label: string; score: number; note: string }[];
 }) {
+  const overallBand = bandFor(posterScore);
   return (
     <section className="pb-10">
       <div className="ink-panel report-score-shell rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-7 sm:p-10">
@@ -471,7 +466,10 @@ function ScoreDashboardBlock({
             <p className="mt-4 text-base leading-7 text-[rgba(243,236,223,0.74)]">
               Overall brand readiness
             </p>
-            <p className="mt-5 text-xs uppercase tracking-[0.24em] text-[rgba(243,236,223,0.54)]">
+            <p
+              className="mt-5 text-xs uppercase tracking-[0.24em]"
+              style={{ color: overallBand.color }}
+            >
               {scoreBand}
             </p>
             <p className="mt-4 font-serif text-2xl italic leading-tight text-[rgba(243,236,223,0.92)]">
@@ -480,56 +478,68 @@ function ScoreDashboardBlock({
           </div>
           <div className="flex flex-col justify-between gap-5">
             <div>
-              <p className="section-label text-[rgba(243,236,223,0.56)]">Verdict line</p>
+              <p className="section-label text-[rgba(243,236,223,0.56)]">What the scores reveal</p>
               <h3 className="mt-4 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] text-[#f6efe2]">
-                Stronger hierarchy, faster reading, and a clearer commercial center.
+                {scoreModifier}
               </h3>
             </div>
             <div className="editorial-rule border-[rgba(243,236,223,0.12)] pt-5">
               <p className="max-w-xl text-sm leading-7 text-[rgba(243,236,223,0.7)]">
-                The web version should not feel like a separate product. This screen now treats the PDF as master art direction and translates it into a denser, darker, still-readable interface.
+                Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Unstable, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.
               </p>
             </div>
           </div>
         </div>
         <div className="report-score-grid mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {scorecard.map((row) => (
-            <div
-              key={row.label}
-              className="report-score-tile rounded-[1.4rem] p-4"
-            >
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(243,236,223,0.56)]">
-                {row.label}
-              </p>
-              <p className="mt-3 font-serif text-5xl leading-none tracking-[-0.06em] text-[#f6efe2]">
-                {row.score}
-              </p>
-              <p className="mt-3 text-xs leading-6 text-[rgba(243,236,223,0.68)]">
-                {row.note}
-              </p>
-            </div>
-          ))}
+          {scorecard.map((row) => {
+            const band = bandFor(row.score);
+            return (
+              <div
+                key={row.label}
+                className="rounded-[1.4rem] p-4"
+                style={{
+                  border: `1px solid ${band.color}30`,
+                  background: `${band.color}12`,
+                }}
+              >
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(243,236,223,0.56)]">
+                  {row.label}
+                </p>
+                <p
+                  className="mt-3 font-serif text-5xl leading-none tracking-[-0.06em]"
+                  style={{ color: band.color }}
+                >
+                  {row.score}
+                </p>
+                <p className="mt-1 text-[9.5px] uppercase tracking-[0.18em]" style={{ color: band.color, opacity: 0.7 }}>
+                  {band.label}
+                </p>
+                <p className="mt-2 text-xs leading-6 text-[rgba(243,236,223,0.68)]">
+                  {row.note}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-export function FullReportExperience({
-  locale,
-  initialUrl = "",
-  paymentRequired = false,
-  paymentUnlocked = false,
-  paymentSessionId = null,
-  accessError = "",
-}: {
+type FullReportExperienceProps = {
   locale: SiteLocale;
   initialUrl?: string;
   paymentRequired?: boolean;
   paymentUnlocked?: boolean;
   paymentSessionId?: string | null;
   accessError?: string;
-}) {
+};
+
+export function FullReportExperience({
+  locale,
+  initialUrl = "",
+  accessError = "",
+}: FullReportExperienceProps) {
   const copy = siteI18n.siteCopy[locale].fullReport;
   const labels = {
     en: {
@@ -702,7 +712,7 @@ export function FullReportExperience({
     locale === "es"
       ? {
           "Positioning clarity": "Claridad de posicionamiento",
-          "AI discoverability": "Descubribilidad IA",
+          "AI discoverability": "Descubribilidad por IA",
           "Visual credibility": "Credibilidad visual",
           "Offer specificity": "Especificidad de la oferta",
           "Conversion readiness": "Preparación para convertir",
@@ -710,33 +720,24 @@ export function FullReportExperience({
       : locale === "ru"
         ? {
             "Positioning clarity": "Ясность позиционирования",
-            "AI discoverability": "AI discoverability",
+            "AI discoverability": "AI-видимость",
             "Visual credibility": "Визуальная убедительность",
             "Offer specificity": "Точность оффера",
             "Conversion readiness": "Готовность к конверсии",
           }
         : {};
-  const [url, setUrl] = useState(initialUrl);
+  const searchParams = useSearchParams();
+  const [url, setUrl] = useState(initialUrl || searchParams.get("url") || "");
   const [report, setReport] = useState<BrandReport | null>(null);
-  const [status, setStatus] = useState<string>(
-    paymentUnlocked && initialUrl ? copy.paymentUnlockedStatus : copy.statusInitial,
-  );
+  const [status, setStatus] = useState<string>(copy.statusInitial);
   const [error, setError] = useState(accessError);
   const [isPending, startTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState(paymentSessionId);
 
-  function handleGenerate(nextUrl?: string, sessionId?: string | null) {
+  function handleGenerate(nextUrl?: string) {
     const targetUrl = (nextUrl ?? url).trim();
     if (!targetUrl) {
       setError(copy.emptyUrl);
-      setStatus("");
-      return;
-    }
-
-    if (paymentRequired && !sessionId) {
-      setError(copy.paymentRequiredError);
       setStatus("");
       return;
     }
@@ -751,11 +752,7 @@ export function FullReportExperience({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            url: targetUrl,
-            language: locale,
-            sessionId: sessionId || undefined,
-          }),
+          body: JSON.stringify({ url: targetUrl, language: locale }),
         });
 
         const payload = (await response.json()) as ReportResponse | ErrorResponse;
@@ -782,59 +779,14 @@ export function FullReportExperience({
   }
 
   useEffect(() => {
-    setUrl(initialUrl);
-    setActiveSessionId(paymentSessionId);
-    if (accessError) {
-      setError(accessError);
-    }
-    if (initialUrl && (!paymentRequired || paymentUnlocked)) {
-      handleGenerate(initialUrl, paymentSessionId);
+    const searchUrl = searchParams.get("url");
+    const resolvedInitialUrl = initialUrl || searchUrl;
+    if (resolvedInitialUrl) {
+      setUrl(resolvedInitialUrl);
+      handleGenerate(resolvedInitialUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialUrl, paymentRequired, paymentSessionId, paymentUnlocked, accessError]);
-
-  async function handleCheckout(nextUrl?: string) {
-    const targetUrl = (nextUrl ?? url).trim();
-    if (!targetUrl) {
-      setError(copy.emptyUrl);
-      setStatus("");
-      return;
-    }
-
-    setIsCheckingOut(true);
-    setError("");
-    setStatus(copy.checkoutBusy);
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: targetUrl, language: locale }),
-      });
-
-      const payload = (await response.json()) as CheckoutResponse | ErrorResponse;
-      if (!response.ok || !("checkoutUrl" in payload)) {
-        const errorPayload = payload as ErrorResponse;
-        throw new Error(
-          errorPayload.detail ||
-            errorPayload.error ||
-            "Unable to open Stripe checkout right now.",
-        );
-      }
-
-      window.location.assign(payload.checkoutUrl);
-    } catch (checkoutError) {
-      setError(
-        checkoutError instanceof Error
-          ? checkoutError.message
-          : "Unable to open Stripe checkout right now.",
-      );
-      setStatus("");
-      setIsCheckingOut(false);
-    }
-  }
+  }, [searchParams, initialUrl]);
 
   async function handleDownloadPdf() {
     if (!report) return;
@@ -847,12 +799,7 @@ export function FullReportExperience({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          url: report.url,
-          language: locale,
-          report,
-          sessionId: activeSessionId || undefined,
-        }),
+        body: JSON.stringify({ url: report.url, language: locale, report }),
       });
 
       if (!response.ok) {
@@ -863,10 +810,14 @@ export function FullReportExperience({
       }
 
       const blob = await response.blob();
-      triggerPdfDownload(
-        blob,
-        `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
-      );
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
@@ -939,11 +890,7 @@ export function FullReportExperience({
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              if (paymentRequired && !activeSessionId) {
-                handleCheckout();
-                return;
-              }
-              handleGenerate(undefined, activeSessionId);
+              handleGenerate();
             }}
             className="grain-panel report-intro-panel rounded-[2rem] border border-[color:var(--line)] p-6 sm:p-8"
           >
@@ -964,10 +911,6 @@ export function FullReportExperience({
               <input
                 id="report-url"
                 type="text"
-                inputMode="url"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder={copy.urlPlaceholder}
@@ -976,16 +919,10 @@ export function FullReportExperience({
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
                   type="submit"
-                  disabled={isPending || isCheckingOut}
+                  disabled={isPending}
                   className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isCheckingOut
-                    ? copy.checkoutBusy
-                    : isPending
-                      ? copy.submitBusy
-                      : paymentRequired && !activeSessionId
-                        ? copy.checkoutIdle
-                        : copy.submitIdle}
+                  {isPending ? copy.submitBusy : copy.submitIdle}
                 </button>
                 <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">
                   {status}
@@ -1078,7 +1015,7 @@ export function FullReportExperience({
               <button
                 type="button"
                 onClick={handleDownloadPdf}
-                disabled={!report || isDownloading || (paymentRequired && !activeSessionId)}
+                disabled={!report || isDownloading}
                 className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                   {isDownloading ? copy.downloadBusy : copy.downloadIdle}
@@ -1090,11 +1027,6 @@ export function FullReportExperience({
                 {copy.sampleCta}
               </Link>
             </div>
-            {isDownloading ? (
-              <p className="text-xs uppercase tracking-[0.16em] text-[#c9e7de]">
-                {copy.downloadBusy}
-              </p>
-            ) : null}
             <p className="max-w-md text-sm leading-6 text-[color:var(--foreground-soft)]">
               {copy.footerNote}
             </p>
@@ -1105,6 +1037,7 @@ export function FullReportExperience({
           <div className="report-stage">
             <ReportCoverCard
               brandName={report.brandName}
+              whatItDoes={report.whatItDoes}
               snapshot={report.snapshot}
               reportId={reportId}
             />
@@ -1139,22 +1072,28 @@ export function FullReportExperience({
               </div>
 
               <div className="ink-panel grid gap-5 rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 pt-8 sm:p-8">
-                {report.scorecard.map((row) => (
-                  <div
-                    key={row.label}
-                    className="grid gap-3 border-b border-[rgba(243,236,223,0.12)] pb-5 sm:grid-cols-[1fr_4.5rem_1fr]"
-                  >
-                    <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
-                      {scoreLabels[row.label] || row.label}
-                    </p>
-                    <p className="font-serif text-5xl leading-none tracking-[-0.06em] text-[#a8bddf]">
-                      {row.score}
-                    </p>
-                    <p className="text-sm leading-6 text-[rgba(243,236,223,0.72)]">
-                      {row.note}
-                    </p>
-                  </div>
-                ))}
+                {report.scorecard.map((row) => {
+                  const band = bandFor(row.score);
+                  return (
+                    <div
+                      key={row.label}
+                      className="grid gap-3 border-b border-[rgba(243,236,223,0.12)] pb-5 sm:grid-cols-[1fr_4.5rem_1fr]"
+                    >
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                        {scoreLabels[row.label] || row.label}
+                      </p>
+                      <p
+                        className="font-serif text-5xl leading-none tracking-[-0.06em]"
+                        style={{ color: band.color }}
+                      >
+                        {row.score}
+                      </p>
+                      <p className="text-sm leading-6 text-[rgba(243,236,223,0.72)]">
+                        {row.note}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -1295,11 +1234,9 @@ export function FullReportExperience({
               <ListBlock
                 label={labels.frameLabel}
                 title={labels.frameTitle}
-                items={[
-                  "Sharper commercial clarity without flattening the premium signal.",
-                  "A clearer path from first impression to trust to action.",
-                  "A brand that feels both more intelligent and more sellable.",
-                ]}
+                items={report.expectationGap.length > 0
+                  ? report.expectationGap.slice(0, 3)
+                  : [report.strategicNextMove || "Align the signal with the commercial intent."]}
               />
             </section>
 
@@ -1762,17 +1699,20 @@ export function FullReportExperience({
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label">Audit fixes</p>
+                <p className="section-label">Priority fix stack</p>
                 <div className="editorial-rule mt-5 space-y-5 border-[rgba(243,236,223,0.12)] pt-5">
                   {(
                     [
-                      ["Fix now", report.priorityFixes.fixNow],
-                      ["Fix next", report.priorityFixes.fixNext],
-                      ["Keep", report.priorityFixes.keep],
-                    ] as Array<[string, string[]]>
-                  ).map(([label, items]) => (
+                      ["Fix now", report.priorityFixes.fixNow, "#E07A5F"],
+                      ["Fix next", report.priorityFixes.fixNext, "#E8B04C"],
+                      ["Keep", report.priorityFixes.keep, "#6FE0C2"],
+                    ] as Array<[string, string[], string]>
+                  ).map(([label, items, color]) => (
                     <div key={label}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p
+                        className="text-sm uppercase tracking-[0.18em]"
+                        style={{ color }}
+                      >
                         {label}
                       </p>
                       <div className="mt-3 space-y-3">
@@ -1810,51 +1750,29 @@ export function FullReportExperience({
               </div>
             </section>
 
-            <section className="pb-10">
-              <div className="editorial-rule pt-8">
-                <p className="section-label">Campaign ideas</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
-                  Ways this brand could speak more sharply in public
-                </h2>
-                <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--foreground-soft)]">
-                  The report should not stop at critique. These are campaign or
-                  content directions that could translate the sharper positioning
-                  into something visible and sellable.
-                </p>
-              </div>
-
-              <div className="mt-8 grid gap-6 lg:grid-cols-3">
-                {report.campaignAngles.map((angle) => (
-                  <article
-                    key={angle.title}
-                    className="ink-panel rounded-[1.9rem] border border-[rgba(243,236,223,0.14)] p-6"
-                  >
-                    <p className="section-label text-[rgba(243,236,223,0.58)]">Angle</p>
-                    <h3 className="mt-4 font-serif text-3xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
-                      {angle.title}
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-[rgba(243,236,223,0.72)]">
-                      {angle.angle}
-                    </p>
-                    <p className="mt-5 border-t border-[rgba(243,236,223,0.12)] pt-5 text-sm leading-7 text-[rgba(243,236,223,0.72)]">
-                      {angle.whyItCouldWork}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ListBlock
-                label="Next 7 days"
-                title="Fast changes to make immediately"
-                items={report.actionPlan.next7Days}
-              />
-              <ListBlock
-                label="Next 30 days"
-                title="What to tighten after the quick wins"
+                label="30-day action plan"
+                title="Your roadmap for the next 30 days"
                 items={report.actionPlan.next30Days}
               />
+              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(243,236,223,0.6)]">What comes next</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+                  Three ways to use this diagnosis
+                </h2>
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
+                  {[
+                    "Do it yourself — use the fix stack and action plan as your roadmap.",
+                    "BrandMirror Reviewed — guided walkthrough of the diagnosis and next moves.",
+                    "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
+                  ].map((item) => (
+                    <p key={item} className="text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
             </section>
 
             <section className="pb-12">
