@@ -266,6 +266,9 @@ export const siteCopy = {
       downloadPdfBusy: "Exporting free PDF...",
       unlockCta: "Unlock full report — $197",
       unlockSecondary: "See full report structure",
+      unlockTestPdfIdle: "Test full report PDF",
+      unlockTestPdfBusy: "Building full report PDF...",
+      unlockTestPdfNote: "Testing only / bypass paywall",
     },
     fullReport: {
       back: "Back to BrandMirror",
@@ -597,6 +600,9 @@ export const siteCopy = {
       downloadPdfBusy: "Exportando PDF gratis...",
       unlockCta: "Desbloquear reporte completo — $197",
       unlockSecondary: "Ver estructura del reporte completo",
+      unlockTestPdfIdle: "Probar PDF del reporte completo",
+      unlockTestPdfBusy: "Construyendo PDF del reporte completo...",
+      unlockTestPdfNote: "Solo prueba / sin paywall",
     },
     fullReport: {
       back: "Volver a BrandMirror",
@@ -928,6 +934,9 @@ export const siteCopy = {
       downloadPdfBusy: "Экспортирую бесплатный PDF...",
       unlockCta: "Открыть полный отчёт — $197",
       unlockSecondary: "Посмотреть структуру полного отчёта",
+      unlockTestPdfIdle: "Тестовый PDF полного отчёта",
+      unlockTestPdfBusy: "Собираю PDF полного отчёта...",
+      unlockTestPdfNote: "Только для теста / без paywall",
     },
     fullReport: {
       back: "Назад в BrandMirror",

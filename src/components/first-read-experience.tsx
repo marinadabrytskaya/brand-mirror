@@ -4,6 +4,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { type BrandReadResult } from "@/lib/brand-read";
+import { type BrandReport } from "@/lib/brand-report";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
@@ -20,6 +21,11 @@ type ReadResponse = {
 type ErrorResponse = {
   error?: string;
   detail?: string;
+};
+
+type ReportResponse = {
+  ok: boolean;
+  report: BrandReport;
 };
 
 // ---------------------------------------------------------------------------
@@ -158,6 +164,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingFullReport, setIsDownloadingFullReport] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Real clock, client-side only to avoid SSR/CSR hydration mismatch.
@@ -265,6 +272,68 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       );
     } finally {
       setIsDownloading(false);
+    }
+  }
+
+  async function handleDownloadFullReportPdf() {
+    if (!currentUrl) return;
+    setIsDownloadingFullReport(true);
+    setError("");
+
+    try {
+      const reportResponse = await fetch("/api/brand-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: currentUrl, language: locale }),
+      });
+
+      const reportPayload = (await reportResponse.json()) as
+        | ReportResponse
+        | ErrorResponse;
+
+      if (!reportResponse.ok || !("report" in reportPayload)) {
+        const errorPayload = reportPayload as ErrorResponse;
+        throw new Error(
+          errorPayload.detail ||
+            errorPayload.error ||
+            "Unable to generate the full report right now.",
+        );
+      }
+
+      const pdfResponse = await fetch("/api/brand-report/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: currentUrl,
+          language: locale,
+          report: reportPayload.report,
+        }),
+      });
+
+      if (!pdfResponse.ok) {
+        const payload = (await pdfResponse.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(
+          payload.detail || payload.error || "Unable to export the PDF right now.",
+        );
+      }
+
+      const blob = await pdfResponse.blob();
+      triggerPdfDownload(
+        blob,
+        `${reportPayload.report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
+      );
+    } catch (downloadError) {
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Unable to export the PDF right now.",
+      );
+    } finally {
+      setIsDownloadingFullReport(false);
     }
   }
 
@@ -801,6 +870,41 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 {copy.unlockSecondary.toUpperCase()}
               </Link>
             </div>
+            {currentUrl ? (
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={handleDownloadFullReportPdf}
+                  disabled={isDownloadingFullReport}
+                  className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    borderColor: "rgba(111,224,194,0.35)",
+                    color: "#6FE0C2",
+                    fontSize: "12.5px",
+                    letterSpacing: "0.18em",
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontWeight: 500,
+                  }}
+                >
+                  {isDownloadingFullReport
+                    ? copy.unlockTestPdfBusy.toUpperCase()
+                    : copy.unlockTestPdfIdle.toUpperCase()}
+                </button>
+                <p
+                  style={{
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontSize: "10.5px",
+                    letterSpacing: "0.14em",
+                    color: isDownloadingFullReport ? "#6FE0C2" : COLOR.textMuted,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {isDownloadingFullReport
+                    ? copy.unlockTestPdfBusy
+                    : copy.unlockTestPdfNote}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div>
