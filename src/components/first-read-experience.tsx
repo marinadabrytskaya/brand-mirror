@@ -534,9 +534,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               <input
                 id="brand-url"
                 name="url"
-                type="url"
+                type="text"
                 inputMode="url"
                 autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder={copy.urlPlaceholder}

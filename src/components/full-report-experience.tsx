@@ -877,6 +877,10 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
               <input
                 id="report-url"
                 type="text"
+                inputMode="url"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder={copy.urlPlaceholder}

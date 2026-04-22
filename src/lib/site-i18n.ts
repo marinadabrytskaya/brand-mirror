@@ -227,7 +227,7 @@ export const siteCopy = {
       startBody:
         "The free layer shows what is working, what is breaking trust, and where the message starts losing the buyer. The full report opens only after payment.",
       websiteUrl: "Website URL",
-      urlPlaceholder: "https://yourbrand.com",
+      urlPlaceholder: "yourbrand.com",
       submitIdle: "Read my brand",
       submitBusy: "Reading brand...",
       statusInitial: "Enter a website to generate the first read.",
@@ -283,7 +283,7 @@ export const siteCopy = {
       unlockBody:
         "Right now this is the transferred mechanic. Next we can attach it to checkout so this route becomes the post-payment result surface.",
       websiteUrl: "Website URL",
-      urlPlaceholder: "https://yourbrand.com",
+      urlPlaceholder: "yourbrand.com",
       submitIdle: "Generate full report",
       submitBusy: "Building report...",
       statusInitial: "Enter a website to generate the full report.",
@@ -561,7 +561,7 @@ export const siteCopy = {
       startBody:
         "La capa gratuita muestra qué está funcionando, qué está rompiendo la confianza y dónde el mensaje empieza a perder al comprador. El reporte completo se abre solo después del pago.",
       websiteUrl: "URL del sitio web",
-      urlPlaceholder: "https://tu-marca.com",
+      urlPlaceholder: "tu-marca.com",
       submitIdle: "Lee mi marca",
       submitBusy: "Leyendo marca...",
       statusInitial: "Ingresa un sitio web para generar la primera lectura.",
@@ -617,7 +617,7 @@ export const siteCopy = {
       unlockBody:
         "Ahora mismo esta es la mecánica transferida. Lo siguiente es conectarla al checkout para que esta ruta se convierta en la superficie posterior al pago.",
       websiteUrl: "URL del sitio web",
-      urlPlaceholder: "https://tu-marca.com",
+      urlPlaceholder: "tu-marca.com",
       submitIdle: "Generar reporte completo",
       submitBusy: "Construyendo reporte...",
       statusInitial: "Ingresa un sitio web para generar el reporte completo.",
@@ -895,7 +895,7 @@ export const siteCopy = {
       startBody:
         "Бесплатный слой показывает, что работает, что ломает доверие и где сообщение начинает терять покупателя. Полный отчёт открывается только после оплаты.",
       websiteUrl: "URL сайта",
-      urlPlaceholder: "https://yourbrand.com",
+      urlPlaceholder: "yourbrand.com",
       submitIdle: "Прочитать мой бренд",
       submitBusy: "Читаю бренд...",
       statusInitial: "Введите сайт, чтобы сгенерировать first read.",
@@ -951,7 +951,7 @@ export const siteCopy = {
       unlockBody:
         "Пока это перенесённая механика. Следующим шагом можно привязать checkout, чтобы этот маршрут стал результатом после оплаты.",
       websiteUrl: "URL сайта",
-      urlPlaceholder: "https://yourbrand.com",
+      urlPlaceholder: "yourbrand.com",
       submitIdle: "Сгенерировать полный отчёт",
       submitBusy: "Собираю отчёт...",
       statusInitial: "Введите сайт, чтобы сгенерировать полный отчёт.",
