@@ -931,7 +931,7 @@ function computePosterScore(result: Pick<BrandReadResult, "positioningClarity" |
   return Math.round(sum / 5);
 }
 
-// Canonical 4-tier band name: FLATLINING / UNSTABLE / STABLE / LEADING.
+// Canonical band labels are kept in score-band.ts (for example: FLATLINING / DEVELOPING / STABLE / LEADING).
 // The previous 6-tier film-metaphor vocabulary was retired so that the text
 // band and the color indicator never disagree.
 function getScoreBand(score: number) {

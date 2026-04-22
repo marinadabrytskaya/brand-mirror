@@ -2,7 +2,7 @@
 //
 // Two things live in this file and nowhere else:
 //   1. The 5-tier color-banded indicator system (FLATLINING / FRAGILE /
-//      UNSTABLE / STABLE / LEADING) that encodes a numeric score as a vital sign.
+//      DEVELOPING / STABLE / LEADING) that encodes a numeric score as a vital sign.
 //   2. The 5-axis dimension model — positioningClarity, toneCoherence (AI discoverability),
 //      visualCredibility, offerSpecificity, conversionReadiness — with
 //      canonical labels and rendering order.
@@ -18,7 +18,7 @@ export type BandKey = "flatlining" | "fragile" | "unstable" | "stable" | "leadin
 
 export type Band = {
   readonly key: BandKey;
-  readonly label: "FLATLINING" | "FRAGILE" | "UNSTABLE" | "STABLE" | "LEADING";
+  readonly label: "FLATLINING" | "FRAGILE" | "DEVELOPING" | "STABLE" | "LEADING";
   readonly color: string;
   readonly lo: number;
   readonly hi: number;
@@ -44,11 +44,11 @@ export const BANDS: readonly Band[] = [
   },
   {
     key: "unstable",
-    label: "UNSTABLE",
+    label: "DEVELOPING",
     color: "#E8B04C",
     lo: 50,
     hi: 70,
-    blurb: "It works in bursts. The site wins people over, then loses them again.",
+    blurb: "There is clear potential here. The page is moving in the right direction, but buyers still have to work too hard.",
   },
   {
     key: "stable",
@@ -89,7 +89,7 @@ export function bandModifier(score: number): string {
     case "fragile":
       return "The foundation exists, but the signal breaks under scrutiny. The buyer sees potential and walks away.";
     case "unstable":
-      return "The signal fires in bursts. Trust builds and then breaks within the same scroll.";
+      return "The signal is taking shape. The page is moving in the right direction, but the buyer still has to bridge too much on their own.";
     case "stable":
       return "The signal holds. The page earns attention, but still has room to tighten the ask.";
     case "leading":

@@ -2362,7 +2362,7 @@ ${websiteContext.visibleText || "n/a"}
 
 Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, Offer specificity, AI discoverability, Visual credibility, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
 
-Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-40 FLATLINING, 40-70 UNSTABLE, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
+Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-30 FLATLINING, 30-50 FRAGILE, 50-70 DEVELOPING, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
 
 CALIBRATION GUARDS — apply these before every score.
 - 85-100 is rare. Reserved for brands visually indistinguishable from a top-10 player in their category (Stripe, Linear, Aesop, Arc, Hermès, Apple). A WordPress theme, Squarespace template, generic dark-gradient SaaS hero, or stock-photo-heavy B2B page caps at 75.
@@ -3149,8 +3149,8 @@ export async function generateBrandReportPdf(
         ],
         readingScale: "READING THE SCALE",
         legend: [
-          { title: "0-40", body: "Critical. The signal is weak, confusing, or actively costing trust." },
-          { title: "40-70", body: "Developing. There is potential here, but the page still makes buyers work too hard." },
+          { title: "0-30", body: "Critical. The signal is weak, confusing, or actively costing trust." },
+          { title: "30-70", body: "Developing. There is potential here, but the page still makes buyers work too hard." },
           { title: "70-100", body: "Strong. The brand is creating clarity, trust, and momentum with less friction." },
         ],
         whatScoreTells: "What this score is telling us",
