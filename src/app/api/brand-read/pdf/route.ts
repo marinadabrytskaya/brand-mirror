@@ -4,6 +4,7 @@ import {
   generateBrandRead,
 } from "@/lib/brand-read";
 import { getSiteLocale } from "@/lib/site-i18n";
+import { DIMENSIONS, bandFor } from "@/lib/score-band";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -27,17 +28,24 @@ const COLORS = {
 };
 
 function slugify(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror";
+  return String(value || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror";
 }
 
 function scoreRows(result: BrandReadResult) {
-  return [
-    ["Positioning clarity", result.positioningClarity],
-    ["Offer specificity", result.offerSpecificity],
-    ["AI discoverability", result.toneCoherence],
-    ["Visual credibility", result.visualCredibility],
-    ["Conversion readiness", result.conversionReadiness],
-  ] as const;
+  return DIMENSIONS.map((dimension) => [
+    dimension.label,
+    safeNumber(result[dimension.key]),
+  ] as const);
+}
+
+function safeText(value: unknown, fallback = "") {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return fallback;
+}
+
+function safeNumber(value: unknown, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 function wrapText(text: string, font: PDFFont, size: number, width: number) {
@@ -114,7 +122,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   };
 
   const drawLabel = (text: string, x: number, atY: number, color = COLORS.faint) => {
-    page.drawText(text.toUpperCase(), {
+    page.drawText(safeText(text).toUpperCase(), {
       x,
       y: atY,
       size: 10,
@@ -134,7 +142,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
 
   drawLabel("BrandMirror / Free First Read", PAGE.marginX, y);
   page.drawText(url, {
-    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(url, 10),
+    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeText(url), 10),
     y,
     size: 10,
     font: sans,
@@ -142,7 +150,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
   y -= 34;
 
-  page.drawText(result.brandName, {
+  page.drawText(safeText(result.brandName, "BrandMirror"), {
     x: PAGE.marginX,
     y,
     size: 31,
@@ -151,7 +159,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
   y -= 28;
 
-  page.drawText(result.title, {
+  page.drawText(safeText(result.title, "First Read"), {
     x: PAGE.marginX,
     y,
     size: 11,
@@ -160,7 +168,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
   y -= 22;
 
-  y = drawWrapped(page, result.tagline, serif, 18, PAGE.marginX, y, contentWidth, COLORS.soft, 22);
+  y = drawWrapped(page, safeText(result.tagline), serif, 18, PAGE.marginX, y, contentWidth, COLORS.soft, 22);
   y -= 20;
 
   page.drawRectangle({
@@ -172,14 +180,14 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
 
   drawLabel("Poster score", PAGE.marginX + 24, y);
-  page.drawText(String(result.posterScore), {
+  page.drawText(String(safeNumber(result.posterScore)), {
     x: PAGE.marginX + 24,
     y: y - 42,
     size: 42,
     font: serifBold,
     color: COLORS.accent,
   });
-  page.drawText(result.scoreBand, {
+  page.drawText(safeText(result.scoreBand, bandFor(safeNumber(result.posterScore)).label), {
     x: PAGE.marginX + 176,
     y: y - 20,
     size: 20,
@@ -188,7 +196,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
   drawWrapped(
     page,
-    result.scoreModifier,
+    safeText(result.scoreModifier),
     sans,
     11.5,
     PAGE.marginX + 176,
@@ -235,17 +243,17 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   });
   y -= 170;
 
-  drawSection("What the company appears to do", result.whatItDoes);
-  drawSection("First diagnosis", result.summary);
-  drawSection("Current read", result.current);
-  drawSection("Strongest signal", result.strongestSignal, COLORS.accent);
-  drawSection("Main friction", result.mainFriction, COLORS.warn);
-  drawSection("One next move", result.nextMove);
-  drawSection("What already feels strong", result.strength);
-  drawSection("What is missing", result.gap);
-  drawSection("What feels out of sync", result.mismatch);
-  drawSection("Tone read", result.voice);
-  drawSection("Direction", result.direction);
+  drawSection("What the company appears to do", safeText(result.whatItDoes));
+  drawSection("First diagnosis", safeText(result.summary));
+  drawSection("Current read", safeText(result.current));
+  drawSection("Strongest signal", safeText(result.strongestSignal), COLORS.accent);
+  drawSection("Main friction", safeText(result.mainFriction), COLORS.warn);
+  drawSection("One next move", safeText(result.nextMove));
+  drawSection("What already feels strong", safeText(result.strength));
+  drawSection("What is missing", safeText(result.gap));
+  drawSection("What feels out of sync", safeText(result.mismatch));
+  drawSection("Tone read", safeText(result.voice));
+  drawSection("Direction", safeText(result.direction));
 
   page.drawText("Powered by BrandMirror", {
     x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by BrandMirror", 9.5) / 2,
@@ -276,7 +284,7 @@ export async function POST(request: Request) {
     return new Response(new Uint8Array(pdf), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${slugify(payload.result.brandName)}-first-read.pdf"`,
+        "Content-Disposition": `attachment; filename="${slugify(safeText(payload.result.brandName, "brandmirror"))}-first-read.pdf"`,
       },
     });
   } catch (error) {
