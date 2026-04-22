@@ -315,21 +315,25 @@ async function renderBrandReportPdf(report: BrandReport, url: string) {
   return Buffer.from(await pdf.save());
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json().catch(() => ({}))) as {
-      url?: string;
-      language?: string;
-      report?: BrandReport;
-      sessionId?: string;
-    };
-    const language = getSiteLocale(body.language);
-    const paidAccess = isStripeConfigured()
-      ? await getPaidCheckoutAccess(body.sessionId)
-      : null;
+async function buildBrandReportPdf({
+  url,
+  language,
+  report,
+  sessionId,
+}: {
+  url?: string;
+  language?: string;
+  report?: BrandReport;
+  sessionId?: string;
+}) {
+  const locale = getSiteLocale(language);
+  const paidAccess = isStripeConfigured()
+    ? await getPaidCheckoutAccess(sessionId)
+    : null;
 
-    if (isStripeConfigured() && !paidAccess) {
-      return new Response(
+  if (isStripeConfigured() && !paidAccess) {
+    return {
+      errorResponse: new Response(
         JSON.stringify({
           error: "Full report PDF is locked until payment is confirmed.",
           detail: "Complete checkout to unlock the paid BrandMirror PDF.",
@@ -340,22 +344,86 @@ export async function POST(request: Request) {
             "Content-Type": "application/json; charset=utf-8",
           },
         },
-      );
+      ),
+    } as const;
+  }
+
+  const resolvedReport =
+    report &&
+    report.url &&
+    (!paidAccess || report.url === paidAccess.reportUrl)
+      ? report
+      : await generateBrandReport(paidAccess?.reportUrl || url || "", locale);
+
+  const pdf = await renderBrandReportPdf(
+    resolvedReport,
+    paidAccess?.reportUrl || url || resolvedReport.url,
+  );
+
+  return { pdf, report: resolvedReport } as const;
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const outcome = await buildBrandReportPdf({
+      url: searchParams.get("url") || "",
+      language: searchParams.get("language") || undefined,
+      sessionId: searchParams.get("session_id") || undefined,
+    });
+
+    if ("errorResponse" in outcome) {
+      return outcome.errorResponse;
     }
 
-    const report =
-      body.report &&
-      body.report.url &&
-      (!paidAccess || body.report.url === paidAccess.reportUrl)
-        ? body.report
-        : await generateBrandReport(paidAccess?.reportUrl || body.url || "", language);
-
-    const pdf = await renderBrandReportPdf(report, paidAccess?.reportUrl || body.url || report.url);
-
-    return new Response(new Uint8Array(pdf), {
+    return new Response(new Uint8Array(outcome.pdf), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${slugify(safeText(report.brandName, "brandmirror"))}-report.pdf"`,
+        "Content-Disposition": `attachment; filename="${slugify(safeText(outcome.report.brandName, "brandmirror"))}-report.pdf"`,
+      },
+    });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: "Unable to export the BrandMirror PDF right now.",
+        detail:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while exporting the PDF.",
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      },
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json().catch(() => ({}))) as {
+      url?: string;
+      language?: string;
+      report?: BrandReport;
+      sessionId?: string;
+    };
+    const outcome = await buildBrandReportPdf({
+      url: body.url,
+      language: body.language,
+      report: body.report,
+      sessionId: body.sessionId,
+    });
+
+    if ("errorResponse" in outcome) {
+      return outcome.errorResponse;
+    }
+
+    return new Response(new Uint8Array(outcome.pdf), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${slugify(safeText(outcome.report.brandName, "brandmirror"))}-report.pdf"`,
       },
     });
   } catch (error) {

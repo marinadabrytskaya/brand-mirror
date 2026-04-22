@@ -4,7 +4,6 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { type BrandReadResult } from "@/lib/brand-read";
-import { type BrandReport } from "@/lib/brand-report";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
@@ -27,12 +26,6 @@ type CheckoutResponse = {
   ok: boolean;
   checkoutUrl: string;
   sessionId: string;
-};
-
-type ReportResponse = {
-  ok: boolean;
-  url: string;
-  report: BrandReport;
 };
 
 // ---------------------------------------------------------------------------
@@ -326,7 +319,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
   }
 
-  async function handleDownloadFullReportTestPdf() {
+  function handleDownloadFullReportTestPdf() {
     const targetUrl = currentUrl.trim();
     if (!targetUrl) return;
 
@@ -334,57 +327,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     setError("");
 
     try {
-      const reportResponse = await fetch("/api/brand-report", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: targetUrl, language: locale }),
-      });
-
-      const reportPayload = (await reportResponse.json()) as ReportResponse | ErrorResponse;
-      if (!reportResponse.ok || !("report" in reportPayload)) {
-        const errorPayload = reportPayload as ErrorResponse;
-        throw new Error(
-          errorPayload.detail ||
-            errorPayload.error ||
-            "Unable to build the full report right now.",
-        );
-      }
-
-      const pdfResponse = await fetch("/api/brand-report/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: reportPayload.url,
-          language: locale,
-          report: reportPayload.report,
-        }),
-      });
-
-      if (!pdfResponse.ok) {
-        const payload = (await pdfResponse.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(
-          payload.detail ||
-            payload.error ||
-            "Unable to export the full PDF right now.",
-        );
-      }
-
-      const blob = await pdfResponse.blob();
-      triggerPdfDownload(
-        blob,
-        `${reportPayload.report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
-      );
-    } catch (downloadError) {
-      setError(
-        downloadError instanceof Error
-          ? downloadError.message
-          : "Unable to export the full PDF right now.",
-      );
-    } finally {
+      const nextUrl = `/api/brand-report/pdf?url=${encodeURIComponent(targetUrl)}&language=${encodeURIComponent(locale)}`;
+      window.open(nextUrl, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => setIsDownloadingFullReport(false), 1200);
+    } catch {
+      setError("Unable to export the full PDF right now.");
       setIsDownloadingFullReport(false);
     }
   }

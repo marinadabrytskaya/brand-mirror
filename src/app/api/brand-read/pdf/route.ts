@@ -48,6 +48,19 @@ function safeNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function hexToRgbColor(value: string) {
+  const normalized = value.replace("#", "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : normalized;
+  const parsed = Number.parseInt(expanded, 16);
+  return rgb(((parsed >> 16) & 255) / 255, ((parsed >> 8) & 255) / 255, (parsed & 255) / 255);
+}
+
 function wrapText(text: string, font: PDFFont, size: number, width: number) {
   const words = (text || "").trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
@@ -97,6 +110,8 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   const sansBold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+  const posterBand = bandFor(safeNumber(result.posterScore));
+  const posterBandColor = hexToRgbColor(posterBand.color);
 
   const addPage = () => {
     const page = pdf.addPage([PAGE.width, PAGE.height]);
@@ -141,8 +156,9 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   };
 
   drawLabel("BrandMirror / Free First Read", PAGE.marginX, y);
-  page.drawText(url, {
-    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeText(url), 10),
+  const safeUrl = safeText(url);
+  page.drawText(safeUrl, {
+    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeUrl, 10),
     y,
     size: 10,
     font: sans,
@@ -164,7 +180,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
     y,
     size: 11,
     font: sans,
-    color: COLORS.accent,
+    color: posterBandColor,
   });
   y -= 22;
 
@@ -185,14 +201,14 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
     y: y - 42,
     size: 42,
     font: serifBold,
-    color: COLORS.accent,
+    color: posterBandColor,
   });
-  page.drawText(safeText(result.scoreBand, bandFor(safeNumber(result.posterScore)).label), {
+  page.drawText(safeText(result.scoreBand, posterBand.label), {
     x: PAGE.marginX + 176,
     y: y - 20,
     size: 20,
     font: sansBold,
-    color: COLORS.text,
+    color: posterBandColor,
   });
   drawWrapped(
     page,
@@ -209,6 +225,8 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
 
   scoreRows(result).forEach(([label, value], index) => {
     const rowY = y - index * 28;
+    const rowBand = bandFor(value);
+    const rowBandColor = hexToRgbColor(rowBand.color);
     page.drawText(label.toUpperCase(), {
       x: PAGE.marginX,
       y: rowY,
@@ -230,7 +248,7 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
       start: { x: lineLeft, y: rowY + 6 },
       end: { x: lineLeft + ((lineRight - lineLeft) * value) / 100, y: rowY + 6 },
       thickness: 6,
-      color: COLORS.accent,
+      color: rowBandColor,
     });
     const numeric = String(value);
     page.drawText(numeric, {
@@ -238,25 +256,49 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
       y: rowY,
       size: 12,
       font: sansBold,
-      color: COLORS.text,
+      color: rowBandColor,
     });
   });
   y -= 170;
 
-  drawSection("What the company appears to do", safeText(result.whatItDoes));
-  drawSection("First diagnosis", safeText(result.summary));
-  drawSection("Current read", safeText(result.current));
-  drawSection("Strongest signal", safeText(result.strongestSignal), COLORS.accent);
-  drawSection("Main friction", safeText(result.mainFriction), COLORS.warn);
-  drawSection("One next move", safeText(result.nextMove));
-  drawSection("What already feels strong", safeText(result.strength));
-  drawSection("What is missing", safeText(result.gap));
-  drawSection("What feels out of sync", safeText(result.mismatch));
-  drawSection("Tone read", safeText(result.voice));
-  drawSection("Direction", safeText(result.direction));
+  page.drawRectangle({
+    x: PAGE.marginX,
+    y: y - 98,
+    width: contentWidth,
+    height: 118,
+    color: COLORS.panel,
+  });
+  drawLabel("Next step", PAGE.marginX + 22, y);
+  y -= 26;
+  y = drawWrapped(
+    page,
+    "Unlock the full BrandMirror report for the complete diagnosis, friction map, rewrite direction, and PDF export.",
+    serif,
+    17,
+    PAGE.marginX + 22,
+    y,
+    contentWidth - 44,
+    COLORS.text,
+    22,
+  );
+  y -= 10;
+  page.drawText("brand-mirror-xi.vercel.app", {
+    x: PAGE.marginX + 22,
+    y,
+    size: 12,
+    font: sansBold,
+    color: posterBandColor,
+  });
+  page.drawText("$197 full report", {
+    x: PAGE.width - PAGE.marginX - 22 - sansBold.widthOfTextAtSize("$197 full report", 12),
+    y,
+    size: 12,
+    font: sansBold,
+    color: posterBandColor,
+  });
 
-  page.drawText("Powered by BrandMirror", {
-    x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by BrandMirror", 9.5) / 2,
+  page.drawText("Powered by SAHAR / saharstudio.com", {
+    x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
     y: 24,
     size: 9.5,
     font: sans,
