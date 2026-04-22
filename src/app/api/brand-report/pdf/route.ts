@@ -2,12 +2,14 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf
 import {
   type BrandReport,
   generateBrandReport,
+  generateBrandReportPreviewFromRead,
 } from "@/lib/brand-report";
+import { type BrandReadResult } from "@/lib/brand-read";
 import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const PAGE = {
   width: 612,
@@ -320,13 +322,28 @@ async function buildBrandReportPdf({
   language,
   report,
   sessionId,
+  preview,
+  readResult,
 }: {
   url?: string;
   language?: string;
   report?: BrandReport;
   sessionId?: string;
+  preview?: boolean;
+  readResult?: BrandReadResult;
 }) {
   const locale = getSiteLocale(language);
+
+  if (preview && url && readResult) {
+    const previewReport = await generateBrandReportPreviewFromRead(
+      url,
+      readResult,
+      locale,
+    );
+    const pdf = await renderBrandReportPdf(previewReport, url || previewReport.url);
+    return { pdf, report: previewReport } as const;
+  }
+
   const paidAccess = isStripeConfigured()
     ? await getPaidCheckoutAccess(sessionId)
     : null;
@@ -408,12 +425,16 @@ export async function POST(request: Request) {
       language?: string;
       report?: BrandReport;
       sessionId?: string;
+      preview?: boolean;
+      readResult?: BrandReadResult;
     };
     const outcome = await buildBrandReportPdf({
       url: body.url,
       language: body.language,
       report: body.report,
       sessionId: body.sessionId,
+      preview: body.preview,
+      readResult: body.readResult,
     });
 
     if ("errorResponse" in outcome) {

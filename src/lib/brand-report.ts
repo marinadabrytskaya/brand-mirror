@@ -1698,6 +1698,25 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
   };
 }
 
+export async function generateBrandReportPreviewFromRead(
+  urlInput: string,
+  read: BrandReadResult,
+  language: SiteLocale = "en",
+) {
+  const normalized = normalizeUrl(urlInput);
+  if (!normalized) {
+    throw new Error("Please enter a valid website URL.");
+  }
+
+  const fallback = buildFallbackReport(normalized, read);
+
+  if (language !== "en") {
+    return localizeBrandReport(fallback, language);
+  }
+
+  return fallback;
+}
+
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
