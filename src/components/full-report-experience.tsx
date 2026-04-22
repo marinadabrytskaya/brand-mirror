@@ -526,20 +526,21 @@ function ScoreDashboardBlock({
   );
 }
 
-type FullReportExperienceProps = {
+export function FullReportExperience({
+  locale,
+  initialUrl = "",
+  paymentRequired = false,
+  paymentUnlocked = false,
+  paymentSessionId = null,
+  accessError = "",
+}: {
   locale: SiteLocale;
   initialUrl?: string;
   paymentRequired?: boolean;
   paymentUnlocked?: boolean;
   paymentSessionId?: string | null;
   accessError?: string;
-};
-
-export function FullReportExperience({
-  locale,
-  initialUrl = "",
-  accessError = "",
-}: FullReportExperienceProps) {
+}) {
   const copy = siteI18n.siteCopy[locale].fullReport;
   const labels = {
     en: {
@@ -727,10 +728,10 @@ export function FullReportExperience({
           }
         : {};
   const searchParams = useSearchParams();
-  const [url, setUrl] = useState(initialUrl || searchParams.get("url") || "");
+  const [url, setUrl] = useState(searchParams.get("url") || initialUrl || "");
   const [report, setReport] = useState<BrandReport | null>(null);
   const [status, setStatus] = useState<string>(copy.statusInitial);
-  const [error, setError] = useState(accessError);
+  const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -779,11 +780,11 @@ export function FullReportExperience({
   }
 
   useEffect(() => {
-    const searchUrl = searchParams.get("url");
-    const resolvedInitialUrl = initialUrl || searchUrl;
-    if (resolvedInitialUrl) {
-      setUrl(resolvedInitialUrl);
-      handleGenerate(resolvedInitialUrl);
+    const urlFromParams = searchParams.get("url");
+    const targetUrl = urlFromParams || initialUrl;
+    if (targetUrl) {
+      setUrl(targetUrl);
+      handleGenerate(targetUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, initialUrl]);

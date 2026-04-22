@@ -22,12 +22,6 @@ type ErrorResponse = {
   detail?: string;
 };
 
-type CheckoutResponse = {
-  ok: boolean;
-  checkoutUrl: string;
-  sessionId: string;
-};
-
 // ---------------------------------------------------------------------------
 // Scanner taxonomy lives in src/lib/score-band.ts. This component only imports
 // the `bandFor` helper and the `Band` type so first-read, full-report, and
@@ -119,6 +113,7 @@ const COLOR = {
   line: "rgba(255,255,255,0.1)",
   lineSoft: "rgba(255,255,255,0.06)",
   liveRed: "#FF3B3B",
+  accent: "#D4C4DC",
 } as const;
 
 const metaLabel: React.CSSProperties = {
@@ -136,24 +131,6 @@ const terminalText: React.CSSProperties = {
   color: COLOR.textMuted,
 };
 
-function triggerPdfDownload(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = filename;
-  link.rel = "noopener";
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-
-  // Safari can cancel blob downloads if we tear down the link/object URL
-  // immediately after click.
-  window.setTimeout(() => {
-    link.remove();
-    URL.revokeObjectURL(objectUrl);
-  }, 60_000);
-}
-
 // ---------------------------------------------------------------------------
 
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
@@ -163,9 +140,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isDownloadingFullReport, setIsDownloadingFullReport] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isDownloadingFreePdf, setIsDownloadingFreePdf] = useState(false);
+  const [isTestingFullPdf, setIsTestingFullPdf] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Real clock, client-side only to avoid SSR/CSR hydration mismatch.
@@ -239,11 +215,38 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     });
   }
 
-  async function handleDownloadPdf() {
-    if (!currentUrl) return;
-    setIsDownloading(true);
-    setError("");
+  const prodCode = productionCode(result.brandName, result.posterScore);
+  const ticker = tickerSymbol(result.brandName);
+  const displayHost = (() => {
+    try {
+      if (currentUrl) return new URL(currentUrl).hostname.replace(/^www\./, "");
+    } catch {
+      /* fall through */
+    }
+    return `${(result.brandName || "brand").toLowerCase().replace(/\s+/g, "")}.com`;
+  })();
 
+  const reportHref = siteI18n.withLang(
+    `/full-report${currentUrl || url ? `?url=${encodeURIComponent(currentUrl || url.trim())}` : ""}`,
+    locale,
+  );
+
+  async function downloadPdfFromResponse(response: Response, filename: string) {
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+  }
+
+  async function handleDownloadFreePdf() {
+    if (!currentUrl) return;
+    setError("");
+    setIsDownloadingFreePdf(true);
     try {
       const response = await fetch("/api/brand-read/pdf", {
         method: "POST",
@@ -256,104 +259,45 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
         throw new Error(
-          payload.detail || payload.error || "Unable to export the PDF right now.",
+          payload.detail || payload.error || "Unable to export the free PDF right now.",
         );
       }
 
-      const blob = await response.blob();
-      triggerPdfDownload(
-        blob,
-        `${result.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`,
-      );
+      const filename = `${(result.brandName || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`;
+      await downloadPdfFromResponse(response, filename);
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
           ? downloadError.message
-          : "Unable to export the PDF right now.",
+          : "Unable to export the free PDF right now.",
       );
     } finally {
-      setIsDownloading(false);
+      setIsDownloadingFreePdf(false);
     }
   }
 
-  async function handleCheckout() {
-    const targetUrl = (currentUrl || url).trim();
-    if (!targetUrl) {
-      setError(copy.emptyUrl);
-      setStatus("");
-      return;
-    }
-
-    setIsCheckingOut(true);
+  async function handleTestFullPdf() {
+    if (!currentUrl) return;
     setError("");
-    setStatus(copy.unlockBusy);
-
+    setIsTestingFullPdf(true);
     try {
-      const response = await fetch("/api/checkout", {
+      const response = await fetch("/api/brand-report/pdf", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: targetUrl, language: locale }),
+        body: JSON.stringify({ url: currentUrl, language: locale, readResult: result }),
       });
 
-      const payload = (await response.json()) as CheckoutResponse | ErrorResponse;
-      if (!response.ok || !("checkoutUrl" in payload)) {
-        const errorPayload = payload as ErrorResponse;
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
         throw new Error(
-          errorPayload.detail ||
-            errorPayload.error ||
-            "Unable to open Stripe checkout right now.",
+          payload.detail || payload.error || "Unable to export the full PDF right now.",
         );
       }
 
-      window.location.assign(payload.checkoutUrl);
-    } catch (checkoutError) {
-      setError(
-        checkoutError instanceof Error
-          ? checkoutError.message
-          : "Unable to open Stripe checkout right now.",
-      );
-      setStatus("");
-      setIsCheckingOut(false);
-    }
-  }
-
-  async function handleDownloadFullReportTestPdf() {
-    const targetUrl = currentUrl.trim();
-    if (!targetUrl) return;
-
-    setIsDownloadingFullReport(true);
-    setError("");
-
-    try {
-      const pdfResponse = await fetch("/api/brand-report/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: targetUrl,
-          language: locale,
-          preview: true,
-          readResult: result,
-        }),
-      });
-
-      if (!pdfResponse.ok) {
-        const errorPayload = (await pdfResponse.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(
-          errorPayload.detail ||
-            errorPayload.error ||
-            "Unable to export the full PDF right now.",
-        );
-      }
-
-      const blob = await pdfResponse.blob();
-      triggerPdfDownload(
-        blob,
-        `${result.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
-      );
+      const filename = `${(result.brandName || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-full-report-preview.pdf`;
+      await downloadPdfFromResponse(response, filename);
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
@@ -361,20 +305,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           : "Unable to export the full PDF right now.",
       );
     } finally {
-      setIsDownloadingFullReport(false);
+      setIsTestingFullPdf(false);
     }
   }
-
-  const prodCode = productionCode(result.brandName, result.posterScore);
-  const ticker = tickerSymbol(result.brandName);
-  const displayHost = (() => {
-    try {
-      if (currentUrl) return new URL(currentUrl).hostname.replace(/^www\./, "");
-    } catch {
-      /* fall through */
-    }
-    return `${(result.brandName || "brand").toLowerCase().replace(/\s+/g, "")}.com`;
-  })();
 
   return (
     <main
@@ -454,60 +387,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </div>
         </div>
 
-        {/* =================== What we measure — horizontal strip =================== */}
-        <section className="mt-12 border-y py-7" style={{ borderColor: COLOR.line }}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <p style={metaLabel}>WHAT&nbsp;WE&nbsp;MEASURE</p>
-            <p
-              className="max-w-xl leading-6"
-              style={{ color: COLOR.textSoft, fontSize: "13.5px" }}
-            >
-              Five things we look at on a homepage. Each gets a score from 0 to 100.
-              The colour tells you whether it is working, wobbling, or in trouble.
-            </p>
-          </div>
-          <div className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
-            {DIMENSIONS.map((d, idx) => (
-              <div key={d.key} className="min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "10px",
-                      letterSpacing: "0.2em",
-                      color: "rgba(237,237,242,0.4)",
-                    }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "10.5px",
-                      letterSpacing: "0.24em",
-                      color: COLOR.text,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {d.shortLabel}
-                  </span>
-                </div>
-                <p
-                  className="mt-3 leading-5"
-                  style={{
-                    color: "rgba(237,237,242,0.72)",
-                    fontSize: "13px",
-                  }}
-                >
-                  {d.summary}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* =================== Form + scanner =================== */}
-        <section className="mt-14 grid gap-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-start">
+        <section className="mt-12 grid gap-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-start">
 
           {/* ---------- LEFT: URL entry as terminal card ---------- */}
           <form
@@ -560,9 +441,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 type="text"
                 inputMode="url"
                 autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder={copy.urlPlaceholder}
@@ -691,48 +569,17 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               {"\u201C"}{result.summary}{"\u201D"}
             </p>
+            <p className="mt-6" style={metaLabel}>
+              {copy.currentState}
+            </p>
             <p
-              className="mt-6 max-w-[44rem] leading-7"
+              className="mt-3 max-w-[44rem] leading-7"
               style={{ color: COLOR.textSoft, fontSize: "15px" }}
             >
               {result.current}
             </p>
           </div>
         </section>
-
-        {currentUrl ? (
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              disabled={isDownloading}
-              className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                borderColor: "rgba(111,224,194,0.35)",
-                color: "#6FE0C2",
-                fontSize: "12.5px",
-                letterSpacing: "0.18em",
-                fontFamily: "var(--font-mono), ui-monospace, monospace",
-                fontWeight: 500,
-              }}
-            >
-              {isDownloading
-                ? copy.downloadPdfBusy.toUpperCase()
-                : copy.downloadPdfIdle.toUpperCase()}
-            </button>
-            <p
-              style={{
-                fontFamily: "var(--font-mono), ui-monospace, monospace",
-                fontSize: "10.5px",
-                letterSpacing: "0.14em",
-                color: isDownloading ? "#6FE0C2" : COLOR.textMuted,
-                textTransform: "uppercase",
-              }}
-            >
-              {isDownloading ? copy.downloadPdfBusy : `${copy.freeBadge} / PDF`}
-            </p>
-          </div>
-        ) : null}
 
         <hr
           className="mt-16"
@@ -817,7 +664,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           style={{ border: 0, height: "0.5px", background: COLOR.line }}
         />
 
-        {/* =================== Signal / Friction / Next move =================== */}
+        {/* =================== Signal teaser (full version behind paywall) =================== */}
         <section className="mt-12 grid gap-10 sm:grid-cols-3">
           <AnatomyColumn
             label={copy.strongestSignal.toUpperCase()}
@@ -827,20 +674,151 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           <AnatomyColumn
             label={copy.mainFriction.toUpperCase()}
             tone="#E8B04C"
-            body={copy.lockedTeaser}
-            locked
+            body={result.mainFriction}
           />
-          <AnatomyColumn
-            label={copy.nextMove.toUpperCase()}
-            tone={COLOR.text}
-            body={copy.lockedTeaser}
-            locked
-            emphasis
-          />
+          <div className="rounded-xl border p-5" style={{ borderColor: `${COLOR.line}`, background: `${COLOR.line}22` }}>
+            <p style={{ ...metaLabel, color: COLOR.text }}>{copy.nextMove.toUpperCase()}</p>
+            <p className="mt-3 leading-6" style={{ color: COLOR.textSoft, fontSize: "14px", fontStyle: "italic" }}>
+              Available in full report
+            </p>
+          </div>
         </section>
 
         <hr
           className="mt-16"
+          style={{ border: 0, height: "0.5px", background: COLOR.line }}
+        />
+
+        {/* =================== Locked teasers =================== */}
+        <section className="mt-12 grid gap-6 sm:grid-cols-2">
+          {/* Headline rewrite teaser */}
+          <div
+            className="relative overflow-hidden rounded-2xl border p-6 sm:p-8"
+            style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
+          >
+            <p style={{ ...metaLabel, color: COLOR.accent }}>HEADLINE&nbsp;REWRITE</p>
+            <div className="mt-5 space-y-4">
+              <div>
+                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>AFTER</p>
+                <div
+                  className="mt-2 rounded-lg px-4 py-3"
+                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
+                >
+                  <p style={{ color: COLOR.text, fontSize: "18px", fontFamily: "var(--font-cormorant), Georgia, serif", fontWeight: 500 }}>
+                    A sharper headline that earns the click faster
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>SUPPORTING&nbsp;LINE</p>
+                <div
+                  className="mt-2 rounded-lg px-4 py-3"
+                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
+                >
+                  <p style={{ color: COLOR.textSoft, fontSize: "14px" }}>
+                    The subheadline that makes the promise concrete
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>CTA</p>
+                <div
+                  className="mt-2 rounded-lg px-4 py-3"
+                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
+                >
+                  <p style={{ color: "#6FE0C2", fontSize: "13px" }}>
+                    A call to action that matches the intent
+                  </p>
+                </div>
+              </div>
+            </div>
+            {/* Lock overlay */}
+            <div
+              className="absolute inset-0 flex items-end justify-center pb-6"
+              style={{ background: "linear-gradient(to bottom, transparent 20%, rgba(7,7,10,0.85) 80%)" }}
+            >
+              <p
+                className="rounded-full border px-5 py-2"
+                style={{
+                  ...metaLabel,
+                  fontSize: "10px",
+                  borderColor: "rgba(255,255,255,0.2)",
+                  color: COLOR.text,
+                  background: "rgba(7,7,10,0.7)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                &#x1F512;&nbsp;&nbsp;INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT
+              </p>
+            </div>
+          </div>
+
+          {/* Fix stack teaser */}
+          <div
+            className="relative overflow-hidden rounded-2xl border p-6 sm:p-8"
+            style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
+          >
+            <p style={{ ...metaLabel, color: COLOR.accent }}>FIX&nbsp;STACK</p>
+            <div className="mt-5 space-y-4">
+              {[
+                { label: "FIX NOW", color: "#E07A5F", count: 3 },
+                { label: "FIX NEXT", color: "#E8B04C", count: 3 },
+                { label: "KEEP", color: "#6FE0C2", count: 3 },
+              ].map((band) => (
+                <div key={band.label} className="flex items-center gap-4">
+                  <div
+                    className="flex w-24 items-center justify-center rounded-lg py-3"
+                    style={{ background: `${band.color}18`, border: `1px solid ${band.color}30` }}
+                  >
+                    <span style={{ ...metaLabel, fontSize: "9.5px", color: band.color, letterSpacing: "0.2em" }}>
+                      {band.label}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 gap-2">
+                    {Array.from({ length: band.count }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-2 flex-1 rounded-full"
+                        style={{ background: `${band.color}25` }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>
+                    {band.count}&nbsp;items
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p
+              className="mt-6 leading-6"
+              style={{ color: COLOR.textMuted, fontSize: "13px" }}
+            >
+              What to fix first, what can wait, and what is already earning trust — prioritised by commercial impact.
+            </p>
+            {/* Lock overlay */}
+            <div
+              className="absolute inset-0 flex items-end justify-center pb-6"
+              style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(7,7,10,0.8) 85%)" }}
+            >
+              <p
+                className="rounded-full border px-5 py-2"
+                style={{
+                  ...metaLabel,
+                  fontSize: "10px",
+                  borderColor: "rgba(255,255,255,0.2)",
+                  color: COLOR.text,
+                  background: "rgba(7,7,10,0.7)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                &#x1F512;&nbsp;&nbsp;INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <hr
+          className="mt-12"
           style={{ border: 0, height: "0.5px", background: COLOR.line }}
         />
 
@@ -869,10 +847,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               {copy.unlockBody}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={handleCheckout}
-                disabled={isCheckingOut}
+              <Link
+                href={reportHref}
                 className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 transition hover:-translate-y-px"
                 style={{
                   background: "#6FE0C2",
@@ -883,9 +859,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   fontWeight: 500,
                 }}
               >
-                &#9654;&nbsp;&nbsp;
-                {(isCheckingOut ? copy.unlockBusy : copy.unlockCta).toUpperCase()}
-              </button>
+                &#9654;&nbsp;&nbsp;{copy.unlockCta.toUpperCase()}
+              </Link>
               <Link
                 href={siteI18n.withLang("/sample-report", locale)}
                 className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
@@ -900,43 +875,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               >
                 {copy.unlockSecondary.toUpperCase()}
               </Link>
-              {currentUrl ? (
-                <button
-                  type="button"
-                  onClick={handleDownloadFullReportTestPdf}
-                  disabled={isDownloadingFullReport}
-                  className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    borderColor: "rgba(232,176,76,0.28)",
-                    color: "#E8B04C",
-                    fontSize: "12.5px",
-                    letterSpacing: "0.18em",
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontWeight: 500,
-                  }}
-                >
-                  {(
-                    isDownloadingFullReport
-                      ? copy.unlockTestPdfBusy
-                      : copy.unlockTestPdfIdle
-                  ).toUpperCase()}
-                </button>
-              ) : null}
             </div>
-            {isCheckingOut || isDownloadingFullReport ? (
-              <p
-                className="mt-3"
-                style={{
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontSize: "10.5px",
-                  letterSpacing: "0.14em",
-                  color: isDownloadingFullReport ? "#E8B04C" : "#6FE0C2",
-                  textTransform: "uppercase",
-                }}
-              >
-                {isDownloadingFullReport ? copy.unlockTestPdfBusy : copy.unlockBusy}
-              </p>
-            ) : null}
           </div>
 
           <div>
@@ -1086,7 +1025,10 @@ function ScannerReadout({
           style={{
             color: COLOR.text,
             fontWeight: 500,
-            fontSize: "clamp(2.6rem, 5.5vw, 3.5rem)",
+            fontSize: (brandName || "").length > 20
+              ? "clamp(1.6rem, 3.5vw, 2.2rem)"
+              : "clamp(2.6rem, 5.5vw, 3.5rem)",
+            wordBreak: "break-word",
           }}
         >
           {(brandName || "brand").toLowerCase()}
@@ -1318,7 +1260,7 @@ function ScannerReadout({
         <div style={{ ...metaLabel, fontSize: 9.5 }}>INDICATOR&nbsp;SCALE</div>
         <div className="mt-2 grid grid-cols-5 gap-1.5">
           {BANDS.map((item) => {
-            const active = item.key === band.key;
+            const active = pct >= item.lo && pct <= item.hi;
             return (
               <div
                 key={item.label}
@@ -1422,13 +1364,11 @@ function AnatomyColumn({
   tone,
   body,
   emphasis,
-  locked,
 }: {
   label: string;
   tone: string;
   body: string;
   emphasis?: boolean;
-  locked?: boolean;
 }) {
   return (
     <div>
@@ -1448,32 +1388,12 @@ function AnatomyColumn({
       <p
         className="mt-4 leading-7"
         style={{
-          color: locked
-            ? "rgba(237,237,242,0.52)"
-            : emphasis
-              ? COLOR.text
-              : "rgba(237,237,242,0.82)",
+          color: emphasis ? COLOR.text : "rgba(237,237,242,0.82)",
           fontSize: emphasis ? "16px" : "15px",
           fontWeight: emphasis ? 500 : 400,
         }}
       >
         {body}
-        {locked ? (
-          <span
-            className="ml-3 inline-flex items-center rounded-full border px-2.5 py-1 align-middle"
-            style={{
-              borderColor: "rgba(255,255,255,0.12)",
-              color: tone,
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-              fontSize: "9px",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              verticalAlign: "middle",
-            }}
-          >
-            Locked
-          </span>
-        ) : null}
       </p>
     </div>
   );

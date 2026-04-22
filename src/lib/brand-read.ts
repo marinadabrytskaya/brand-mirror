@@ -1,13 +1,10 @@
 // @ts-nocheck
 import * as cheerio from "cheerio";
 import { type SiteLocale } from "@/lib/site-i18n";
-import { ModelApiError, requestOpenAIJsonText } from "@/lib/openai-json";
 import { translateTexts } from "@/lib/text-translate";
 import { scoreBandLabel, bandModifier } from "@/lib/score-band";
 
-export const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-export const FIRST_READ_OPENAI_MODEL =
-  process.env.OPENAI_FIRST_READ_MODEL || "gpt-4o-mini";
+export const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 export const VISUAL_WORLDS = [
   "ruler",
@@ -780,12 +777,12 @@ function buildPosterGenre(world: VisualWorld, lens: CategoryLens) {
 
 function determineTensionType(result: Pick<BrandReadResult, "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness" | "voice" | "drop" | "mainFriction">): TensionType {
   // Five axes map to four tension types:
-  //   clarity gap      = positioning, offer, or AI discoverability is weakest
+  //   clarity gap      = positioning or offer is the weakest link
   //   credibility gap  = visual is the weakest link
-  //   courage gap      = conversion is the weakest link (the site still flinches)
+  //   courage gap      = tone or conversion is the weakest link (voice flinches)
   //   visibility gap   = visual high but commercial framing (positioning+offer) low
   const positioning = result.positioningClarity;
-  const discoverability = result.toneCoherence;
+  const tone = result.toneCoherence;
   const visual = result.visualCredibility;
   const offer = result.offerSpecificity;
   const conversion = result.conversionReadiness;
@@ -797,9 +794,9 @@ function determineTensionType(result: Pick<BrandReadResult, "positioningClarity"
     return "visibility gap";
   }
 
-  const lowest = Math.min(positioning, discoverability, visual, offer, conversion);
+  const lowest = Math.min(positioning, tone, visual, offer, conversion);
 
-  if (lowest === positioning || lowest === offer || lowest === discoverability) {
+  if (lowest === positioning || lowest === offer) {
     return "clarity gap";
   }
 
@@ -808,6 +805,7 @@ function determineTensionType(result: Pick<BrandReadResult, "positioningClarity"
   }
 
   if (
+    lowest === tone ||
     lowest === conversion ||
     /(safe|careful|generic|soft|cautious|polite|withheld|broad)/.test(voiceSignal)
   ) {
@@ -905,13 +903,13 @@ function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<Bra
   }
 
   // Compact fallback lines keyed by which of three *broad* buckets is weakest:
-  //   clarity       = positioning, offer, or AI discoverability
+  //   clarity       = positioning or offer
   //   credibility   = visual
-  //   cohesion      = conversion
+  //   cohesion      = tone or conversion
   const broadLows = {
-    clarity: Math.min(result.positioningClarity, result.offerSpecificity, result.toneCoherence),
+    clarity: Math.min(result.positioningClarity, result.offerSpecificity),
     credibility: result.visualCredibility,
-    cohesion: result.conversionReadiness,
+    cohesion: Math.min(result.toneCoherence, result.conversionReadiness),
   };
   const lowMetric = (Object.entries(broadLows).sort((a, b) => a[1] - b[1])[0]?.[0] ??
     "clarity") as "clarity" | "credibility" | "cohesion";
@@ -933,8 +931,8 @@ function computePosterScore(result: Pick<BrandReadResult, "positioningClarity" |
   return Math.round(sum / 5);
 }
 
-// Canonical band labels are kept in score-band.ts (for example: FLATLINING / DEVELOPING / STABLE / LEADING).
-// The previous 6-tier film-metaphor vocabulary was retired so that the text
+// Canonical 5-tier band name: FLATLINING / FRAGILE / DEVELOPING / STABLE /
+// LEADING. The previous film-metaphor vocabulary was retired so that the text
 // band and the color indicator never disagree.
 function getScoreBand(score: number) {
   return scoreBandLabel(score);
@@ -948,7 +946,7 @@ function buildScoreModifier(result: Pick<BrandReadResult, "positioningClarity" |
     { key: "offerSpecificity" as const, value: result.offerSpecificity, line: "The quality is visible. The exact offer still arrives a beat late." },
     { key: "positioningClarity" as const, value: result.positioningClarity, line: "They can feel the standard. The reason to step closer is still quieter than it should be." },
     { key: "conversionReadiness" as const, value: result.conversionReadiness, line: "The interest is there. The next step has not been earned cleanly enough." },
-    { key: "toneCoherence" as const, value: result.toneCoherence, line: "The brand is compelling. AI systems still would not know when to recommend it." },
+    { key: "toneCoherence" as const, value: result.toneCoherence, line: "The brand exists. AI tools still struggle to find it or describe it accurately." },
     { key: "visualCredibility" as const, value: result.visualCredibility, line: "The belief is there. The world around it has not fully caught up yet." },
   ];
   const weakest = axes.reduce((acc, cur) => (cur.value < acc.value ? cur : acc), axes[0]);
@@ -1746,19 +1744,16 @@ async function requestGeminiBrandRead(
   websiteContext: WebsiteContext,
   language: SiteLocale,
 ) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  const apiKey = process.env.OPENAI_API_KEY;
   const hints = inferVisualWorldHints(websiteContext);
   const targetLanguage = LANGUAGE_NAMES[language];
 
-  if (!hasOpenAI && !apiKey) {
+  if (!apiKey) {
     return buildHeuristicRead(url, websiteContext, hints);
   }
 
-  // Pre-compute the industry lens so we can tell Gemini explicitly which
-  // vocabulary to use and which to avoid. This is stronger than asking the
-  // model to figure out the industry on its own — that instruction was being
-  // ignored in the middle of a long prompt.
+  // Pre-compute the industry lens so we can tell the model explicitly which
+  // vocabulary to use and which to avoid.
   const detectedLens = inferCategoryLens(websiteContext);
   const industryBrief = buildIndustryBrief(detectedLens);
 
@@ -1827,42 +1822,39 @@ CALIBRATION GUARDS — read these before you assign any score.
 - Solo practitioner sites, personal coach sites, one-person therapy/wellness practices typically cap Visual at 65 unless the design is demonstrably exceptional (custom branding, professional photography, deliberate art direction). Do not compare a personal practice to a funded wellness brand like Equinox or Goop. Similarly, pages without a clear booking flow, transparent pricing, or concrete next-step proof cap Conversion at 65.
 
 positioningClarity — how quickly the homepage makes the offer legible to a first-time visitor.
-- 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
-- 40-70  category is guessable, exact offer is not. Page leans on insider shorthand.
-- 70-85  offer and audience are legible inside the hero frame.
-- 85-100 offer, audience, and reason-to-care all land before the first scroll. Anchor: Stripe homepage hero, Linear hero, Notion hero. Not: most corporate homepages.
+- 0-30   the visitor cannot say what this company does after 10 seconds. Hero is mood-only, abstract, or the promise is completely buried.
+- 30-50  the category is vaguely guessable but the exact offer is unclear. Hero uses insider jargon or mood-first design with no concrete claim.
+- 50-70  category is clear, exact offer takes effort. Page leans on shorthand the buyer must decode.
+- 70-85  offer and audience are legible inside the hero frame. A first-time visitor can describe what this company does.
+- 85-100 offer, audience, and reason-to-care all land before the first scroll. Anchor: Stripe homepage hero, Linear hero, Notion hero.
 
-IMPORTANT: the JSON key "toneCoherence" is now used for AI Discoverability. Keep the key name exactly as written, but score it using the rubric below.
-
-toneCoherence — AI Discoverability: how confidently AI systems could discover, classify, and recommend this business in response to a real user request.
-- 0-40   AI cannot reliably tell who this business is for, what it specifically offers, where it operates, or in which queries it should appear.
-- 40-70  AI can roughly infer the category, but recommendation would still be generic or hesitant. The service, audience, geography, or proof are still too weak or too implied.
-- 70-85  The site gives clear enough signals for AI to match the business to relevant user queries with reasonable confidence. Category, audience, service scope, and trust cues are present in language the model can restate without guessing.
-- 85-100 The business is highly discoverable and recommendable by AI. The site makes category, audience, location or service scope, differentiation, and proof immediately legible.
-
-AI DISCOVERABILITY CALIBRATION RULES:
-- If the site is visually strong but does not clearly say who the business is for, the score cannot be high.
-- If geography, service scope, or category are vague, the score must stay below 75 for local-intent or recommendation-led queries.
-- If there is little proof, AI may understand the business but should not be scored as highly recommendable.
-- If the site is easy to restate in one precise phrase like "X for Y in Z", the score should rise.
+toneCoherence — AI discoverability: whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand based on its website content.
+- 0-30   AI tools cannot find or describe the brand at all. No structured data, no meta descriptions, no indexable content. Completely invisible to AI search.
+- 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries. No Schema.org, no FAQ, poor meta tags.
+- 50-70  AI tools find the brand and get the category right but miss specifics. Some meta descriptions exist but lack precision. No structured data or FAQ content.
+- 70-85  AI tools can accurately describe what the brand does and for whom. Clear meta descriptions, some structured data, natural-language content on key pages.
+- 85-100 Brand is fully optimized for AI discovery. Rich structured data, comprehensive FAQ, consistent naming, clear claims AI can quote. Anchor: Stripe, Linear, Notion.
 
 visualCredibility — whether the design signals quality, control, and category trust.
-- 0-40   template feel, stock imagery, typographic inconsistency. The design undercuts the price.
-- 40-70  competent but generic. A clean WordPress/Webflow theme with decent photography sits around 55-70. Nothing marks this as category-leader.
+- 0-30   amateur feel, broken layout, stock imagery mismatched to brand, typographic chaos. The design actively repels trust.
+- 30-50  template feel is obvious. Generic WordPress/Squarespace theme with minimal customization. Design undercuts whatever price the brand is asking.
+- 50-70  competent but generic. A clean WordPress/Webflow theme with decent photography sits here. Nothing marks this as category-leader.
 - 70-85  considered, intentional, on-brand. Custom type choices, deliberate composition, controlled colour. A buyer would accept a premium price without flinching.
-- 85-100 unmistakable. Visual system does conversion work before copy has to help. Anchor: Stripe, Linear, Aesop, Hermès, Arc Browser, Framer, Apple. NOT anchors: a generic dark-with-gradient SaaS page, a WordPress theme however clean, a stock-photo-heavy B2B site, a "ChatGPT suggested this layout" page. If in doubt between 80 and 90, pick 80.
+- 85-100 unmistakable. Visual system does conversion work before copy has to help. Anchor: Stripe, Linear, Aesop, Hermès, Arc Browser, Framer, Apple. If in doubt between 80 and 90, pick 80.
 
 offerSpecificity — how directly the page states what exactly is sold, to whom, and why it matters now.
-- 0-40   offer is implied, never stated. Reader leaves still unsure what they would be buying.
-- 40-70  the what is present but the for-whom and why-now are vague.
+- 0-30   offer is never stated. Reader leaves the page unable to say what they would be buying or why.
+- 30-50  offer is implied through mood, imagery, or vague language. "We help businesses grow" level of specificity. No concrete deliverable named.
+- 50-70  the what is present but the for-whom and why-now are vague. Buyer can guess the category but not the exact offering.
 - 70-85  what / who / why are on the page, even if the reader moves past the hero to find them.
-- 85-100 the first screen states the offer concretely, with who it is for and what it resolves. Anchor: Ramp ("corporate cards and spend management for growing businesses"), Gusto, Linear.
+- 85-100 the first screen states the offer concretely, with who it is for and what it resolves. Anchor: Ramp, Gusto, Linear.
 
 conversionReadiness — whether the page has earned a confident next step by the time a motivated buyer looks for one.
-- 0-40   no clear next step, or a generic "learn more" that does not match intent.
-- 40-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
+- 0-30   no clear next step exists, or the only CTA is a generic "contact us" buried at the bottom. No proof, no urgency, no path forward.
+- 30-50  a CTA exists but is disconnected from the value proposition. No social proof near the CTA, vague commitment ("get started"), or mismatched intent.
+- 50-70  CTAs exist and are visible but underpowered — weak proof, vague value, mismatched commitment level.
 - 70-85  next step is clear and earned for the most likely buyer; minor friction on edge cases.
-- 85-100 the CTA is obvious, proof is within reach, and the commitment level matches the page's promise. Anchor: any best-in-class SaaS pricing page with clear plan, clear value, clear start button.
+- 85-100 the CTA is obvious, proof is within reach, and the commitment level matches the page's promise. Anchor: any best-in-class SaaS pricing page.
 
 Return JSON with exactly these keys. Do not omit any of the five scores under any circumstance — if you are genuinely uncertain, estimate to the nearest 5 and commit. Do not return "null", "0", or an empty string for any score.
 {
@@ -1878,7 +1870,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
   "strength": "what already feels strong or convincing, 3-5 sentences",
   "gap": "what is missing or unclear, 4-6 sentences",
   "mismatch": "where the brand feels slightly out of sync with itself, 3-5 sentences",
-  "voice": "how the tone compares to the visual world, 4-6 sentences",
+  "voice": "AI discoverability assessment: how well AI tools can find, parse, and recommend this brand based on its website content — check for structured data, clear meta descriptions, natural-language descriptions, FAQ presence, and consistent naming. 4-6 sentences",
   "direction": "what to do next, 4-6 sentences",
   "amplify": "what to lean into more, 3-5 sentences",
   "drop": "what to reduce, simplify, or remove, 3-5 sentences",
@@ -1893,94 +1885,46 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
 }
 `;
 
-  if (hasOpenAI) {
-    try {
-      const text = await requestOpenAIJsonText(prompt, {
-        model: FIRST_READ_OPENAI_MODEL,
-        timeoutMs: 40000,
-      });
-
-      return normalizeResult(extractJson(text), hints, websiteContext, url);
-    } catch (error) {
-      const shouldRetryOnFallbackModel =
-        error instanceof ModelApiError &&
-        error.status === 504 &&
-        FIRST_READ_OPENAI_MODEL !== "gpt-4o-mini";
-
-      if (!shouldRetryOnFallbackModel) {
-        throw error;
-      }
-
-      const retryText = await requestOpenAIJsonText(prompt, {
-        model: "gpt-4o-mini",
-        timeoutMs: 30000,
-      });
-
-      return normalizeResult(extractJson(retryText), hints, websiteContext, url);
-    }
-  }
-
-  const isTemporaryModelFailure = (status: number) => status === 429 || status === 503;
-
-  const toBrandReadApiError = (status: number, detail: string) => {
-    if (status === 429) {
-      return new ModelApiError(
-        `Gemini request failed: ${status} ${detail}`,
-        429,
-        "Gemini has reached this project's current quota. Please try again later or set up billing in Google AI Studio.",
-      );
-    }
-
-    if (status === 503) {
-      return new ModelApiError(
-        `Gemini request failed: ${status} ${detail}`,
-        503,
-        "Gemini is temporarily experiencing high demand. Please try again in a minute.",
-      );
-    }
-
-    return new ModelApiError(
-      `Gemini request failed: ${status} ${detail}`,
-      status,
-      "Unable to generate the brand read right now.",
-    );
-  };
-
-  // Retry helper with fallback to older model when 2.5-flash is overloaded
+  // Retry helper for OpenAI API calls
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-  async function attemptGeminiCall(modelName: string, retries: number): Promise<Response> {
+  async function attemptOpenAICall(retries: number): Promise<Response> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
+      const timeout = setTimeout(() => controller.abort(), 30000);
 
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+          "https://api.openai.com/v1/chat/completions",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
             },
             signal: controller.signal,
             body: JSON.stringify({
-              contents: [
+              model,
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a brand strategist. Always respond with valid JSON only, no markdown fences.",
+                },
                 {
                   role: "user",
-                  parts: [{ text: prompt }],
+                  content: prompt,
                 },
               ],
-              generationConfig: {
-                temperature: 0.7,
-                responseMimeType: "application/json",
-              },
+              temperature: 0.7,
+              response_format: { type: "json_object" },
             }),
           },
         ).finally(() => clearTimeout(timeout));
 
-        // If 503 and we have retries left, wait and try again
-        if (response.status === 503 && attempt < retries) {
-          const delay = attempt * 1500; // 1.5s, 3s, etc.
+        // If rate limited or server error and we have retries left, wait and try again
+        if ((response.status === 429 || response.status >= 500) && attempt < retries) {
+          const delay = attempt * 2000;
           await sleep(delay);
           continue;
         }
@@ -1989,41 +1933,28 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
       } catch (error) {
         clearTimeout(timeout);
         if (attempt < retries) {
-          await sleep(attempt * 1500);
+          await sleep(attempt * 2000);
           continue;
         }
         throw error;
       }
     }
 
-    // This should never be reached due to the loop logic, but TypeScript needs it
     throw new Error("Retry logic exhausted");
   }
 
-  // Try gemini-2.5-flash first, then fall back to 2.0-flash on quota/overload.
-  let response: Response;
-  response = await attemptGeminiCall("gemini-2.5-flash", 3);
-
-  if (isTemporaryModelFailure(response.status)) {
-    console.warn(
-      `gemini-2.5-flash returned ${response.status}, falling back to gemini-2.0-flash`,
-    );
-    response = await attemptGeminiCall("gemini-2.0-flash", 2);
-  }
+  const response = await attemptOpenAICall(3);
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw toBrandReadApiError(response.status, errorText);
+    throw new Error(`OpenAI request failed: ${response.status} ${errorText}`);
   }
 
   const payload = await response.json();
-  const text =
-    payload?.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text || "")
-      .join("") || "";
+  const text = payload?.choices?.[0]?.message?.content || "";
 
   if (!text) {
-    throw new Error("Gemini returned an empty response");
+    throw new Error("OpenAI returned an empty response");
   }
 
   return normalizeResult(extractJson(text), hints, websiteContext, url);
@@ -2116,7 +2047,7 @@ export async function generateBrandRead(url: string, language: SiteLocale = "en"
     const websiteContext = await fetchWebsiteContext(normalizedUrl);
     const result = await requestGeminiBrandRead(normalizedUrl, websiteContext, language);
     const localizedResult =
-      !process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY && language !== "en"
+      !process.env.OPENAI_API_KEY && language !== "en"
         ? await localizeBrandReadResult(result, language)
         : result;
 
@@ -2126,7 +2057,7 @@ export async function generateBrandRead(url: string, language: SiteLocale = "en"
       result: localizedResult,
     };
   } catch (error) {
-    if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       const fallback = pickSampleTemplate(normalizedUrl);
       return {
         url: normalizedUrl,

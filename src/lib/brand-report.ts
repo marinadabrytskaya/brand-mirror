@@ -17,7 +17,6 @@ import {
   resolveWorldPoster,
   DEFAULT_MODEL,
 } from "@/lib/brand-read";
-import { requestOpenAIJsonText } from "@/lib/openai-json";
 import {
   captureWebsiteSurface,
   type SiteCapture,
@@ -1363,9 +1362,6 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
     ],
   };
 
-  const aiDiscoverabilityRead =
-    "AI can only recommend what it can classify quickly and restate without guessing. Right now the brand is clear enough to intrigue, but not yet explicit enough on category, audience, and retrieval cues to be effortlessly recommended in a real answer engine query. The site needs sharper language around who it is for, what it specifically does, and what proof supports that claim.";
-
   return {
     url,
     brandName: read.brandName,
@@ -1422,19 +1418,19 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
         note: "How quickly the offer becomes legible on the homepage.",
       },
       {
-        label: "Offer specificity",
-        score: read.offerSpecificity,
-        note: "How directly the brand explains what it does and why it matters.",
-      },
-      {
         label: "AI discoverability",
         score: read.toneCoherence,
-        note: "How easily AI could classify, retrieve, and recommend this business.",
+        note: "How well the written voice supports the visual impression.",
       },
       {
         label: "Visual credibility",
         score: read.visualCredibility,
         note: "How strongly the visual system implies quality and trust.",
+      },
+      {
+        label: "Offer specificity",
+        score: read.offerSpecificity,
+        note: "How directly the brand explains what it does and why it matters.",
       },
       {
         label: "Conversion readiness",
@@ -1443,7 +1439,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       },
     ],
     positioningRead: read.current,
-    toneCheck: aiDiscoverabilityRead,
+    toneCheck: read.voice,
     visualIdentityRead: read.strength,
     aboveTheFold: read.gap,
     conversionRead:
@@ -1699,22 +1695,11 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
 }
 
 export async function generateBrandReportPreviewFromRead(
-  urlInput: string,
+  url: string,
   read: BrandReadResult,
-  language: SiteLocale = "en",
 ) {
-  const normalized = normalizeUrl(urlInput);
-  if (!normalized) {
-    throw new Error("Please enter a valid website URL.");
-  }
-
-  const fallback = buildFallbackReport(normalized, read);
-
-  if (language !== "en") {
-    return localizeBrandReport(fallback, language);
-  }
-
-  return fallback;
+  const normalized = normalizeUrl(url) || url;
+  return buildFallbackReport(normalized, read);
 }
 
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
@@ -2303,9 +2288,8 @@ async function requestGeminiBrandReport(
   websiteContext: Awaited<ReturnType<typeof fetchWebsiteContext>>,
   language: SiteLocale,
 ) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
-  if (!hasOpenAI && !apiKey) return null;
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
   const targetLanguage = LANGUAGE_NAMES[language];
 
   const prompt = `
@@ -2341,7 +2325,7 @@ Important rules:
 - Keep structural enums and machine-readable fields stable:
   - Keep screenshotCallouts.zone values in English.
   - Keep surfaceCaptures.kind and captureMethod values in English.
-  - Keep scorecard labels exactly as: Positioning clarity, Offer specificity, AI discoverability, Visual credibility, Conversion readiness.
+  - Keep scorecard labels exactly as: Positioning clarity, AI discoverability, Visual credibility, Offer specificity, Conversion readiness.
 - Return only valid JSON.
 
 Website URL:
@@ -2356,7 +2340,7 @@ Existing first-read:
 - Strength: ${firstRead.strength}
 - Gap: ${firstRead.gap}
 - Mismatch: ${firstRead.mismatch}
-- Tone read: ${firstRead.voice}
+- AI discoverability read: ${firstRead.voice}
 - Next move: ${firstRead.direction}
 - Strongest signal: ${firstRead.strongestSignal}
 - Main friction: ${firstRead.mainFriction}
@@ -2379,7 +2363,7 @@ ${websiteContext.callsToAction.map((item) => `  - ${item}`).join("\n") || "  - n
 - Visible text:
 ${websiteContext.visibleText || "n/a"}
 
-Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, Offer specificity, AI discoverability, Visual credibility, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
+Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, AI discoverability, Visual credibility, Offer specificity, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
 
 Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-30 FLATLINING, 30-50 FRAGILE, 50-70 DEVELOPING, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
 
@@ -2389,32 +2373,37 @@ CALIBRATION GUARDS — apply these before every score.
 - Default to 60-80 for most brands. If your instinct says "this feels solid", that is STABLE (70-85), not LEADING. Move the number down if you catch yourself being generous.
 
 Positioning clarity — how quickly the homepage makes the offer legible to a first-time visitor.
-- 0-40   the visitor cannot say what this company does after 10 seconds. Hero is mood-only or the promise is buried.
-- 40-70  category is guessable, exact offer is not. Page leans on insider shorthand.
+- 0-30   the visitor cannot say what this company does after 10 seconds. Hero is mood-only, abstract, or buried.
+- 30-50  the category is vaguely guessable but the exact offer is unclear. Insider jargon or mood-first design.
+- 50-70  category is clear, exact offer takes effort. Page leans on shorthand the buyer must decode.
 - 70-85  offer and audience are legible inside the hero frame.
 - 85-100  offer, audience, and reason-to-care all land before the first scroll.
 
-AI discoverability — whether AI systems could confidently discover, classify, and recommend this business in response to a real user query.
-- 0-40   AI cannot reliably tell who this business is for, what it specifically offers, where it operates, or in which queries it should appear.
-- 40-70  AI can roughly infer the category, but recommendation would still be generic or hesitant because the service, audience, geography, or proof are too weak or too implied.
-- 70-85  The site gives clear enough signals for AI to match the business to relevant user queries with reasonable confidence. Category, audience, service scope, and trust cues are present in language the model can restate without guessing.
-- 85-100  The business is highly discoverable and recommendable by AI. The site makes category, audience, location or service scope, differentiation, and proof immediately legible.
+AI discoverability — whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand.
+- 0-30   AI tools cannot find or describe the brand at all. Completely invisible to AI search.
+- 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries.
+- 50-70  AI tools find the brand and get the category right but miss specifics. Some meta descriptions exist but lack precision.
+- 70-85  AI tools can accurately describe what the brand does and for whom. Clear meta descriptions, some structured data.
+- 85-100  Brand is fully optimized for AI discovery. Rich structured data, comprehensive FAQ, consistent naming, clear claims AI can quote.
 
 Visual credibility — whether the design signals quality, control, and category trust.
-- 0-40   template feel, stock imagery, typographic inconsistency. The design undercuts the price.
-- 40-70  competent but generic. Nothing marks this as category-leader.
+- 0-30   amateur feel, broken layout, stock imagery mismatched to brand. Design actively repels trust.
+- 30-50  template feel is obvious. Generic theme with minimal customization. Design undercuts the price.
+- 50-70  competent but generic. Nothing marks this as category-leader.
 - 70-85  considered, intentional, on-brand. A buyer would accept a premium price without flinching.
 - 85-100  unmistakable. Visual system does conversion work before copy has to help.
 
 Offer specificity — how directly the page explains what exactly is sold, to whom, and why it matters now.
-- 0-40   offer is implied, never stated. Reader leaves still unsure what they would be buying.
-- 40-70  the what is present but the for-whom and why-now are vague.
+- 0-30   offer is never stated. Reader leaves unable to say what they would be buying.
+- 30-50  offer is implied through mood or vague language. "We help businesses grow" level of specificity.
+- 50-70  the what is present but the for-whom and why-now are vague.
 - 70-85  what / who / why are on the page, even if the reader has to move past the hero to find them.
 - 85-100  the first screen states the offer concretely, with who it is for and what it resolves.
 
 Conversion readiness — whether the page has earned a confident next step by the time a motivated buyer looks for one.
-- 0-40   no clear next step, or a generic "learn more" that does not match intent.
-- 40-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
+- 0-30   no clear next step exists, or only a generic "contact us" buried at the bottom. No proof, no path.
+- 30-50  a CTA exists but is disconnected from the value proposition. No social proof nearby, vague commitment.
+- 50-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
 - 70-85  next step is clear and earned for the most likely buyer; minor friction on edge cases.
 - 85-100  the CTA is obvious, proof is within reach, and the commitment level matches the page's promise.
 
@@ -2440,9 +2429,9 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
   ],
   "scorecard": [
     { "label": "Positioning clarity", "score": 78, "note": "short note" },
-    { "label": "Offer specificity", "score": 71, "note": "short note" },
     { "label": "AI discoverability", "score": 82, "note": "short note" },
     { "label": "Visual credibility", "score": 86, "note": "short note" },
+    { "label": "Offer specificity", "score": 71, "note": "short note" },
     { "label": "Conversion readiness", "score": 74, "note": "short note" }
   ],
   "positioningRead": "2-4 sentences, specific and human",
@@ -2543,47 +2532,43 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
 }
 `;
 
-  if (hasOpenAI) {
-    const text = await requestOpenAIJsonText(prompt, {
-      timeoutMs: 110000,
-    });
-
-    return extractJson(text) as RawBrandReport;
-  }
-
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`,
+    "https://api.openai.com/v1/chat/completions",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
-        contents: [
+        model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a brand strategist. Always respond with valid JSON only, no markdown fences.",
+          },
           {
             role: "user",
-            parts: [{ text: prompt }],
+            content: prompt,
           },
         ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-        },
+        temperature: 0.7,
+        response_format: { type: "json_object" },
       }),
     },
   );
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Gemini request failed: ${response.status} ${errorText}`);
+    throw new Error(`OpenAI request failed: ${response.status} ${errorText}`);
   }
 
   const payload = await response.json();
-  const text =
-    payload?.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text || "")
-      .join("") || "";
+  const text = payload?.choices?.[0]?.message?.content || "";
 
   if (!text) {
-    throw new Error("Gemini returned an empty response");
+    throw new Error("OpenAI returned an empty response");
   }
 
   return extractJson(text) as RawBrandReport;
@@ -3161,15 +3146,15 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "PROOF AND CTA ZONE",
         methodologyBullets: [
           "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-          "AI Discoverability measures whether AI could confidently classify and recommend the business.",
+          "Tone Coherence measures whether the written voice supports the visual impression.",
           "Visual Credibility measures whether the design signals quality and control.",
           "Offer Specificity measures how directly the page explains what it does and why it matters.",
           "Conversion Readiness measures whether the page has earned a confident next step.",
         ],
         readingScale: "READING THE SCALE",
         legend: [
-          { title: "0-30", body: "Critical. The signal is weak, confusing, or actively costing trust." },
-          { title: "30-70", body: "Developing. There is potential here, but the page still makes buyers work too hard." },
+          { title: "0-40", body: "Critical. The signal is weak, confusing, or actively costing trust." },
+          { title: "40-70", body: "Developing. There is potential here, but the page still makes buyers work too hard." },
           { title: "70-100", body: "Strong. The brand is creating clarity, trust, and momentum with less friction." },
         ],
         whatScoreTells: "What this score is telling us",
@@ -3243,7 +3228,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "AI Discoverability mide si la IA podría clasificar y recomendar el negocio con confianza.",
+          "Tone Coherence mide si la voz escrita sostiene la impresión visual.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
@@ -3325,7 +3310,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ЗОНА PROOF И CTA",
         methodologyBullets: [
           "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "AI Discoverability измеряет, сможет ли ИИ уверенно классифицировать и рекомендовать этот бизнес.",
+          "Tone Coherence измеряет, поддерживает ли письменный голос визуальное впечатление.",
           "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
           "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
           "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
@@ -3578,13 +3563,6 @@ export async function generateBrandReportPdf(
         implication: report.headlineCorrection.currentProblem,
       },
       {
-        label: "Offer specificity",
-        title: "Offer Specificity",
-        diagnosis: report.aboveTheFold,
-        quote: report.namingFit.correction,
-        implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
-      },
-      {
         label: "AI discoverability",
         title: "AI Discoverability",
         diagnosis: report.toneCheck,
@@ -3597,6 +3575,13 @@ export async function generateBrandReportPdf(
         diagnosis: report.visualIdentityRead,
         quote: report.whatWorks[0] || report.visualIdentityRead,
         implication: report.mixedSignals,
+      },
+      {
+        label: "Offer specificity",
+        title: "Offer Specificity",
+        diagnosis: report.aboveTheFold,
+        quote: report.namingFit.correction,
+        implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
       },
       {
         label: "Conversion readiness",

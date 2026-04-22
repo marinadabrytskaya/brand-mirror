@@ -14,7 +14,7 @@
 // Bands
 // ---------------------------------------------------------------------------
 
-export type BandKey = "flatlining" | "fragile" | "unstable" | "stable" | "leading";
+export type BandKey = "flatlining" | "fragile" | "developing" | "stable" | "leading";
 
 export type Band = {
   readonly key: BandKey;
@@ -43,12 +43,12 @@ export const BANDS: readonly Band[] = [
     blurb: "There is a foundation, but it is not working for the brand yet. Trust does not hold.",
   },
   {
-    key: "unstable",
+    key: "developing",
     label: "DEVELOPING",
     color: "#E8B04C",
     lo: 50,
     hi: 70,
-    blurb: "There is clear potential here. The page is moving in the right direction, but buyers still have to work too hard.",
+    blurb: "There is potential here, but the page still makes buyers work too hard.",
   },
   {
     key: "stable",
@@ -68,6 +68,8 @@ export const BANDS: readonly Band[] = [
   },
 ] as const;
 
+// Intervals are closed on the low side, open on the high side, except the top
+// band which is closed on both sides.
 export function bandFor(score: number): Band {
   if (!Number.isFinite(score)) return BANDS[0];
   if (score < 30) return BANDS[0];
@@ -88,8 +90,8 @@ export function bandModifier(score: number): string {
       return "The signal is not landing. The page is losing the buyer before the offer gets a chance.";
     case "fragile":
       return "The foundation exists, but the signal breaks under scrutiny. The buyer sees potential and walks away.";
-    case "unstable":
-      return "The signal is taking shape. The page is moving in the right direction, but the buyer still has to bridge too much on their own.";
+    case "developing":
+      return "The interest is there. The next step has not been earned cleanly enough.";
     case "stable":
       return "The signal holds. The page earns attention, but still has room to tighten the ask.";
     case "leading":
@@ -110,11 +112,13 @@ export type DimensionKey =
 
 export type Dimension = {
   readonly key: DimensionKey;
-  readonly label: string;
-  readonly shortLabel: string;
-  readonly summary: string;
+  readonly label: string;          // PDF + full-report human label
+  readonly shortLabel: string;     // compact label for first-read sub-scores
+  readonly summary: string;        // one-line description of what this axis measures
 };
 
+// The ORDER of this array is canonical — this is the order in which sub-scores
+// appear everywhere: first-read score-breakdown, full-report dashboard, PDF.
 export const DIMENSIONS: readonly Dimension[] = [
   {
     key: "positioningClarity",
@@ -148,6 +152,7 @@ export const DIMENSIONS: readonly Dimension[] = [
   },
 ] as const;
 
+// Overall readiness — average of all five dimensions, rounded to integer.
 export function computeOverallScore(scores: Record<DimensionKey, number>): number {
   const values = DIMENSIONS.map((d) => scores[d.key] ?? 0);
   const sum = values.reduce((acc, v) => acc + (Number.isFinite(v) ? v : 0), 0);
