@@ -6,6 +6,8 @@ import { translateTexts } from "@/lib/text-translate";
 import { scoreBandLabel, bandModifier } from "@/lib/score-band";
 
 export const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+export const FIRST_READ_OPENAI_MODEL =
+  process.env.OPENAI_FIRST_READ_MODEL || "gpt-4o-mini";
 
 export const VISUAL_WORLDS = [
   "ruler",
@@ -1892,11 +1894,30 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
 `;
 
   if (hasOpenAI) {
-    const text = await requestOpenAIJsonText(prompt, {
-      timeoutMs: 55000,
-    });
+    try {
+      const text = await requestOpenAIJsonText(prompt, {
+        model: FIRST_READ_OPENAI_MODEL,
+        timeoutMs: 40000,
+      });
 
-    return normalizeResult(extractJson(text), hints, websiteContext, url);
+      return normalizeResult(extractJson(text), hints, websiteContext, url);
+    } catch (error) {
+      const shouldRetryOnFallbackModel =
+        error instanceof ModelApiError &&
+        error.status === 504 &&
+        FIRST_READ_OPENAI_MODEL !== "gpt-4o-mini";
+
+      if (!shouldRetryOnFallbackModel) {
+        throw error;
+      }
+
+      const retryText = await requestOpenAIJsonText(prompt, {
+        model: "gpt-4o-mini",
+        timeoutMs: 30000,
+      });
+
+      return normalizeResult(extractJson(retryText), hints, websiteContext, url);
+    }
   }
 
   const isTemporaryModelFailure = (status: number) => status === 429 || status === 503;
