@@ -1,4 +1,5 @@
-export const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+export const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+export const SAFE_OPENAI_FALLBACK_MODEL = "gpt-4o-mini";
 
 export class ModelApiError extends Error {
   status: number;
@@ -13,6 +14,17 @@ export class ModelApiError extends Error {
 }
 
 function toOpenAIError(status: number, detail: string) {
+  if (
+    status === 400 &&
+    /invalid model id|model.*does not exist|unsupported model/i.test(detail)
+  ) {
+    return new ModelApiError(
+      `OpenAI request failed: ${status} ${detail}`,
+      400,
+      "OpenAI model configuration is invalid. Falling back to a safe default is required.",
+    );
+  }
+
   if (status === 401) {
     return new ModelApiError(
       `OpenAI request failed: ${status} ${detail}`,
@@ -67,6 +79,7 @@ export async function requestOpenAIJsonText(
   options?: {
     model?: string;
     timeoutMs?: number;
+    allowModelFallback?: boolean;
   },
 ) {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -75,6 +88,7 @@ export async function requestOpenAIJsonText(
     return null;
   }
 
+  const selectedModel = options?.model || DEFAULT_OPENAI_MODEL;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30000);
 
@@ -87,7 +101,7 @@ export async function requestOpenAIJsonText(
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: options?.model || DEFAULT_OPENAI_MODEL,
+        model: selectedModel,
         input: prompt,
         store: false,
         text: {
@@ -100,6 +114,22 @@ export async function requestOpenAIJsonText(
 
     if (!response.ok) {
       const errorText = await response.text();
+      const invalidModel =
+        response.status === 400 &&
+        /invalid model id|model.*does not exist|unsupported model/i.test(errorText);
+
+      if (
+        invalidModel &&
+        (options?.allowModelFallback ?? true) &&
+        selectedModel !== SAFE_OPENAI_FALLBACK_MODEL
+      ) {
+        return requestOpenAIJsonText(prompt, {
+          ...options,
+          model: SAFE_OPENAI_FALLBACK_MODEL,
+          allowModelFallback: false,
+        });
+      }
+
       throw toOpenAIError(response.status, errorText);
     }
 
