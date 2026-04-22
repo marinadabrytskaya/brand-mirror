@@ -1,0 +1,1 @@
+{"error":"Unable to export the BrandMirror PDF right now.","detail":"ENOENT: no such file or directory, open '[project]/node_modules/pdfkit/js/data/Helvetica.afm'"}

@@ -1,0 +1,405 @@
+{
+  "ok": true,
+  "report": {
+    "url": "https://www.nike.com",
+    "brandName": "Nike",
+    "visualWorld": "hero",
+    "title": "The Nike Standard",
+    "tagline": "The pressure is visible. The next victory still needs a name.",
+    "snapshot": "Nike reads as cultural authority under pressure. The energy is immediate, but the commercial promise still leans on brand familiarity to do part of the work.",
+    "surfaceCaptures": [
+      {
+        "label": "Current website",
+        "kind": "website",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "href": "https://www.nike.com",
+        "captureMethod": "metadata-local",
+        "note": "Current Nike homepage surface used for this report."
+      },
+      {
+        "label": "Brand signal",
+        "kind": "brand-signal",
+        "imageUrl": "/poster images/Hero2.png",
+        "note": "Poster layer used to frame Nike as a hero brand.",
+        "captureMethod": "poster"
+      }
+    ],
+    "screenshotCallouts": [
+      {
+        "zone": "hero-promise",
+        "title": "Hero promise",
+        "body": "The page sells movement and status instantly, but the immediate reason to care about this specific story could land faster.",
+        "x": 12,
+        "y": 13
+      },
+      {
+        "zone": "proof-cta",
+        "title": "Proof and CTA zone",
+        "body": "Nike can afford implication, but this surface would convert harder if product or offer clarity arrived one beat earlier.",
+        "x": 57,
+        "y": 62
+      }
+    ],
+    "scorecard": [
+      {
+        "label": "Positioning clarity",
+        "score": 78,
+        "note": "The brand promise is powerful, but page-level specificity can still sharpen."
+      },
+      {
+        "label": "Tone coherence",
+        "score": 86,
+        "note": "The voice matches the visual authority and pace."
+      },
+      {
+        "label": "Visual credibility",
+        "score": 95,
+        "note": "Immediate trust, pressure, and category leadership."
+      },
+      {
+        "label": "Offer specificity",
+        "score": 74,
+        "note": "The page can still state the exact story faster."
+      },
+      {
+        "label": "Conversion readiness",
+        "score": 84,
+        "note": "Strong momentum with room for cleaner page-level framing."
+      }
+    ],
+    "positioningRead": "Nike does not need to prove relevance. It needs to make each specific page promise legible at the speed of its visual authority. Right now the brand-level power is doing some of the work that the page-level positioning should still be carrying.",
+    "toneCheck": "The tone is forceful, compressed, and culturally fluent. It sounds like a brand that expects movement. When the page gets too campaign-led without enough immediate product or offer framing, the tone starts outrunning the buying logic.",
+    "visualIdentityRead": "The visual system remains one of the strongest in the category: athletic, cinematic, and unmistakably Nike. It communicates pressure, ambition, and control with almost no wasted motion.",
+    "aboveTheFold": "Above the fold, the page is already commanding enough to stop the scroll. The opportunity is not more impact. It is faster specificity about what this particular page wants the buyer to understand or do.",
+    "conversionRead": "Nike is not losing on trust. It is occasionally leaving clarity on the table because the brand can afford to be a little more implicit than smaller competitors. That still creates friction on pages that need to convert a specific intent.",
+    "strategicDirection": "This brand should not move toward louder marketing. It should move toward sharper commercial clarity inside the premium signal it already owns. The strategy is to keep the atmosphere, but make the promise, proof, and decision path far more explicit so the brand reads as both desirable and commercially precise.",
+    "archetypeRead": {
+      "primary": "Hero",
+      "secondary": "Ruler",
+      "rationale": "Nike reads first as heroic pressure and performance, with a secondary ruler pull through authority, scale, and category control."
+    },
+    "aestheticDirections": [
+      {
+        "name": "Architectural luxury",
+        "note": "Stone, shadow, symmetry, and an expensive sense of control."
+      },
+      {
+        "name": "Editorial authority",
+        "note": "Severe typography, measured spacing, and restrained prestige."
+      }
+    ],
+    "culturalAssociations": {
+      "films": [
+        "A Single Man",
+        "Phantom Thread"
+      ],
+      "eras": [
+        "Interwar modernism",
+        "1980s executive minimalism"
+      ],
+      "art": [
+        "Monumental sculpture",
+        "Neo-classical editorial portraiture"
+      ],
+      "music": [
+        "Orchestral chamber scores",
+        "Sparse piano with tension"
+      ]
+    },
+    "visualCodes": {
+      "palette": [
+        "charcoal",
+        "ivory",
+        "burnished gold"
+      ],
+      "textures": [
+        "stone",
+        "satin matte paper",
+        "brushed metal"
+      ],
+      "symbols": [
+        "columns",
+        "gates",
+        "monograms"
+      ],
+      "forms": [
+        "symmetry",
+        "heavy verticals",
+        "framed negative space"
+      ]
+    },
+    "toneOfVoice": [
+      "The tone is calm and polished. It now needs more decisiveness, more specificity, and less protective language if it wants to convert with the same force as the visuals.",
+      "Make the first line do more work: audience, outcome, and difference should all be visible quickly.",
+      "Rochester helps clients understand the value faster, without losing the premium feel."
+    ],
+    "audienceRead": {
+      "primaryAudience": "Founders, decision-makers, and buyers comparing premium options.",
+      "whatTheyAreLookingFor": [
+        "A clear explanation of what the brand actually offers.",
+        "Proof that the quality is real, not just styled.",
+        "A next step that feels worth their attention and time."
+      ],
+      "whatTheyNeedToFeel": [
+        "That the brand is intentional, trustworthy, and in control.",
+        "That they are looking at something sharper than the generic market.",
+        "That saying yes would reduce uncertainty rather than create more of it."
+      ],
+      "whatTheyNeedToHear": [
+        "Who this is for and what changes because of it.",
+        "Why this offer is different in a way that matters commercially.",
+        "What happens next if they take the next step."
+      ]
+    },
+    "verbalImage": {
+      "nameSignal": "Rochester sounds like it should stand for a clear signal, not a vague category story.",
+      "headlineSignal": "The opening line is still too soft for the level of visual control the brand already has.",
+      "firstScreenTone": "The first screen sounds considered, but not decisive enough.",
+      "risk": "If the first words stay softer than the first impression, the brand will look more confident than it sounds."
+    },
+    "namingFit": {
+      "verdict": "Partial fit: the name is strong enough to own a role, but the homepage still has to define that role faster.",
+      "roleMatch": "The name can support a ruler position, but the page is not locking that role in quickly enough.",
+      "risk": "If the opening stays broad, the name will carry style before it carries meaning.",
+      "correction": "Use the hero to tell people exactly what kind of brand this is and what commercial territory it owns."
+    },
+    "headlineCorrection": {
+      "currentProblem": "The current first line is still building mood before it states the offer in business terms.",
+      "correctionLogic": "The headline should do three things fast: identify who it is for, state what changes, and make the value legible without a second read.",
+      "rewrittenDirection": "Rochester helps clients understand the value faster, without losing the premium feel."
+    },
+    "brandKnownFor": "Nike should be known not just for energy, but for making performance feel inevitable.",
+    "industryFit": {
+      "expectedArchetype": "Ruler",
+      "assessment": "The category pull is not yet explicit here, so the current archetype read is being led by the surface signal.",
+      "leverage": "Use that signal to sharpen positioning faster instead of diluting it with softer category language."
+    },
+    "expectationGap": [
+      "As a Hero brand, buyers expect the promise to feel active, direct, and earned.",
+      "When the page gets too atmospheric before it gets specific, the heroic energy loses some commercial force.",
+      "Nike can be iconic and still be clearer at the page level."
+    ],
+    "archetypeTests": [
+      {
+        "name": "Hero test",
+        "verdict": "Weak: the first screen still lacks enough force and decision pressure."
+      },
+      {
+        "name": "Ruler test",
+        "verdict": "Partially passes: the brand has control, but not enough authority in the value story."
+      },
+      {
+        "name": "Sage test",
+        "verdict": "Weak: the page still asks the buyer to work too hard for clarity."
+      },
+      {
+        "name": "Creator test",
+        "verdict": "Partially passes: the point of view is there, but it is not yet tight enough commercially."
+      }
+    ],
+    "whatWorks": [
+      "The brand has instant authority and does not need to ask for attention.",
+      "The visual system creates pressure, aspiration, and trust immediately.",
+      "Nike still feels like category leadership rather than category participation."
+    ],
+    "whatsBroken": [
+      "Some pages still rely on Nike-level fame to carry clarity that should be stated outright.",
+      "The first screen can lean more campaign-led than commercially explicit.",
+      "The visitor can feel the power before they fully understand the page-level proposition."
+    ],
+    "whyNotConverting": [
+      "The page is optimized for impact before it is optimized for precise legibility.",
+      "The authority of the brand can mask small clarity gaps that still cost action.",
+      "The surface creates interest instantly, but not always the fastest route to certainty."
+    ],
+    "audienceMismatch": [
+      "Buyers come ready for performance, but still need a clearer page-level reason to act now.",
+      "The audience expects conviction and specificity together; sometimes the page gives conviction first and specificity second.",
+      "The brand earns trust immediately, which makes any clarity delay more noticeable, not less."
+    ],
+    "brandMyth": "The myth is not just victory. It is the idea that pressure is the proving ground, and movement is the only honest answer.",
+    "mixedSignals": "The visual layer says elite performance and cultural certainty. The written layer sometimes says campaign atmosphere before clear commercial framing. The result is powerful, but slightly more interpretive than it needs to be.",
+    "frictionMap": [
+      "The first screen delays clarity around the actual offer and outcome.",
+      "The homepage leans on atmosphere before a concrete commercial promise.",
+      "The verbal system needs to work as hard as the visual system already does.",
+      "The first scroll does not resolve the buyer's uncertainty quickly enough.",
+      "The journey hints at quality without fully explaining what happens after the visitor says yes."
+    ],
+    "trustGaps": [
+      "There is not enough proof early enough for a buyer who is already comparison-shopping.",
+      "The current page gives limited clarity around process, delivery, or what working with the brand actually looks like.",
+      "The CTA arrives before enough commercial certainty has been built."
+    ],
+    "offerOpportunities": [
+      "State the offer in one line that combines audience, transformation, and business value.",
+      "Introduce a proof layer earlier so the premium feel is backed by visible evidence.",
+      "Make the first scroll resolve the buyer's biggest question before moving deeper into atmosphere or brand world."
+    ],
+    "positioningMoves": [
+      "Move from broad brand mood to a more explicit commercial claim that says who the offer is for and why it matters now.",
+      "Anchor the brand around one primary value proposition instead of letting multiple soft signals compete for attention.",
+      "Use the premium aesthetic as evidence of judgement, not as a substitute for explaining the offer."
+    ],
+    "messagingPriorities": [
+      "Make the first line do more work: audience, outcome, and difference should all be visible quickly.",
+      "Reduce language that sounds tasteful but non-committal, especially in the hero and first supporting section.",
+      "Build a stronger hierarchy of proof, so the visitor is not asked to trust the atmosphere alone."
+    ],
+    "offerStrategy": [
+      "Package the core offer around a clearer before-and-after transformation, not only a process description.",
+      "Introduce stronger signals of scope, deliverable, or method so the premium price logic feels easier to follow.",
+      "Design the call to action as the next logical business step, not just a polite invitation to learn more."
+    ],
+    "priorityFixes": {
+      "fixNow": [
+        "State the specific page promise earlier.",
+        "Tie the hero line more directly to the immediate product or campaign story.",
+        "Reduce any copy that assumes brand fame can replace legibility."
+      ],
+      "fixNext": [
+        "Bring proof or product detail closer to the hero moment.",
+        "Clarify what action the page is asking for before the CTA appears.",
+        "Use the same force in the copy that already exists in the visuals."
+      ],
+      "keep": [
+        "Keep the pace, pressure, and athlete-led conviction.",
+        "Keep the image system uncompromising and emotionally charged.",
+        "Keep the sense that Nike is leading, not explaining itself from scratch."
+      ]
+    },
+    "campaignAngles": [
+      {
+        "title": "Behind the brand signal",
+        "angle": "Turn the audit itself into a campaign idea: show people what their brand is communicating before they realise it. This leans into the intelligence of the offer rather than only its polish.",
+        "whyItCouldWork": "It makes the product feel diagnostic and strategic at the same time, which is exactly where BrandMirror should sit."
+      },
+      {
+        "title": "Why premium brands still lose trust",
+        "angle": "Build a content or landing sequence around the gap between looking elevated and being immediately believable. Show where visual strength is not yet matched by commercial clarity.",
+        "whyItCouldWork": "This creates tension, authority, and a clear reason for the audience to care right now."
+      },
+      {
+        "title": "From tasteful to trusted",
+        "angle": "Frame the brand shift as a move from beautiful presentation to sharper commercial performance. The story becomes less about style alone and more about what the sharpened signal changes.",
+        "whyItCouldWork": "It gives the brand a practical growth narrative rather than leaving the conversation in aesthetics."
+      }
+    ],
+    "rewriteSuggestions": {
+      "heroLine": "Performance gear and stories built for athletes who move first.",
+      "subheadline": "Make the page-level reason to care land as fast as the Nike signal already does.",
+      "cta": "Shop the drop"
+    },
+    "beforeAfterHero": {
+      "currentFrame": {
+        "label": "Before",
+        "title": "Hero promise",
+        "body": "What is missing is a faster expression of value. The site creates an atmosphere before it creates certainty. That mak…",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 12,
+        "focusY": 13
+      },
+      "rewrittenFrame": {
+        "eyebrow": "After",
+        "headline": "Rochester helps clients understand the value faster, without losing the premium feel.",
+        "subheadline": "A sharper headline, clearer offer framing, and more immediate certainty would make the current visual system convert more effectively.",
+        "cta": "See how it works",
+        "note": "Make the first line do more work: audience, outcome, and difference should all be visible quickly.",
+        "posterUrl": "/brand-worlds/Ruler.png"
+      }
+    },
+    "brandWorldAlternatives": [
+      {
+        "world": "ruler",
+        "title": "Rochester currently reads as Ruler",
+        "tagline": "Premium control, stronger hierarchy, firmer value claim.",
+        "note": "This is the dominant visual archetype the current site is already reinforcing.",
+        "posterUrl": "/brand-worlds/Ruler.png",
+        "isCurrent": true
+      },
+      {
+        "world": "hero",
+        "title": "Hero is the adjacent lane",
+        "tagline": "Move from broad brand mood to a more explicit commercial claim that says who the offer is for and why it matters now.",
+        "note": "This adjacent world would make the brand feel more expansive, strategic, or commercially precise without breaking the existing identity.",
+        "posterUrl": "/brand-worlds/Hero.png",
+        "isCurrent": false
+      }
+    ],
+    "proofGallery": [
+      {
+        "label": "Trust evidence",
+        "title": "Support surface",
+        "body": "There is not enough proof early enough for a buyer who is already comparison-shopping.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 50,
+        "focusY": 18
+      },
+      {
+        "label": "Offer evidence",
+        "title": "Support surface",
+        "body": "State the offer in one line that combines audience, transformation, and business value.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 15,
+        "focusY": 37
+      },
+      {
+        "label": "Support evidence",
+        "title": "Support surface",
+        "body": "Bring the core value proposition into the first screen.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 36,
+        "focusY": 37
+      }
+    ],
+    "miniStoryboard": [
+      {
+        "label": "Frame 01",
+        "title": "First impression",
+        "body": "What is missing is a faster expression of value. The site creates an atmosphere before it creates certainty. That makes the brand feel elevated, but slightly withheld.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 18,
+        "focusY": 18
+      },
+      {
+        "label": "Frame 02",
+        "title": "Trust layer",
+        "body": "There is not enough proof early enough for a buyer who is already comparison-shopping.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 38,
+        "focusY": 74
+      },
+      {
+        "label": "Frame 03",
+        "title": "Action layer",
+        "body": "Rewrite the opening promise so the value lands before the atmosphere fully takes over.",
+        "imageUrl": "/Users/marynadabrytskaya/Desktop/Brand Mirror/tmp/reports/nike-surface-from-metadata.jpg",
+        "focusX": 86,
+        "focusY": 84
+      }
+    ],
+    "actionPlan": {
+      "next7Days": [
+        "Rewrite the hero so the page-specific promise lands in one read.",
+        "Move one stronger product or proof cue into the first screen.",
+        "Trim campaign language that delays clarity."
+      ],
+      "next30Days": [
+        "Audit key landing pages for where brand fame is masking clarity gaps.",
+        "Create a tighter pattern for hero promise + proof + action across product stories.",
+        "Protect the emotional force while making each surface more commercially explicit."
+      ]
+    },
+    "strategicNextMove": "Sharpen page-level clarity without touching the underlying brand force. Nike wins because it feels inevitable; the next move is making each surface just as legible as it is iconic.",
+    "genre": "Epic War Drama",
+    "posterScore": 84,
+    "scoreBand": "Festival Circuit Material",
+    "scoreModifier": "Everything here builds momentum. The first screen could still close the gap faster.",
+    "whatItDoes": "Inspiring the world's athletes, Nike delivers innovative products, experiences and services.",
+    "whatItSignals": "It comes across as driven, global, and relentlessly performance-led. The site projects competitive confidence before the visitor has read a single detail. The world is already persuasive. The pace, image system, and language all suggest that Nike expects attention rather than asking for it.",
+    "whatIsMissing": "What is still missing is a faster commercial frame for the specific story being told on the page right now. The authority is already there. The immediate promise could land harder before the visitor has to interpret campaign language or brand context on their own.",
+    "whatToDoNext": "Keep the pressure, but make the opening promise more explicit. Let the first screen say what this drop, product story, or campaign moment is asking the buyer to care about now.",
+    "whatToAmplify": "Amplify the momentum, the athlete-level conviction, and the sense that Nike already owns the stage. Those signals are why the brand converts attention so fast.",
+    "whatToDrop": "Drop any line that assumes the visitor will do extra decoding work because the brand is famous enough to get away with it. Even iconic brands benefit when the page earns clarity faster."
+  }
+}

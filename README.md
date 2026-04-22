@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BrandMirror
+
+BrandMirror is a standalone product by SAHAR Studio.
+
+It is positioned as an AI-powered brand positioning and visual identity audit
+for founders, premium service brands, small creative studios, and agencies.
+The product should feel like a real diagnostic tool with future app potential,
+not a generic SaaS site and not an agency service page.
+
+## Current Scope
+
+- Standalone landing page
+- Sample report / analysis preview
+- Product-facing structure for future app routes
+- Offer and MVP notes in `docs/brandmirror-foundation.md`
+
+## Routes
+
+- `/` landing page
+- `/sample-report` sample diagnostic output
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## Product Direction
 
-To learn more about Next.js, take a look at the following resources:
+Core tagline: `See what your brand is actually saying.`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Primary CTA: `Read my brand`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Secondary CTA: `See sample report`
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Preferred domain direction: `brandmirror.app`
