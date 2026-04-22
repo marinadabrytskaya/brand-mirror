@@ -185,14 +185,14 @@ export const siteCopy = {
             name: "Free First Read",
             price: "$0",
             summary:
-              "A fast outside read of the homepage: brand snapshot, 3 scores, strongest signal, main friction, and one next move.",
+              "A fast outside read of the homepage: scanner readout, 5 scores, first diagnosis, strongest signal, main friction, and locked next-step teasers.",
             detail: "Best as the try-before-you-buy layer.",
           },
           {
             name: "BrandMirror Report",
             price: "$197",
             summary:
-              "The full paid report: positioning, AI discoverability, visual identity, above-the-fold audit, friction map, priority fixes, and 3 rewrite suggestions.",
+              "The full paid report: first read, score dashboard, signal read, website surface, 5 deep dives, archetype + poster, fix stack, and 30-day plan.",
             detail: "Best for founders and premium service brands that need clear next actions.",
           },
           {
@@ -253,13 +253,13 @@ export const siteCopy = {
         "This is where BrandMirror becomes the actual product. The paid layer explains what is off, why it matters, and what to fix first.",
       included: "Included",
       unlockItems: [
-        "Full positioning read",
+        "Signal read + website surface",
+        "5 commercial deep dives",
         "AI discoverability audit",
-        "Visual identity audit",
-        "Above-the-fold analysis",
-        "Friction map + priority fixes",
+        "Brand archetype + poster",
+        "Priority fix stack",
         "30-day action plan",
-        "3 rewrite suggestions",
+        "Headline rewrite direction",
         "PDF export",
       ],
       unlockNotes: [
@@ -521,14 +521,14 @@ export const siteCopy = {
             name: "Primera lectura gratis",
             price: "$0",
             summary:
-              "Una lectura externa rápida de la home: snapshot de marca, 3 scores, señal más fuerte, fricción principal y un siguiente movimiento.",
+              "Una lectura externa rápida de la home: scanner readout, 5 scores, primer diagnóstico, señal más fuerte, fricción principal y teasers bloqueados del siguiente paso.",
             detail: "Ideal como capa de prueba antes de comprar.",
           },
           {
             name: "Reporte BrandMirror",
             price: "$197",
             summary:
-              "El reporte pagado completo: posicionamiento, tono, identidad visual, auditoría above the fold, mapa de fricción, fixes prioritarios y 3 sugerencias de reescritura.",
+              "El reporte pagado completo: first read, score dashboard, signal read, website surface, 5 deep dives, archetype + poster, fix stack y plan de 30 días.",
             detail: "Ideal para founders y marcas de servicio premium que necesitan próximos pasos claros.",
           },
           {
@@ -589,13 +589,13 @@ export const siteCopy = {
         "Aquí es donde BrandMirror se convierte en el producto real. La capa pagada explica qué está mal, por qué importa y qué arreglar primero.",
       included: "Incluido",
       unlockItems: [
-        "Lectura completa de posicionamiento",
+        "Signal read + website surface",
+        "5 deep dives comerciales",
         "Auditoría de descubribilidad en IA",
-        "Auditoría de identidad visual",
-        "Análisis above the fold",
-        "Mapa de fricción",
-        "Fixes prioritarios",
-        "3 sugerencias de reescritura",
+        "Archetype + poster",
+        "Fix stack prioritario",
+        "Plan de 30 días",
+        "Dirección de headline rewrite",
         "Exportación PDF",
       ],
       unlockNotes: [
@@ -857,14 +857,14 @@ export const siteCopy = {
             name: "Бесплатный First Read",
             price: "$0",
             summary:
-              "Быстрый внешний взгляд на homepage: brand snapshot, 3 score, strongest signal, main friction и один next move.",
+              "Быстрый внешний взгляд на homepage: scanner readout, 5 score, first diagnosis, strongest signal, main friction и locked teasers следующего шага.",
             detail: "Лучше всего как try-before-you-buy слой.",
           },
           {
             name: "BrandMirror Report",
             price: "$197",
             summary:
-              "Полный платный отчёт: позиционирование, тон, визуальная идентичность, above-the-fold audit, friction map, priority fixes и 3 rewrite suggestions.",
+              "Полный платный отчёт: first read, score dashboard, signal read, website surface, 5 deep dives, archetype + poster, fix stack и 30-day plan.",
             detail: "Лучше всего для founders и premium service brands, которым нужны ясные следующие шаги.",
           },
           {
@@ -925,13 +925,13 @@ export const siteCopy = {
         "Вот здесь BrandMirror становится настоящим продуктом. Платный слой объясняет, что именно не так, почему это важно и что исправить первым.",
       included: "Включено",
       unlockItems: [
-        "Полный разбор позиционирования",
+        "Signal read + website surface",
+        "5 коммерческих deep dives",
         "Аудит AI discoverability",
-        "Аудит визуальной идентичности",
-        "Анализ первого экрана",
-        "Карта фрикции",
-        "Приоритетные fixes",
-        "3 rewrite suggestions",
+        "Brand archetype + poster",
+        "Priority fix stack",
+        "30-day action plan",
+        "Headline rewrite direction",
         "Экспорт PDF",
       ],
       unlockNotes: [

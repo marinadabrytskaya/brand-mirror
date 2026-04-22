@@ -1420,7 +1420,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       {
         label: "AI discoverability",
         score: read.toneCoherence,
-        note: "How well the written voice supports the visual impression.",
+        note: "How accurately AI tools can find, describe, and recommend the brand.",
       },
       {
         label: "Visual credibility",
@@ -3083,20 +3083,20 @@ export async function generateBrandReportPdf(
     });
 
     const colors = {
-      ink: "#17130f",
-      paper: "#f5f0eb",
-      paperSoft: "#eee4d6",
-      dark: "#1a1a1a",
-      darkSoft: "#24211d",
-      textOnDark: "#f0ebe3",
-      mutedOnDark: "#cfc4b5",
-      textOnLight: "#2d2d2d",
-      mutedOnLight: "#6d6459",
-      accent: "#c9a84c",
-      terracotta: "#b85c38",
-      rule: "#d8ccbc",
-      darkRule: "#4a433a",
-      success: "#738a61",
+      dark: "#0A0B0F",
+      darkSoft: "#121620",
+      panel: "#18191F",
+      panelSoft: "#1E222C",
+      textOnDark: "#F5F5F3",
+      mutedOnDark: "#B8BCC8",
+      textMuted: "#8E95A3",
+      accent: "#D4C4DC",
+      terracotta: "#C17B6F",
+      amber: "#E8B04C",
+      mint: "#7FD9C8",
+      success: "#8BA888",
+      rule: "#2B3342",
+      darkRule: "#2B3342",
     };
 
     doc.registerFont("Helvetica", path.join(fontDir, "Arial.ttf"));
@@ -3109,7 +3109,7 @@ export async function generateBrandReportPdf(
     const contentLeft = 56;
     const contentRight = 539;
     const contentWidth = contentRight - contentLeft;
-    const totalPages = includeWebsiteEvidencePage ? 17 : 16;
+    const totalPages = 16;
     let pageNumber = 0;
     const overallScore = Math.round(
       report.scorecard.reduce((sum, item) => sum + item.score, 0) / Math.max(report.scorecard.length, 1),
@@ -3117,15 +3117,15 @@ export async function generateBrandReportPdf(
     const pdfCopy = {
       en: {
         coverSub: "YOUR BRANDMIRROR REPORT",
-        powered: "Powered by Sahar",
+        powered: "Powered by SAHAR / saharstudio.com",
         footer: "Your brand is already speaking. This is what it is saying.",
-        whatThisIsLabel: "WHAT THIS REPORT IS",
+        whatThisIsLabel: "WHAT WE MEASURE",
         whatThisIsTitle:
-          "A product audit built to close the gap between perception and conversion",
+          "Five commercial signals that decide whether the brand gets understood, trusted, and chosen",
         whatThisIsIntro: [
-          `This report is not a moodboard and not a generic checklist. It is a commercial read of how ${report.brandName} is being understood the moment a buyer lands on the page.`,
-          "Use it in this order: read the score dashboard first, then the diagnosis pages, then the fix stack and action plan.",
-          "Every BrandMirror report is built on a five-axis scoring system designed to track the distance between how the brand looks and how confidently it sells.",
+          `BrandMirror reads the brand the way a sharp buyer reads the first screen: before the copy has fully explained itself, before the proof has earned trust, before the click has happened.`,
+          "This report measures five signals that shape that decision: clarity, discoverability, credibility, specificity, and readiness to act.",
+          "The goal is not to score taste. The goal is to show where the page is helping the sale, where it is slowing it down, and what to fix first.",
         ],
         reportSnapshot: "REPORT SNAPSHOT",
         overallReadiness: "Overall brand readiness",
@@ -3146,47 +3146,49 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "PROOF AND CTA ZONE",
         methodologyBullets: [
           "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-          "Tone Coherence measures whether the written voice supports the visual impression.",
+          "AI Discoverability measures whether AI tools can find, summarize, and recommend the brand accurately.",
           "Visual Credibility measures whether the design signals quality and control.",
           "Offer Specificity measures how directly the page explains what it does and why it matters.",
           "Conversion Readiness measures whether the page has earned a confident next step.",
         ],
         readingScale: "READING THE SCALE",
         legend: [
-          { title: "0-40", body: "Critical. The signal is weak, confusing, or actively costing trust." },
-          { title: "40-70", body: "Developing. There is potential here, but the page still makes buyers work too hard." },
-          { title: "70-100", body: "Strong. The brand is creating clarity, trust, and momentum with less friction." },
+          { title: "0-30", body: "Flatlining. The signal is broken, absent, or actively costing trust." },
+          { title: "30-50", body: "Fragile. A base exists, but it does not hold trust under pressure." },
+          { title: "50-70", body: "Developing. The signal works in parts, but it still leaks confidence." },
+          { title: "70-85", body: "Stable. The page holds clarity and trust, with room to sharpen." },
+          { title: "85-100", body: "Leading. The brand is structured strongly enough to sell before it explains." },
         ],
         whatScoreTells: "What this score is telling us",
         revealingLine: "MOST REVEALING LINE",
         forBrand: `FOR ${report.brandName.toUpperCase()}`,
-        benchmark: "Benchmark",
+        benchmark: "PRACTICAL READ",
         archetypeLabel: "BRAND ARCHETYPE",
         archetypeTitle: `${report.archetypeRead.primary} with ${report.archetypeRead.secondary} pull`,
         archetypeExpect: "What buyers expect from this role",
         archetypeSoWhat: "SO WHAT DOES THIS MEAN COMMERCIALLY?",
-        gapLabel: "THE GAP DIAGNOSIS",
+        gapLabel: "SIGNAL READ",
         gapTitle:
-          "The mismatch between what the brand promises and what the page currently delivers",
-        brandPromises: "WHAT YOUR BRAND PROMISES",
-        pageDelivers: "WHAT THE PAGE CURRENTLY DELIVERS",
-        commercialCost: "The commercial cost of this gap",
+          "What is missing, where the signal drifts, and what the AI layer can actually understand",
+        brandPromises: "WHAT IS MISSING",
+        pageDelivers: "MIXED SIGNALS",
+        commercialCost: "AI DISCOVERABILITY CHECK",
         fixesLabel: "PRIORITY FIX STACK",
         fixesTitle:
-          "What to fix now, what can wait, and what is already earning its keep",
+          "What to fix now, what can wait, and what is already earning trust",
         fixNow: "FIX NOW",
         fixNext: "FIX NEXT",
         keep: "KEEP",
-        plan7Label: "7-DAY ACTION PLAN",
+        plan7Label: "FIRST READ",
         plan7Title:
-          "What to change first to sharpen the message without losing the premium feel",
+          "What the company does, what it signals, and how the page lands before trust is earned",
         day: "DAY",
         headlineCorrection: "HEADLINE CORRECTION",
         plan30Label: "30-DAY ACTION PLAN",
-        plan30Title: "The structural changes that make the brand easier to choose",
+        plan30Title: "Your roadmap for the next 30 days",
         next30: "Next 30 days",
         campaignDirection: "Campaign direction",
-        directionCues: "DIRECTION CUES",
+        directionCues: "WHAT COMES NEXT",
         nextLabel: "WHAT COMES NEXT",
         nextTitle: "Three ways to act on this report while the diagnosis is still fresh",
         nextCards: [
@@ -3199,15 +3201,15 @@ export async function generateBrandReportPdf(
       },
       es: {
         coverSub: "TU REPORTE BRANDMIRROR",
-        powered: "Powered by Sahar",
+        powered: "Powered by SAHAR / saharstudio.com",
         footer: "Tu marca ya está hablando. Esto es lo que está diciendo.",
-        whatThisIsLabel: "QUÉ ES ESTE REPORTE",
+        whatThisIsLabel: "QUÉ MEDIMOS",
         whatThisIsTitle:
-          "Una auditoría de producto diseñada para cerrar la brecha entre percepción y conversión",
+          "Cinco señales comerciales que deciden si la marca se entiende, se confía y se elige",
         whatThisIsIntro: [
-          `Este reporte no es un moodboard ni un checklist genérico. Es una lectura comercial de cómo se entiende ${report.brandName} en el momento en que un comprador aterriza en la página.`,
-          "Léelo en este orden: primero el panel de scores, luego las páginas de diagnóstico, y después el stack de fixes y el plan de acción.",
-          "Cada reporte BrandMirror se construye sobre un sistema de cinco ejes pensado para medir la distancia entre cómo se ve la marca y cuán bien vende.",
+          `BrandMirror lee la marca como la lee un comprador agudo en la primera pantalla: antes de que el copy termine de explicarse, antes de que la prueba gane confianza, antes del clic.`,
+          "Este reporte mide cinco señales que modelan esa decisión: claridad, discoverability, credibilidad, especificidad y preparación para convertir.",
+          "La meta no es puntuar gusto. La meta es mostrar dónde la página ayuda a la venta, dónde la frena y qué corregir primero.",
         ],
         reportSnapshot: "RESUMEN DEL REPORTE",
         overallReadiness: "Preparación general de la marca",
@@ -3228,40 +3230,42 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "Tone Coherence mide si la voz escrita sostiene la impresión visual.",
+          "AI Discoverability mide si las herramientas de IA pueden encontrar, resumir y recomendar la marca con precisión.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
         ],
         readingScale: "CÓMO LEER LA ESCALA",
         legend: [
-          { title: "0-40", body: "Crítico. La señal es débil, confusa o está dañando la confianza." },
-          { title: "40-70", body: "En desarrollo. Hay potencial, pero la página todavía obliga demasiado al comprador." },
-          { title: "70-100", body: "Fuerte. La marca ya está generando claridad, confianza y momentum." },
+          { title: "0-30", body: "Flatlining. La señal está rota, ausente o destruye confianza." },
+          { title: "30-50", body: "Fragile. Hay base, pero no sostiene la confianza." },
+          { title: "50-70", body: "Developing. Funciona por momentos, pero sigue perdiendo impulso." },
+          { title: "70-85", body: "Stable. La página sostiene claridad y confianza, con margen para afilar." },
+          { title: "85-100", body: "Leading. La marca vende antes de tener que explicarse." },
         ],
         whatScoreTells: "Qué nos está diciendo este score",
         revealingLine: "LÍNEA MÁS REVELADORA",
         forBrand: `PARA ${report.brandName.toUpperCase()}`,
-        benchmark: "Benchmark",
+        benchmark: "LECTURA PRÁCTICA",
         archetypeLabel: "ARQUETIPO DE MARCA",
         archetypeTitle: `${report.archetypeRead.primary} con un pull hacia ${report.archetypeRead.secondary}`,
         archetypeExpect: "Qué espera el comprador de este rol",
         archetypeSoWhat: "¿QUÉ SIGNIFICA ESTO COMERCIALMENTE?",
-        gapLabel: "DIAGNÓSTICO DE LA BRECHA",
+        gapLabel: "LECTURA DE LA SEÑAL",
         gapTitle:
-          "La diferencia entre lo que promete la marca y lo que la página realmente entrega",
-        brandPromises: "LO QUE TU MARCA PROMETE",
-        pageDelivers: "LO QUE LA PÁGINA ENTREGA",
-        commercialCost: "El coste comercial de esta brecha",
+          "Qué falta, dónde se mezcla la señal y qué puede entender de verdad la capa de IA",
+        brandPromises: "QUÉ FALTA",
+        pageDelivers: "SEÑALES MEZCLADAS",
+        commercialCost: "CHEQUEO DE AI DISCOVERABILITY",
         fixesLabel: "STACK DE FIXES PRIORITARIOS",
         fixesTitle:
           "Qué arreglar ahora, qué puede esperar y qué ya está trabajando a favor de la marca",
         fixNow: "ARREGLAR AHORA",
         fixNext: "ARREGLAR DESPUÉS",
         keep: "MANTENER",
-        plan7Label: "PLAN DE 7 DÍAS",
+        plan7Label: "FIRST READ",
         plan7Title:
-          "Qué cambiar primero para afilar el mensaje sin perder el tono premium",
+          "Qué hace la empresa, qué está señalando y cómo se lee antes de que exista confianza",
         day: "DÍA",
         headlineCorrection: "CORRECCIÓN DEL HEADLINE",
         plan30Label: "PLAN DE 30 DÍAS",
@@ -3281,15 +3285,15 @@ export async function generateBrandReportPdf(
       },
       ru: {
         coverSub: "ТВОЙ ОТЧЁТ BRANDMIRROR",
-        powered: "Powered by Sahar",
+        powered: "Powered by SAHAR / saharstudio.com",
         footer: "Твой бренд уже говорит. Вот что он говорит.",
-        whatThisIsLabel: "ЧТО ЭТО ЗА ОТЧЁТ",
+        whatThisIsLabel: "ЧТО МЫ ИЗМЕРЯЕМ",
         whatThisIsTitle:
-          "Продуктовая аудит-версия, которая закрывает разрыв между восприятием и конверсией",
+          "Пять коммерческих сигналов, которые решают, поймут ли бренд, поверят ли ему и выберут ли его",
         whatThisIsIntro: [
-          `Это не moodboard и не generic checklist. Это коммерческое чтение того, как считывается ${report.brandName} в момент, когда покупатель попадает на страницу.`,
-          "Читай его так: сначала score dashboard, потом страницы диагноза, потом stack fixes и action plan.",
-          "Каждый отчёт BrandMirror строится на системе из пяти осей, которая измеряет разрыв между тем, как бренд выглядит, и тем, насколько уверенно он продаёт.",
+          `BrandMirror читает бренд так, как его читает внимательный покупатель на первом экране: до того, как текст всё объяснил, до того, как proof заслужил доверие, до клика.`,
+          "Этот отчёт измеряет пять сигналов, которые формируют это решение: clarity, discoverability, credibility, specificity и readiness to act.",
+          "Задача не в том, чтобы оценить вкус. Задача — показать, где страница помогает продаже, где тормозит её и что чинить первым.",
         ],
         reportSnapshot: "СНИМОК ОТЧЁТА",
         overallReadiness: "Общая готовность бренда",
@@ -3310,40 +3314,42 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ЗОНА PROOF И CTA",
         methodologyBullets: [
           "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "Tone Coherence измеряет, поддерживает ли письменный голос визуальное впечатление.",
+          "AI Discoverability измеряет, могут ли AI tools найти бренд, точно описать его и рекомендовать его.",
           "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
           "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
           "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
         ],
         readingScale: "КАК ЧИТАТЬ ШКАЛУ",
         legend: [
-          { title: "0-40", body: "Критично. Сигнал слабый, запутанный или уже ломает доверие." },
-          { title: "40-70", body: "В развитии. Потенциал есть, но страница всё ещё заставляет покупателя слишком много додумывать." },
-          { title: "70-100", body: "Сильно. Бренд уже создаёт ясность, доверие и движение вперёд." },
+          { title: "0-30", body: "Flatlining. Сигнал сломан, отсутствует или уже ломает доверие." },
+          { title: "30-50", body: "Fragile. Основа есть, но она не держит доверие." },
+          { title: "50-70", body: "Developing. Что-то работает, но уверенность всё ещё утекает." },
+          { title: "70-85", body: "Stable. Страница держит ясность и доверие, но её можно усилить." },
+          { title: "85-100", body: "Leading. Бренд продаёт ещё до того, как начинает объяснять." },
         ],
         whatScoreTells: "Что нам говорит этот score",
         revealingLine: "САМАЯ ПОКАЗАТЕЛЬНАЯ ЛИНИЯ",
         forBrand: `ДЛЯ ${report.brandName.toUpperCase()}`,
-        benchmark: "Ориентир",
+        benchmark: "ПРАКТИЧЕСКОЕ ЧТЕНИЕ",
         archetypeLabel: "АРХЕТИП БРЕНДА",
         archetypeTitle: `${report.archetypeRead.primary} с тягой к ${report.archetypeRead.secondary}`,
         archetypeExpect: "Что покупатель ждёт от этой роли",
         archetypeSoWhat: "И ЧТО ЭТО ЗНАЧИТ КОММЕРЧЕСКИ?",
-        gapLabel: "ДИАГНОЗ РАЗРЫВА",
+        gapLabel: "ЧТЕНИЕ СИГНАЛА",
         gapTitle:
-          "Несовпадение между тем, что бренд обещает, и тем, что страница реально даёт",
-        brandPromises: "ЧТО ОБЕЩАЕТ БРЕНД",
-        pageDelivers: "ЧТО РЕАЛЬНО ДАЁТ СТРАНИЦА",
-        commercialCost: "Коммерческая цена этого разрыва",
+          "Чего не хватает, где сигнал распадается и что вообще может понять AI-слой",
+        brandPromises: "ЧЕГО НЕ ХВАТАЕТ",
+        pageDelivers: "СМЕШАННЫЕ СИГНАЛЫ",
+        commercialCost: "AI DISCOVERABILITY CHECK",
         fixesLabel: "СТЕК ПРИОРИТЕТНЫХ FIXES",
         fixesTitle:
           "Что исправить сейчас, что может подождать и что уже работает на бренд",
         fixNow: "ИСПРАВИТЬ СЕЙЧАС",
         fixNext: "ИСПРАВИТЬ СЛЕДОМ",
         keep: "ОСТАВИТЬ",
-        plan7Label: "ПЛАН НА 7 ДНЕЙ",
+        plan7Label: "FIRST READ",
         plan7Title:
-          "Что поменять первым, чтобы сделать сообщение острее и не потерять premium feel",
+          "Что делает компания, что она сигналит и как страница считывается до того, как заслужено доверие",
         day: "ДЕНЬ",
         headlineCorrection: "КОРРЕКЦИЯ HEADLINE",
         plan30Label: "ПЛАН НА 30 ДНЕЙ",
@@ -3371,11 +3377,8 @@ export async function generateBrandReportPdf(
     const reportId = `BM-${report.brandName
       .replace(/[^a-z0-9]/gi, "")
       .toUpperCase()
-      .slice(0, 3)}-${new Date().getFullYear()}-${Buffer.from(report.url)
-      .toString("base64")
-      .replace(/[^A-Z0-9]/gi, "")
       .slice(0, 3)
-      .toUpperCase()}`;
+      .padEnd(3, "X")}-${new Date().getFullYear()}-001`;
     const uniqueItems = (items: string[], max = items.length) =>
       Array.from(
         new Set(
@@ -3409,15 +3412,15 @@ export async function generateBrandReportPdf(
         .replace(/\s+/g, " ")
         .trim();
 
-    const addBasePage = (mode: "light" | "dark") => {
+    const addBasePage = () => {
       pageNumber += 1;
       doc.addPage();
-      doc.rect(0, 0, pageWidth, pageHeight).fill(mode === "dark" ? colors.dark : colors.paper);
-      doc.fillColor(mode === "dark" ? colors.accent : colors.accent)
+      doc.rect(0, 0, pageWidth, pageHeight).fill(colors.dark);
+      doc.fillColor(colors.accent)
         .font("Helvetica")
         .fontSize(9)
         .text("BRANDMIRROR", contentLeft, 36, { characterSpacing: 2.4 });
-      doc.fillColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight)
+      doc.fillColor(colors.mutedOnDark)
         .font("Helvetica")
         .fontSize(9)
         .text(`${String(pageNumber).padStart(2, "0")} / ${String(totalPages).padStart(2, "0")}`, contentRight - 56, 36, {
@@ -3427,10 +3430,10 @@ export async function generateBrandReportPdf(
         });
       doc.moveTo(contentLeft, 760)
         .lineTo(contentRight, 760)
-        .strokeColor(mode === "dark" ? colors.darkRule : colors.rule)
+        .strokeColor(colors.darkRule)
         .lineWidth(0.8)
         .stroke();
-      doc.fillColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight)
+      doc.fillColor(colors.mutedOnDark)
         .font("Helvetica")
         .fontSize(8)
         .text(pdfCopy.footer, contentLeft, 772, {
@@ -3438,17 +3441,57 @@ export async function generateBrandReportPdf(
         });
     };
 
-    const drawPageLabel = (label: string, title: string, mode: "light" | "dark") => {
-      doc.fillColor(mode === "dark" ? colors.accent : colors.accent)
+    const fitHeading = (
+      text: string,
+      width: number,
+      maxHeight: number,
+      startSize = 30,
+      minSize = 22,
+      lineGap = -1,
+      font: "Times-Bold" | "Times-Roman" | "Helvetica" = "Times-Bold",
+    ) => {
+      const clean = bodyCopy(text);
+      let size = startSize;
+      while (size >= minSize) {
+        doc.font(font).fontSize(size);
+        if (doc.heightOfString(clean, { width, lineGap }) <= maxHeight) {
+          return { text: clean, size, lineGap, font };
+        }
+        size -= 1;
+      }
+      return { text: clean, size: minSize, lineGap, font };
+    };
+
+    const drawPageLabel = (
+      label: string,
+      title: string,
+      options?: {
+        width?: number;
+        maxHeight?: number;
+        maxFont?: number;
+        minFont?: number;
+        x?: number;
+      },
+    ) => {
+      const x = options?.x ?? contentLeft;
+      const width = options?.width ?? contentWidth - 40;
+      doc.fillColor(colors.accent)
         .font("Helvetica")
         .fontSize(10)
-        .text(label, contentLeft, 72, { characterSpacing: 2 });
-      doc.fillColor(mode === "dark" ? colors.textOnDark : colors.ink)
-        .font("Times-Bold")
-        .fontSize(28)
-        .text(title, contentLeft, 102, {
-          width: contentWidth - 40,
-          lineGap: -1,
+        .text(label, x, 72, { characterSpacing: 2 });
+      const fitted = fitHeading(
+        title,
+        width,
+        options?.maxHeight ?? 96,
+        options?.maxFont ?? 30,
+        options?.minFont ?? 22,
+      );
+      doc.fillColor(colors.textOnDark)
+        .font(fitted.font)
+        .fontSize(fitted.size)
+        .text(fitted.text, x, 102, {
+          width,
+          lineGap: fitted.lineGap,
         });
       return doc.y;
     };
@@ -3458,15 +3501,44 @@ export async function generateBrandReportPdf(
       x: number,
       y: number,
       width: number,
-      mode: "light" | "dark",
       fontSize = 11,
       lineGap = 5,
     ) => {
-      doc.fillColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight)
+      doc.fillColor(colors.mutedOnDark)
         .font("Helvetica")
         .fontSize(fontSize)
         .text(bodyCopy(text), x, y, { width, lineGap });
       return doc.y;
+    };
+
+    const fitTextToBox = (
+      text: string,
+      width: number,
+      height: number,
+      startSize = 11.5,
+      minSize = 9.5,
+      lineGap = 5,
+      font: "Helvetica" | "Times-Roman" | "Times-Bold" = "Helvetica",
+    ) => {
+      let clean = bodyCopy(text);
+      let size = startSize;
+      while (size >= minSize) {
+        doc.font(font).fontSize(size);
+        if (doc.heightOfString(clean, { width, lineGap }) <= height) {
+          return { text: clean, size, lineGap, font };
+        }
+        size -= 0.3;
+      }
+
+      while (clean.length > 80) {
+        clean = `${clean.slice(0, -12).trim().replace(/[ ,.;:]+$/, "")}...`;
+        doc.font(font).fontSize(minSize);
+        if (doc.heightOfString(clean, { width, lineGap }) <= height) {
+          return { text: clean, size: minSize, lineGap, font };
+        }
+      }
+
+      return { text: clean, size: minSize, lineGap, font };
     };
 
     const drawBulletBlock = (
@@ -3475,16 +3547,15 @@ export async function generateBrandReportPdf(
       x: number,
       y: number,
       width: number,
-      mode: "light" | "dark",
       max = items.length,
     ) => {
-      doc.fillColor(mode === "dark" ? colors.textOnDark : colors.ink)
+      doc.fillColor(colors.textOnDark)
         .font("Times-Bold")
         .fontSize(18)
         .text(heading, x, y, { width });
       let nextY = y + 28;
       for (const item of uniqueItems(items, max)) {
-        doc.fillColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight)
+        doc.fillColor(colors.mutedOnDark)
           .font("Helvetica")
           .fontSize(11)
           .text(`- ${item}`, x, nextY, { width, lineGap: 5 });
@@ -3536,19 +3607,94 @@ export async function generateBrandReportPdf(
       }
     };
 
-    const drawScoreMeter = (x: number, y: number, width: number, score: number, mode: "light" | "dark") => {
-      doc.roundedRect(x, y, width, 8, 4).fill(mode === "dark" ? "#332f2a" : "#e2d6c6");
-      doc.roundedRect(x, y, Math.max(8, width * (score / 100)), 8, 4).fill(colors.accent);
-      [0, 40, 70, 100].forEach((tick) => {
+    const drawScoreMeter = (x: number, y: number, width: number, score: number) => {
+      doc.roundedRect(x, y, width, 8, 4).fill(colors.rule);
+      doc.roundedRect(x, y, Math.max(8, width * (score / 100)), 8, 4).fill(
+        score >= 85
+          ? colors.accent
+          : score >= 70
+            ? colors.mint
+            : score >= 50
+              ? colors.amber
+              : colors.terracotta,
+      );
+      [0, 30, 50, 70, 85, 100].forEach((tick) => {
         const tickX = x + width * (tick / 100);
-        doc.moveTo(tickX, y + 12).lineTo(tickX, y + 18).strokeColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight).stroke();
+        doc.moveTo(tickX, y + 12).lineTo(tickX, y + 18).strokeColor(colors.mutedOnDark).stroke();
       });
-      doc.fillColor(mode === "dark" ? colors.mutedOnDark : colors.mutedOnLight)
+      doc.fillColor(colors.mutedOnDark)
         .font("Helvetica")
         .fontSize(8)
         .text("0", x - 2, y + 20);
+      doc.text("30", x + width * 0.3 - 6, y + 20);
+      doc.text("50", x + width * 0.5 - 6, y + 20);
       doc.text("70", x + width * 0.7 - 6, y + 20);
+      doc.text("85", x + width * 0.85 - 6, y + 20);
       doc.text("100", x + width - 14, y + 20);
+    };
+
+    const bandColor = (score: number) =>
+      score >= 85
+        ? colors.accent
+        : score >= 70
+          ? colors.mint
+          : score >= 50
+            ? colors.amber
+            : score >= 30
+              ? colors.terracotta
+              : "#B65C5C";
+
+    const drawPanel = (x: number, y: number, width: number, height: number, fill = colors.panel) => {
+      doc.roundedRect(x, y, width, height, 16).fill(fill);
+    };
+
+    const drawSectionTag = (text: string, x: number, y: number, color = colors.accent) => {
+      doc.fillColor(color)
+        .font("Helvetica")
+        .fontSize(8.5)
+        .text(text, x, y, { characterSpacing: 1.5 });
+    };
+
+    const drawTextCard = ({
+      x,
+      y,
+      width,
+      height,
+      label,
+      title,
+      body,
+      fill = colors.panel,
+      labelColor = colors.accent,
+      bodyFont = "Helvetica" as "Helvetica" | "Times-Roman" | "Times-Bold",
+      bodySize = 10.4,
+      bodyMin = 9.2,
+      titleFont = "Times-Bold" as "Helvetica" | "Times-Roman" | "Times-Bold",
+      titleSize = 18,
+      titleMin = 14,
+      bodyTopOffset = 70,
+      titleTopOffset = 38,
+    }) => {
+      drawPanel(x, y, width, height, fill);
+      if (label) {
+        drawSectionTag(label, x + 18, y + 18, labelColor);
+      }
+      let bodyTop = y + 20;
+      if (title) {
+        const fittedTitle = fitTextToBox(title, width - 36, 54, titleSize, titleMin, 3, titleFont);
+        doc.fillColor(colors.textOnDark)
+          .font(fittedTitle.font)
+          .fontSize(fittedTitle.size)
+          .text(fittedTitle.text, x + 18, y + titleTopOffset, {
+            width: width - 36,
+            lineGap: fittedTitle.lineGap,
+          });
+        bodyTop = Math.max(bodyTop, doc.y + 12);
+      } else {
+        bodyTop = y + bodyTopOffset;
+      }
+      const bodyHeight = height - (bodyTop - y) - 18;
+      const fittedBody = fitTextToBox(body, width - 36, Math.max(36, bodyHeight), bodySize, bodyMin, 5, bodyFont);
+      drawParagraph(fittedBody.text, x + 18, bodyTop, width - 36, fittedBody.size, fittedBody.lineGap);
     };
 
     const scoreByLabel = (label: string) =>
@@ -3618,539 +3764,610 @@ export async function generateBrandReportPdf(
       3,
     );
 
-    // Page 1: cover
+    const metricCards = [
+      "Positioning Clarity - does the buyer know what you are within one read?",
+      "AI Discoverability - can AI tools find, describe, and recommend the brand accurately?",
+      "Visual Credibility - does the design earn the price and the promise?",
+      "Offer Specificity - could someone repeat what you sell without your help?",
+      "Conversion Readiness - when someone is ready, is there a door to walk through?",
+    ];
+
+    const aiRubric = [
+      "0-40: AI tools cannot find or describe the brand at all.",
+      "40-70: AI tools find the brand but summarize it generically or incorrectly.",
+      "70-85: AI tools can accurately describe and recommend the brand.",
+      "85-100: The brand is structured for AI with clear claims, naming, and data.",
+    ];
+
+    const practicalMoves = {
+      "Positioning Clarity": {
+        low: "Rewrite the first screen so it states what you do, for whom, and why it matters in one read. Remove mood-first language that delays meaning.",
+        mid: "Pull the strongest proof point above the fold so the promise lands faster and with more authority.",
+      },
+      "AI Discoverability": {
+        low: "Add clearer category language, explicit service nouns, and metadata that AI tools can quote without guessing.",
+        mid: "Tighten naming consistency across headline, metadata, and supporting copy so AI summaries stop flattening the offer.",
+      },
+      "Visual Credibility": {
+        low: "Replace template cues and generic imagery. The page has to look as controlled as the price point it implies.",
+        mid: "Sharpen spacing, imagery hierarchy, and proof placement so the visual layer does more commercial work.",
+      },
+      "Offer Specificity": {
+        low: "Name the actual deliverable. Replace broad category language with a concrete commercial offer a buyer can repeat.",
+        mid: "Clarify who the offer is for and what changes after someone buys. The transformation still lands too late.",
+      },
+      "Conversion Readiness": {
+        low: "Create one clear next step near the promise and keep the proof close to it. The page still hides the door.",
+        mid: "Make the CTA more specific and more earned. Reduce friction between interest, trust, and the click.",
+      },
+    } as const;
+
+    const displayUrl = report.url.replace(/^https?:\/\//, "");
+
+    // Page 1: Cover
     pageNumber += 1;
     doc.addPage();
     doc.rect(0, 0, pageWidth, pageHeight).fill(colors.dark);
-    if (archetypePosterSource) {
-      const coverX = 36;
-      const coverY = 30;
-      const coverWidth = pageWidth - 72;
-      const coverHeight = pageHeight - 96;
-
-      drawRoundedImage(archetypePosterSource, coverX, coverY, coverWidth, coverHeight, 24);
-
-      doc.save();
-      doc.fillOpacity(0.18);
-      doc.roundedRect(coverX, coverY, coverWidth, 112, 24).fill(colors.dark);
-      doc.fillOpacity(0.48);
-      doc.rect(coverX, coverY + coverHeight - 264, coverWidth, 264).fill(colors.dark);
-      doc.restore();
-
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("BRANDMIRROR", coverX + 22, coverY + 22, {
-        characterSpacing: 2.4,
-      });
-
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(46).text(report.brandName, coverX + 28, coverY + 188, {
-        width: coverWidth - 56,
-        align: "center",
-        lineGap: -2,
-      });
-      doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(20).text(report.tagline, coverX + 64, coverY + 306, {
-        width: coverWidth - 128,
-        align: "center",
-        lineGap: 4,
-      });
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(report.genre, coverX + 32, coverY + 390, {
-        width: coverWidth - 64,
-        align: "center",
-        characterSpacing: 2.1,
-      });
-
-      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(15).text(
-        `RATED ${report.posterScore} · ${report.scoreBand}`,
-        coverX + 28,
-        coverY + coverHeight - 122,
-        {
-          width: coverWidth - 56,
-          align: "center",
-          characterSpacing: 0.4,
-        },
-      );
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10.5).text(
-        truncate(report.scoreModifier, 120),
-        coverX + 72,
-        coverY + coverHeight - 92,
-        {
-          width: coverWidth - 144,
-          align: "center",
-          lineGap: 4,
-        },
-      );
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(
-        "brandmirror.app",
-        coverX + 28,
-        coverY + coverHeight - 42,
-        {
-          width: coverWidth - 56,
-          align: "center",
-          characterSpacing: 1.2,
-        },
-      );
-
-      doc.moveTo(contentLeft, 792).lineTo(contentRight, 792).strokeColor(colors.accent).lineWidth(1).stroke();
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.5).text(pdfCopy.powered, contentLeft, 804, {
-        width: 180,
-        align: "left",
-        characterSpacing: 1.1,
-      });
-      doc.text(reportId, contentRight - 160, 804, {
-        width: 160,
-        align: "right",
-        characterSpacing: 1.3,
-      });
-    } else {
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("BRANDMIRROR", contentLeft, 56, {
-        characterSpacing: 2.4,
-      });
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(42).text(report.brandName, contentLeft, 262, {
-        width: contentWidth,
-        align: "center",
-      });
-      doc.moveTo(200, 336).lineTo(395, 336).strokeColor(colors.accent).lineWidth(1).stroke();
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(12).text(pdfCopy.coverSub, contentLeft, 354, {
-        width: contentWidth,
-        align: "center",
-        characterSpacing: 1.8,
-      });
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(today, contentLeft, 382, {
-        width: contentWidth,
-        align: "center",
-      });
-      doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(22).text(pdfCopy.footer, 118, 564, {
-        width: 360,
-        align: "center",
-        lineGap: 4,
-      });
-      doc.moveTo(contentLeft, 744).lineTo(contentRight, 744).strokeColor(colors.accent).lineWidth(1).stroke();
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(pdfCopy.powered, contentLeft, 760, {
-        width: 180,
-        align: "left",
-        characterSpacing: 1.1,
-      });
-      doc.text(reportId, contentRight - 160, 760, { width: 160, align: "right", characterSpacing: 1.3 });
-    }
-
-    // Page 2: what this report is
-    addBasePage("light");
-    const whatThisBottom = drawPageLabel(pdfCopy.whatThisIsLabel, pdfCopy.whatThisIsTitle, "light");
-    const introText = pdfCopy.whatThisIsIntro;
-    let introY = Math.max(whatThisBottom + 26, 176);
-    for (const paragraph of introText) {
-      introY = drawParagraph(paragraph, contentLeft, introY, 286, "light", 12, 7) + 18;
-    }
-    const snapshotX = 362;
-    const snapshotY = Math.max(whatThisBottom + 12, 176);
-    const snapshotWidth = 177;
-    doc.roundedRect(snapshotX, snapshotY, snapshotWidth, 248, 14).fill(colors.paperSoft);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.reportSnapshot, snapshotX + 20, snapshotY + 22, {
-      characterSpacing: 1.8,
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text("BRANDMIRROR / FULL REPORT", contentLeft, 42, {
+      characterSpacing: 2.3,
     });
-    doc.fillColor(colors.ink).font("Times-Bold").fontSize(22).text(`${overallScore}/100`, snapshotX + 20, snapshotY + 52);
-    doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(11).text(pdfCopy.overallReadiness, snapshotX + 20, snapshotY + 84, {
-      width: 132,
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(displayUrl, contentRight - 170, 42, {
+      width: 170,
+      align: "right",
     });
-    doc.fillColor(colors.ink).font("Times-Bold").fontSize(15).text(report.title, snapshotX + 20, snapshotY + 126, {
-      width: 138,
-      lineGap: 0,
-    });
-    const snapshotTextY = doc.y + 18;
-    doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(10.5).text(truncate(report.snapshot, 185), snapshotX + 20, snapshotTextY, {
-      width: 138,
-      lineGap: 5,
-    });
-
-    // Page 3: score dashboard
-    addBasePage("dark");
-    drawPageLabel(pdfCopy.scoreDashboardLabel, pdfCopy.scoreDashboardTitle, "dark");
-    const cardTop = 208;
-    const cardWidth = 87;
-    const gap = 10;
-    scorePages.forEach((item, index) => {
-      const x = contentLeft + index * (cardWidth + gap);
-      doc.roundedRect(x, cardTop, cardWidth, 348, 12).fill(colors.darkSoft);
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8).text(item.title.toUpperCase(), x + 12, cardTop + 16, {
-        width: cardWidth - 24,
-        characterSpacing: 1.1,
-      });
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(28).text(String(item.score.score), x + 12, cardTop + 44, {
-        width: cardWidth - 24,
-      });
-      doc.roundedRect(x + 33, cardTop + 100, 20, 160, 10).fill("#3a342c");
-      const fillHeight = Math.max(18, 160 * (item.score.score / 100));
-      doc.roundedRect(x + 33, cardTop + 260 - fillHeight, 20, fillHeight, 10).fill(index === 3 ? colors.terracotta : colors.accent);
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(truncate(item.score.note, 70), x + 12, cardTop + 282, {
-        width: cardWidth - 24,
-        lineGap: 4,
-      });
-    });
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text(pdfCopy.scoreSentence, contentLeft, 608, {
-      width: contentWidth,
+    const coverTitle = fitHeading(report.brandName, contentWidth - 64, 118, 54, 38, -4);
+    doc.fillColor(colors.textOnDark).font(coverTitle.font).fontSize(coverTitle.size).text(coverTitle.text, 88, 116, {
+      width: contentWidth - 64,
+      lineGap: coverTitle.lineGap,
       align: "center",
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(
-      pdfCopy.scoreSub,
-      110,
-      640,
-      { width: 375, align: "center", lineGap: 5 },
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(11).text(pdfCopy.coverSub, 88, 236, {
+      width: contentWidth - 64,
+      align: "center",
+      characterSpacing: 1.9,
+    });
+    const coverTagline = fitTextToBox(
+      truncate(report.tagline || pdfCopy.footer.replace("\n", " "), 160),
+      contentWidth - 120,
+      58,
+      20,
+      15,
+      5,
+      "Times-Roman",
     );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(
-      language === "es"
-        ? "Comparte tu score y etiqueta a @brandmirror."
-        : language === "ru"
-          ? "Поделись своим score и отметь @brandmirror."
-          : "Share your score and tag @brandmirror.",
-      contentLeft,
-      700,
-      { width: contentWidth, align: "center", characterSpacing: 1.2 },
+    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 116, 284, {
+      width: contentWidth - 120,
+      align: "center",
+      lineGap: coverTagline.lineGap,
+    });
+    if (archetypePosterSource) {
+      drawRoundedImage(archetypePosterSource, 56, 386, contentWidth, 312, 22);
+      doc.save();
+      doc.fillOpacity(0.58);
+      doc.rect(56, 386, contentWidth, 312).fill(colors.dark);
+      doc.restore();
+    }
+    drawPanel(124, 564, pageWidth - 248, 92, colors.panel);
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text("REPORT ID", 132, 664, {
+      characterSpacing: 1.5,
+    });
+    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(16).text(reportId, 132, 638);
+    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, 132, 614, {
+      width: pageWidth - 264,
+      align: "left",
+      characterSpacing: 0.4,
+    });
+    doc.moveTo(contentLeft, 744).lineTo(contentRight, 744).strokeColor(colors.rule).stroke();
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.5).text(pdfCopy.powered, contentLeft, 758, {
+      width: 220,
+    });
+    doc.text(today, contentRight - 120, 758, { width: 120, align: "right" });
+
+    // Page 2: What We Measure
+    addBasePage();
+    const page2TitleBottom = drawPageLabel(pdfCopy.whatThisIsLabel, pdfCopy.whatThisIsTitle, {
+      width: 300,
+      maxFont: 26,
+      minFont: 22,
+      maxHeight: 120,
+    });
+    let page2Y = page2TitleBottom + 22;
+    for (const paragraph of pdfCopy.whatThisIsIntro) {
+      page2Y = drawParagraph(paragraph, contentLeft, page2Y, 248, 11.2, 6) + 16;
+    }
+    const page2CardY = Math.max(page2TitleBottom + 8, 214);
+    drawPanel(324, page2CardY, 215, 196);
+    drawSectionTag("FIVE AXES", 344, page2CardY + 24);
+    let metricY = page2CardY + 42;
+    for (const item of metricCards) {
+      metricY = drawParagraph(`- ${item}`, 344, metricY, 175, 9.3, 4) + 6;
+    }
+    drawPanel(contentLeft, 430, contentWidth, 128, colors.panelSoft);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text("How to use this report", contentLeft + 22, 524);
+    drawParagraph(
+      "Start with the First Read and Score Dashboard. Then move into the Signal Read, the deep-dive axes, and the Priority Fix Stack. The Action Plan is there to turn diagnosis into movement.",
+      contentLeft + 22,
+      496,
+      contentWidth - 44,
+      11,
+      6,
+    );
+    doc.fillColor(colors.accent).font("Times-Roman").fontSize(20).text(
+      "A score. A diagnosis. A fix stack. One clear answer about what to sharpen first.",
+      92,
+      616,
+      { width: contentWidth - 72, align: "center", lineGap: 5 },
     );
 
-    // Page 4: methodology
-    addBasePage("light");
-    drawPageLabel(pdfCopy.methodologyLabel, pdfCopy.methodologyTitle, "light");
-    let methodY = 176;
+    // Page 3: First Read
+    addBasePage();
+    const page3TitleBottom = drawPageLabel("FIRST READ", pdfCopy.plan7Title, { width: 338, maxFont: 28, minFont: 22, maxHeight: 132 });
+    const page3Top = page3TitleBottom + 22;
+    drawSectionTag("WHAT IT DOES", contentLeft, page3Top);
+    const whatItDoesBox = fitTextToBox(report.whatItDoes, 270, 84, 11.8, 10.2, 6);
+    let firstReadY = drawParagraph(whatItDoesBox.text, contentLeft, page3Top + 24, 270, whatItDoesBox.size, 6) + 24;
+    drawSectionTag("FIRST DIAGNOSIS", contentLeft, firstReadY);
+    const snapshotBox = fitTextToBox(report.snapshot, 270, 90, 11.8, 10.2, 6, "Times-Roman");
+    firstReadY = drawParagraph(snapshotBox.text, contentLeft, firstReadY + 24, 270, snapshotBox.size, 6) + 24;
+    drawSectionTag("CURRENT STATE", contentLeft, firstReadY);
+    const currentBox = fitTextToBox(report.whatItSignals, 270, 136, 11.4, 10, 6);
+    drawParagraph(currentBox.text, contentLeft, firstReadY + 24, 270, currentBox.size, 6);
+    drawTextCard({
+      x: 350,
+      y: Math.max(page3TitleBottom + 4, 224),
+      width: 189,
+      height: 286,
+      label: pdfCopy.reportSnapshot,
+      body: report.scoreModifier,
+      bodySize: 9.8,
+      bodyMin: 9,
+      bodyTopOffset: 112,
+    });
+    drawSectionTag("CURRENT READ", 370, 258, colors.mint);
+    const currentReadBox = fitTextToBox(firstSentence(report.snapshot), 151, 44, 10.2, 9.2, 4);
+    drawParagraph(currentReadBox.text, 370, 282, 151, currentReadBox.size, 4);
+    doc.fillColor(bandColor(overallScore)).font("Helvetica").fontSize(16).text(report.scoreBand, 370, 340, {
+      width: 151,
+      characterSpacing: 0.6,
+    });
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10.5).text(pdfCopy.overallReadiness, 370, 372, {
+      width: 151,
+    });
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(29).text(`${overallScore}/100`, 370, 398);
+
+    // Page 4: Score Dashboard
+    addBasePage();
+    const page4TitleBottom = drawPageLabel(pdfCopy.scoreDashboardLabel, "Scanner readout across the five commercial signals", {
+      width: 360,
+      maxFont: 27,
+      minFont: 22,
+      maxHeight: 110,
+    });
+    drawTextCard({
+      x: 360,
+      y: page4TitleBottom + 6,
+      width: 179,
+      height: 104,
+      label: "OVERALL",
+      title: `${overallScore}/100`,
+      body: `${report.scoreBand}. ${firstSentence(report.scoreModifier)}`,
+      bodySize: 9.6,
+      bodyMin: 8.8,
+      titleSize: 28,
+      titleMin: 24,
+      titleTopOffset: 34,
+      bodyTopOffset: 72,
+    });
+    let scoreRowY = Math.max(page4TitleBottom + 124, 300);
+    scorePages.forEach((item) => {
+      drawSectionTag(item.title.toUpperCase(), contentLeft, scoreRowY + 24, colors.textMuted);
+      doc.fillColor(bandColor(item.score.score)).font("Helvetica").fontSize(15).text(String(item.score.score), contentRight - 38, scoreRowY + 18, {
+        width: 38,
+        align: "right",
+      });
+      drawScoreMeter(contentLeft + 182, scoreRowY + 22, 248, item.score.score);
+      const mini = fitTextToBox(item.score.note || item.diagnosis, 150, 42, 9.6, 8.8, 4);
+      drawParagraph(mini.text, contentLeft, scoreRowY - 2, 150, mini.size, mini.lineGap);
+      scoreRowY += 72;
+    });
+
+    // Page 5: Methodology
+    addBasePage();
+    const page5TitleBottom = drawPageLabel(pdfCopy.methodologyLabel, pdfCopy.methodologyTitle, {
+      width: 330,
+      maxFont: 28,
+      minFont: 22,
+      maxHeight: 114,
+    });
+    let methodY = page5TitleBottom + 18;
     pdfCopy.methodologyBullets.forEach((item) => {
-      doc.fillColor(colors.ink).font("Helvetica").fontSize(11).text(`- ${item}`, contentLeft, methodY, {
-        width: 270,
-        lineGap: 6,
-      });
-      methodY = doc.y + 12;
+      methodY = drawParagraph(`- ${item}`, contentLeft, methodY, 266, 11, 6) + 8;
     });
-    doc.roundedRect(360, 176, 179, 328, 14).fill("#efe6d9");
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.readingScale, 382, 198, {
-      characterSpacing: 1.7,
-    });
-    let legendY = 236;
-    pdfCopy.legend.forEach((item, index) => {
-      doc.roundedRect(382, legendY, 135, 64, 12).fill(index === 0 ? "#ead7cf" : index === 1 ? "#eadfc9" : "#dde4d3");
-      doc.fillColor(colors.ink).font("Helvetica").fontSize(14).text(item.title, 398, legendY + 14);
-      doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(10).text(item.body, 398, legendY + 32, {
-        width: 103,
-        lineGap: 4,
+    const page5LegendY = Math.max(page5TitleBottom + 8, 176);
+    drawPanel(346, page5LegendY, 193, 436);
+    drawSectionTag(pdfCopy.readingScale, 366, page5LegendY + 408);
+    let legendY = page5LegendY + 372;
+    pdfCopy.legend.forEach((item) => {
+      const itemColor =
+        item.title.includes("Leading") ? colors.accent :
+        item.title.includes("Stable") ? colors.mint :
+        item.title.includes("Developing") ? colors.amber :
+        item.title.includes("Fragile") ? colors.terracotta :
+        "#B65C5C";
+      doc.roundedRect(366, legendY - 52, 153, 58, 14).fill(colors.panelSoft);
+      doc.roundedRect(366, legendY - 52, 44, 58, 14).fill(itemColor);
+      doc.fillColor(itemColor).font("Helvetica").fontSize(8.5).text(item.title.split(" ")[0].toUpperCase(), 420, legendY - 18, {
+        characterSpacing: 1.2,
       });
-      legendY += 84;
+      drawParagraph(item.title.replace(/^[^ ]+\s/, ""), 420, legendY - 38, 83, 9.3, 4);
+      legendY -= 72;
+    });
+    drawSectionTag("AI DISCOVERABILITY", contentLeft, 604, colors.mint);
+    let aiY = 578;
+    aiRubric.forEach((line) => {
+      aiY = drawParagraph(`- ${line}`, contentLeft, aiY, 266, 9.9, 5) + 6;
     });
 
-    if (includeWebsiteEvidencePage) {
-      addBasePage("light");
-      drawPageLabel(pdfCopy.websiteEvidenceLabel, pdfCopy.websiteEvidenceTitle, "light");
-      doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(11).text(
-        pdfCopy.websiteEvidenceCaption,
-        contentLeft,
-        170,
-        { width: 320, lineGap: 5 },
-      );
-      drawRoundedImage(
-        websiteImageSource,
-        contentLeft,
-        208,
-        contentWidth,
-        300,
-        16,
-        { x: heroCallout?.x, y: heroCallout?.y },
-      );
-      const calloutTop = 536;
-      const calloutWidth = (contentWidth - 18) / 2;
-      [
-        {
-          label: pdfCopy.heroCalloutLabel,
-          title: heroCallout?.title || "Hero promise",
-          body: heroCallout?.body || report.aboveTheFold,
-        },
-        {
-          label: pdfCopy.ctaCalloutLabel,
-          title: ctaCallout?.title || "Proof and CTA zone",
-          body: ctaCallout?.body || report.conversionRead,
-        },
-      ].forEach((item, index) => {
-        const x = contentLeft + index * (calloutWidth + 18);
-        doc.roundedRect(x, calloutTop, calloutWidth, 156, 14).fill(colors.paperSoft);
-        doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text(item.label, x + 18, calloutTop + 18, {
-          width: calloutWidth - 36,
-          characterSpacing: 1.4,
-        });
-        doc.fillColor(colors.ink).font("Times-Bold").fontSize(18).text(item.title, x + 18, calloutTop + 42, {
-          width: calloutWidth - 36,
-          lineGap: 1,
-        });
-        doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(10.5).text(truncate(item.body, 180), x + 18, doc.y + 12, {
-          width: calloutWidth - 36,
-          lineGap: 5,
-        });
+    // Page 6: Signal Read Part 1
+    addBasePage();
+    const page6TitleBottom = drawPageLabel("SIGNAL READ", "What is missing, where the signal drifts, and what the AI layer can actually understand", {
+      width: 360,
+      maxFont: 28,
+      minFont: 22,
+      maxHeight: 118,
+    });
+    const signalCardWidth = (contentWidth - 18) / 2;
+    drawTextCard({
+      x: contentLeft,
+      y: page6TitleBottom + 10,
+      width: contentWidth,
+      height: 156,
+      label: pdfCopy.commercialCost,
+      body: report.toneCheck,
+      bodySize: 11.2,
+      bodyMin: 9.8,
+      labelColor: colors.mint,
+      bodyTopOffset: 52,
+      fill: colors.panelSoft,
+    });
+    drawTextCard({
+      x: contentLeft,
+      y: page6TitleBottom + 206,
+      width: signalCardWidth,
+      height: 184,
+      label: pdfCopy.brandPromises,
+      body: report.whatIsMissing || report.whatsBroken.join(" "),
+      bodySize: 10.8,
+      bodyMin: 9.6,
+      bodyTopOffset: 50,
+    });
+    drawTextCard({
+      x: contentLeft + signalCardWidth + 18,
+      y: page6TitleBottom + 206,
+      width: signalCardWidth,
+      height: 184,
+      label: pdfCopy.pageDelivers,
+      body: report.mixedSignals,
+      bodySize: 10.8,
+      bodyMin: 9.6,
+      bodyTopOffset: 50,
+    });
+
+    // Page 7: Signal Read Part 2
+    addBasePage();
+    const page7TitleBottom = drawPageLabel("SIGNAL READ", "What to do next, what to amplify, and what to stop protecting", {
+      width: 390,
+      maxFont: 28,
+      minFont: 22,
+      maxHeight: 114,
+    });
+    drawTextCard({
+      x: contentLeft,
+      y: page7TitleBottom + 10,
+      width: contentWidth,
+      height: 154,
+      label: "WHAT TO DROP",
+      body: report.whatToDrop,
+      bodySize: 11.2,
+      bodyMin: 10,
+      labelColor: colors.terracotta,
+      bodyTopOffset: 52,
+      fill: colors.panelSoft,
+    });
+    drawTextCard({
+      x: contentLeft,
+      y: page7TitleBottom + 212,
+      width: signalCardWidth,
+      height: 184,
+      label: "WHAT TO DO NEXT",
+      body: report.whatToDoNext,
+      bodySize: 10.8,
+      bodyMin: 9.6,
+      bodyTopOffset: 50,
+    });
+    drawTextCard({
+      x: contentLeft + signalCardWidth + 18,
+      y: page7TitleBottom + 212,
+      width: signalCardWidth,
+      height: 184,
+      label: "WHAT TO AMPLIFY",
+      body: report.whatToAmplify,
+      bodySize: 10.8,
+      bodyMin: 9.6,
+      bodyTopOffset: 50,
+    });
+
+    // Page 8: Website Surface
+    addBasePage();
+    const page8TitleBottom = drawPageLabel(pdfCopy.websiteEvidenceLabel, pdfCopy.websiteEvidenceTitle, {
+      width: 370,
+      maxFont: 28,
+      minFont: 22,
+      maxHeight: 114,
+    });
+    const page8ImageY = page8TitleBottom + 14;
+    if (websiteImageSource) {
+      drawRoundedImage(websiteImageSource, contentLeft, page8ImageY, contentWidth, 276, 18, {
+        x: heroCallout?.x,
+        y: heroCallout?.y,
+      });
+    } else {
+      drawPanel(contentLeft, page8ImageY, contentWidth, 276);
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(13).text("Website capture unavailable for this run.", contentLeft, page8ImageY + 126, {
+        width: contentWidth,
+        align: "center",
       });
     }
+    const websiteCalloutWidth = (contentWidth - 18) / 2;
+    [
+      {
+        label: pdfCopy.heroCalloutLabel,
+        title: heroCallout?.title || "Hero promise",
+        body: heroCallout?.body || report.aboveTheFold,
+      },
+      {
+        label: pdfCopy.ctaCalloutLabel,
+        title: ctaCallout?.title || "Proof and CTA zone",
+        body: ctaCallout?.body || report.conversionRead,
+      },
+    ].forEach((item, index) => {
+      const x = contentLeft + index * (websiteCalloutWidth + 18);
+      drawTextCard({
+        x,
+        y: page8ImageY + 306,
+        width: websiteCalloutWidth,
+        height: 132,
+        label: item.label,
+        title: item.title,
+        body: item.body,
+        bodySize: 10,
+        bodyMin: 9,
+        titleSize: 16,
+        titleMin: 13,
+      });
+    });
+    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 450, contentWidth, 10.4, 5);
 
-    // Score axis pages
-    scorePages.forEach((item) => {
-      addBasePage("light");
-      doc.rect(0, 0, pageWidth, 156).fill(colors.dark);
+    // Pages 9-13: axis deep dives
+    scorePages.forEach((item, index) => {
+      addBasePage();
       doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text(item.title.toUpperCase(), contentLeft, 72, {
         characterSpacing: 2,
       });
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(30).text(item.title, contentLeft, 104);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(40).text(String(item.score.score), contentRight - 74, 92, {
-        width: 56,
+      const deepTitle = fitHeading(item.title, 280, 52, 32, 24, -1);
+      doc.fillColor(colors.textOnDark).font(deepTitle.font).fontSize(deepTitle.size).text(deepTitle.text, contentLeft, 106);
+      doc.fillColor(bandColor(item.score.score)).font("Helvetica").fontSize(42).text(String(item.score.score), contentRight - 64, 92, {
+        width: 64,
         align: "right",
       });
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10).text(item.score.note, contentLeft, 190, {
-        width: 246,
-        lineGap: 5,
+      drawTextCard({
+        x: contentLeft,
+        y: 156,
+        width: contentWidth,
+        height: 110,
+        label: item.score.score < 60 ? "PRACTICAL FIX" : "NEXT LEVEL MOVE",
+        body:
+          (item.score.score < 60
+            ? practicalMoves[item.title as keyof typeof practicalMoves]?.low
+            : practicalMoves[item.title as keyof typeof practicalMoves]?.mid) ||
+          (item.score.score >= 70
+            ? "This axis is already helping the brand. The next move is to make it do even more commercial work."
+            : "This axis needs a more explicit correction if the page is going to convert with less resistance."),
+        bodySize: 10.8,
+        bodyMin: 9.6,
+        labelColor: item.score.score < 60 ? colors.terracotta : colors.mint,
+        bodyTopOffset: 50,
+        fill: colors.panelSoft,
       });
-      doc.fillColor(colors.ink).font("Times-Bold").fontSize(20).text(pdfCopy.whatScoreTells, contentLeft, 246, {
-        width: 246,
-      });
-      drawParagraph(item.diagnosis, contentLeft, 278, 246, "light", 12, 7);
-      doc.roundedRect(338, 246, 201, 214, 14).fill(colors.paperSoft);
-      let calloutBodyY = 294;
+      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.whatScoreTells, contentLeft, 312);
+      const diagnosisText = fitTextToBox(item.diagnosis, 248, 160, 11.2, 9.8, 5);
+      drawParagraph(diagnosisText.text, contentLeft, 340, 248, diagnosisText.size, diagnosisText.lineGap);
+      drawPanel(332, 352, 207, 204);
       if (item.title === "Visual Credibility" && websiteImageSource) {
         drawRoundedImage(
           websiteImageSource,
-          358,
-          264,
-          161,
-          86,
+          352,
+          404,
+          167,
+          84,
           12,
-          {
-            x: report.beforeAfterHero.currentFrame.focusX,
-            y: report.beforeAfterHero.currentFrame.focusY,
-          },
+          { x: report.beforeAfterHero.currentFrame.focusX, y: report.beforeAfterHero.currentFrame.focusY },
         );
-        doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text(pdfCopy.revealingLine, 358, 362, {
-          width: 161,
-          characterSpacing: 1.4,
+        drawSectionTag(pdfCopy.revealingLine, 352, 382);
+        const revealVisual = fitTextToBox(truncate(firstSentence(item.quote), 155), 167, 52, 12.4, 10.4, 4, "Times-Roman");
+        doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealVisual.size).text(revealVisual.text, 352, 402, {
+          width: 167,
+          lineGap: revealVisual.lineGap,
         });
-        calloutBodyY = 386;
+        drawSectionTag(pdfCopy.forBrand, 352, 504, colors.textMuted);
+        const implicationVisual = fitTextToBox(item.implication, 167, 34, 10.2, 9, 4);
+        drawParagraph(implicationVisual.text, 352, 524, 167, implicationVisual.size, implicationVisual.lineGap);
       } else {
-        doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.revealingLine, 358, 268, {
-          characterSpacing: 1.5,
+        drawSectionTag(pdfCopy.revealingLine, 352, 384);
+        const revealText = fitTextToBox(truncate(firstSentence(item.quote), 155), 167, 74, 13.2, 10.8, 4, "Times-Roman");
+        doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealText.size).text(revealText.text, 352, 404, {
+          width: 167,
+          lineGap: revealText.lineGap,
         });
+        drawSectionTag(pdfCopy.forBrand, 352, 492, colors.textMuted);
+        const implicationText = fitTextToBox(item.implication, 167, 42, 10, 9, 4);
+        drawParagraph(implicationText.text, 352, 512, 167, implicationText.size, implicationText.lineGap);
       }
-      doc.fillColor(colors.ink).font("Times-Roman").fontSize(14).text(truncate(firstSentence(item.quote), 140), 358, calloutBodyY, {
-        width: 161,
-        lineGap: 4,
-      });
-      const calloutMetaY = Math.max(doc.y + 12, item.title === "Visual Credibility" ? 412 : 376);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.forBrand, 358, calloutMetaY, {
-        characterSpacing: 1.5,
-      });
-      doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(10).text(truncate(item.implication, 170), 358, calloutMetaY + 24, {
-        width: 161,
-        lineGap: 5,
-      });
-      drawScoreMeter(contentLeft, 610, contentWidth, item.score.score, "light");
-      doc.fillColor(colors.ink).font("Times-Bold").fontSize(16).text(pdfCopy.benchmark, contentLeft, 562);
-      doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(11).text(
-        language === "es"
-          ? item.score.score >= 80
-            ? "Este eje ya le está dando una ventaja real a la marca."
-            : item.score.score >= 65
-              ? "Este eje tiene base, pero todavía pierde momentum."
-              : "Este eje está frenando la confianza y necesita corrección directa."
-          : language === "ru"
-            ? item.score.score >= 80
-              ? "Эта ось уже даёт бренду реальное преимущество."
-              : item.score.score >= 65
-                ? "У этой оси уже есть база, но она всё ещё теряет momentum."
-                : "Эта ось тормозит доверие и требует прямой коррекции."
-            : item.score.score >= 80
-              ? "This axis is already giving the brand an advantage."
-              : item.score.score >= 65
-                ? "This axis has a foundation, but it is still leaking momentum."
-                : "This axis is slowing trust and needs direct correction.",
-        contentLeft + 96,
-        564,
-        { width: 387, lineGap: 5 },
-      );
+      drawScoreMeter(contentLeft, 598, contentWidth, item.score.score);
+      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(16).text(pdfCopy.benchmark, contentLeft, 558);
+      if (index === 4) {
+        // no-op, keeps page count readable
+      }
     });
 
-    // Page 10: archetype
-    addBasePage("dark");
-    drawPageLabel(pdfCopy.archetypeLabel, pdfCopy.archetypeTitle, "dark");
-    drawParagraph(report.archetypeRead.rationale, contentLeft, 176, contentWidth, "dark", 12, 7);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.archetypeExpect, contentLeft, 274);
-    let archY = 304;
+    // Page 14: Brand Archetype + Poster
+    addBasePage();
+    drawPageLabel(pdfCopy.archetypeLabel, pdfCopy.archetypeTitle, {
+      width: 350,
+      maxFont: 28,
+      minFont: 22,
+      maxHeight: 108,
+    });
+    drawParagraph(report.archetypeRead.rationale, contentLeft, 194, 242, 11.2, 6);
+    drawSectionTag(pdfCopy.archetypeExpect, contentLeft, 388);
+    let expectY = 394;
     for (const item of uniqueItems([
       report.industryFit.assessment,
       report.industryFit.leverage,
       ...report.expectationGap,
     ], 3)) {
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(`- ${item}`, contentLeft, archY, {
-        width: 224,
-        lineGap: 5,
-      });
-      archY = doc.y + 10;
+      expectY = drawParagraph(`- ${item}`, contentLeft, expectY, 242, 10.6, 5) + 8;
     }
-    doc.roundedRect(320, 256, 219, 284, 16).fill(colors.darkSoft);
+    drawPanel(324, 184, 215, 330);
     if (archetypePosterSource) {
-      drawRoundedImage(archetypePosterSource, 342, 278, 175, 108, 12);
+      drawRoundedImage(archetypePosterSource, 344, 204, 175, 178, 14);
     }
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.archetypeSoWhat, 342, archetypePosterSource ? 406 : 282, {
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(report.title, 344, 404, {
       width: 175,
-      characterSpacing: 1.4,
+      align: "center",
     });
-    let soWhatY = archetypePosterSource ? 438 : 328;
-    archetypeSoWhat.forEach((line) => {
-      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(11).text(`- ${line}`, 342, soWhatY, {
-        width: 175,
-        lineGap: 5,
+    drawParagraph(firstSentence(report.tagline), 356, 438, 151, 9.6, 4);
+    drawSectionTag(pdfCopy.archetypeSoWhat, contentLeft, 162);
+    const implicationWidth = (contentWidth - 24) / 3;
+    archetypeSoWhat.forEach((line, index) => {
+      const x = contentLeft + index * (implicationWidth + 12);
+      drawTextCard({
+        x,
+        y: 548,
+        width: implicationWidth,
+        height: 104,
+        body: line,
+        bodySize: 10,
+        bodyMin: 9,
+        bodyTopOffset: 26,
+        fill: colors.panelSoft,
       });
-      soWhatY = doc.y + 12;
     });
 
-    // Page 11: gap diagnosis
-    addBasePage("light");
-    drawPageLabel(pdfCopy.gapLabel, pdfCopy.gapTitle, "light");
-    doc.moveTo(297, 176).lineTo(297, 654).strokeColor(colors.rule).stroke();
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.brandPromises, contentLeft, 176, {
-      characterSpacing: 1.5,
+    // Page 15: Priority Fix Stack
+    addBasePage();
+    drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, {
+      width: 360,
+      maxFont: 27,
+      minFont: 22,
+      maxHeight: 114,
     });
-    drawBulletBlock("", promiseBullets, contentLeft, 198, 205, "light", 3);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.pageDelivers, 325, 176, {
-      characterSpacing: 1.5,
-    });
-    drawBulletBlock("", deliverBullets, 325, 198, 214, "light", 3);
-    doc.roundedRect(contentLeft, 520, contentWidth, 110, 14).fill(colors.paperSoft);
-    doc.fillColor(colors.ink).font("Times-Bold").fontSize(18).text(pdfCopy.commercialCost, 76, 546);
-    drawParagraph(
-      truncate(report.mixedSignals || report.whyNotConverting.join(" "), 260),
-      76,
-      574,
-      443,
-      "light",
-      11,
-      6,
-    );
-
-    // Page 12: priority fix stack
-    addBasePage("dark");
-    drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, "dark");
     const bands = [
       { title: pdfCopy.fixNow, items: report.priorityFixes.fixNow, color: colors.terracotta },
-      { title: pdfCopy.fixNext, items: report.priorityFixes.fixNext, color: colors.accent },
+      { title: pdfCopy.fixNext, items: report.priorityFixes.fixNext, color: colors.amber },
       { title: pdfCopy.keep, items: report.priorityFixes.keep, color: colors.success },
     ];
-    let bandY = 184;
+    let bandTop = 250;
     bands.forEach((band) => {
-      doc.roundedRect(contentLeft, bandY, contentWidth, 144, 16).fill(colors.darkSoft);
-      doc.roundedRect(contentLeft, bandY, 132, 144, 16).fill(band.color);
-      doc.fillColor(band.title === "KEEP" ? colors.ink : colors.textOnDark).font("Helvetica").fontSize(12).text(band.title, contentLeft + 20, bandY + 26, {
+      drawPanel(contentLeft, bandTop, contentWidth, 98);
+      doc.roundedRect(contentLeft, bandTop, 122, 98, 16).fill(band.color);
+      doc.fillColor(band.title === pdfCopy.keep ? colors.dark : colors.textOnDark).font("Helvetica").fontSize(12).text(band.title, contentLeft + 18, bandTop + 38, {
         characterSpacing: 1.8,
       });
-      let itemY = bandY + 24;
-      band.items.slice(0, 3).forEach((item) => {
-        doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(11).text(`- ${item}`, 206, itemY, {
-          width: 300,
-          lineGap: 5,
-        });
-        itemY = doc.y + 10;
+      let itemY = bandTop + 20;
+      band.items.slice(0, 3).forEach((text) => {
+        itemY = drawParagraph(`- ${text}`, contentLeft + 148, itemY, 310, 10.6, 5) + 6;
       });
-      bandY += 164;
+      bandTop += 116;
+    });
+    const weakestAxes = [...scorePages].sort((a, b) => a.score.score - b.score.score).slice(0, 2);
+    drawPanel(contentLeft, 620, contentWidth, 96, colors.panelSoft);
+    drawSectionTag("WHERE TO START", contentLeft + 18, 644, colors.mint);
+    let weakestY = 666;
+    weakestAxes.forEach((axis) => {
+      const fix =
+        axis.score.score < 60
+          ? practicalMoves[axis.title as keyof typeof practicalMoves]?.low
+          : practicalMoves[axis.title as keyof typeof practicalMoves]?.mid;
+      weakestY = drawParagraph(
+        `${axis.title} (${axis.score.score}/100): ${fix}`,
+        contentLeft + 18,
+        weakestY,
+        contentWidth - 36,
+        10,
+        4,
+      ) + 6;
     });
 
-    // Page 13: 7-day action plan
-    addBasePage("light");
-    drawPageLabel(pdfCopy.plan7Label, pdfCopy.plan7Title, "light");
-    doc.moveTo(104, 188).lineTo(104, 602).strokeColor(colors.accent).lineWidth(1.2).stroke();
-    let dayY = 204;
-    report.actionPlan.next7Days.slice(0, 3).forEach((item, index) => {
-      doc.circle(104, dayY + 8, 7).fill(colors.accent);
-      doc.fillColor(colors.ink).font("Helvetica").fontSize(10).text(`${pdfCopy.day} ${index + 1}-${index + 2}`, 126, dayY, {
-        characterSpacing: 1.1,
-      });
-      drawParagraph(item, 126, dayY + 18, 240, "light", 11, 6);
-      dayY += 128;
+    // Page 16: 30-Day Action Plan + Back Cover
+    addBasePage();
+    drawPageLabel(pdfCopy.plan30Label, pdfCopy.plan30Title, {
+      width: 360,
+      maxFont: 27,
+      minFont: 22,
+      maxHeight: 112,
     });
-    doc.roundedRect(392, 188, 147, 328, 14).fill(colors.paperSoft);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.headlineCorrection, 412, 210, {
-      characterSpacing: 1.5,
+    let actionY = 206;
+    report.actionPlan.next30Days.slice(0, 5).forEach((item) => {
+      actionY = drawParagraph(`- ${item}`, contentLeft, actionY, 244, 10.8, 6) + 8;
     });
-    doc.fillColor(colors.ink).font("Times-Bold").fontSize(18).text(report.rewriteSuggestions.heroLine, 412, 242, {
-      width: 107,
-      lineGap: 4,
+    drawTextCard({
+      x: 332,
+      y: 194,
+      width: 207,
+      height: 274,
+      label: pdfCopy.headlineCorrection,
+      title: "AFTER",
+      body: `${report.rewriteSuggestions.heroLine}\n\nSUPPORT\n${report.rewriteSuggestions.subheadline}\n\nCTA\n${report.rewriteSuggestions.cta}`,
+      bodySize: 9.8,
+      bodyMin: 8.8,
+      titleSize: 12,
+      titleMin: 12,
+      titleFont: "Helvetica",
+      titleTopOffset: 40,
+      bodyTopOffset: 76,
+      fill: colors.panelSoft,
     });
-    doc.fillColor(colors.mutedOnLight).font("Helvetica").fontSize(10).text(report.rewriteSuggestions.subheadline, 412, 336, {
-      width: 107,
-      lineGap: 5,
-    });
-    doc.fillColor(colors.terracotta).font("Helvetica").fontSize(10).text(report.rewriteSuggestions.cta, 412, 452, {
-      width: 107,
-      lineGap: 4,
-    });
-
-    // Page 14: 30-day plan
-    addBasePage("light");
-    drawPageLabel(pdfCopy.plan30Label, pdfCopy.plan30Title, "light");
-    let longY = 180;
-    longY = drawBulletBlock(pdfCopy.next30, report.actionPlan.next30Days, contentLeft, longY, 270, "light", 3) + 18;
-    drawBulletBlock(pdfCopy.campaignDirection, report.campaignAngles.map((item) => `${item.title}: ${item.angle}`), contentLeft, longY, 270, "light", 2);
-    doc.roundedRect(358, 180, 181, 360, 14).fill(colors.paperSoft);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(pdfCopy.directionCues, 380, 204, {
-      characterSpacing: 1.6,
-    });
-    let cueY = 236;
-    uniqueItems([
-      ...report.visualCodes.palette.slice(0, 3),
-      ...report.toneOfVoice.slice(0, 2),
-      report.brandKnownFor,
-    ], 6).forEach((item) => {
-      doc.fillColor(colors.ink).font("Helvetica").fontSize(10).text(item, 380, cueY, {
-        width: 137,
-        lineGap: 4,
-      });
-      cueY = doc.y + 12;
-      doc.moveTo(380, cueY).lineTo(517, cueY).strokeColor(colors.rule).stroke();
-      cueY += 12;
-    });
-
-    // Page 15: what comes next
-    addBasePage("dark");
-    drawPageLabel(pdfCopy.nextLabel, pdfCopy.nextTitle, "dark");
-    const nextCards = pdfCopy.nextCards;
-    nextCards.forEach((card, index) => {
-      const x = contentLeft + index * 161;
-      doc.roundedRect(x, 214, 149, 320, 16).fill(colors.darkSoft);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text(card.icon, x + 18, 238, {
-        characterSpacing: 1.7,
-      });
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(card.title, x + 18, 270, {
-        width: 113,
-        lineGap: 1,
-      });
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(card.body, x + 18, 354, {
-        width: 113,
-        lineGap: 5,
-      });
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(card.price, x + 18, 474);
-    });
-
-    // Page 16: back cover
-    addBasePage("dark");
-    doc.rect(0, 0, pageWidth, pageHeight).fill(colors.dark);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(11).text("BRANDMIRROR", contentLeft, 300, {
-      width: contentWidth,
-      align: "center",
-      characterSpacing: 2.8,
-    });
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(26).text(
+    drawPanel(contentLeft, 506, contentWidth, 122, colors.panelSoft);
+    drawSectionTag("WORK WITH SAHAR", contentLeft + 18, 530, colors.mint);
+    drawParagraph(
+      "You can use this report as a self-guided fix plan, or work with SAHAR to turn it into a sharper homepage, offer system, and brand direction that is easier to trust and easier to buy.",
+      contentLeft + 18,
+      554,
+      contentWidth - 36,
+      10.6,
+      5,
+    );
+    doc.moveTo(contentLeft, 662).lineTo(contentRight, 662).strokeColor(colors.rule).stroke();
+    doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(18).text(
       pdfCopy.backCover,
-      contentLeft,
-      336,
+      contentLeft + 24,
+      696,
       {
-        width: contentWidth,
+        width: contentWidth - 48,
         align: "center",
         lineGap: 6,
       },
     );
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text(
-      report.url.replace(/^https?:\/\//, ""),
-      contentLeft,
-      452,
-      { width: contentWidth, align: "center" },
-    );
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(pdfCopy.powered, contentLeft, 736, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("brand-mirror-xi.vercel.app", contentLeft, 92, {
       width: contentWidth,
       align: "center",
       characterSpacing: 1.2,
+    });
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(pdfCopy.powered, contentLeft, 64, {
+      width: contentWidth,
+      align: "center",
+      characterSpacing: 1.1,
     });
 
     doc.end();
