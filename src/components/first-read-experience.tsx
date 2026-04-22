@@ -4,6 +4,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { type BrandReadResult } from "@/lib/brand-read";
+import { type BrandReport } from "@/lib/brand-report";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
@@ -26,6 +27,11 @@ type CheckoutResponse = {
   ok: boolean;
   checkoutUrl: string;
   sessionId: string;
+};
+
+type ReportResponse = {
+  ok: boolean;
+  report: BrandReport;
 };
 
 // ---------------------------------------------------------------------------
@@ -319,7 +325,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
   }
 
-  function handleDownloadFullReportTestPdf() {
+  async function handleDownloadFullReportTestPdf() {
     const targetUrl = currentUrl.trim();
     if (!targetUrl) return;
 
@@ -327,11 +333,60 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     setError("");
 
     try {
-      const nextUrl = `/api/brand-report/pdf?url=${encodeURIComponent(targetUrl)}&language=${encodeURIComponent(locale)}`;
-      window.open(nextUrl, "_blank", "noopener,noreferrer");
-      window.setTimeout(() => setIsDownloadingFullReport(false), 1200);
-    } catch {
-      setError("Unable to export the full PDF right now.");
+      const reportResponse = await fetch("/api/brand-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: targetUrl,
+          language: locale,
+        }),
+      });
+
+      const reportPayload = (await reportResponse.json()) as ReportResponse | ErrorResponse;
+      if (!reportResponse.ok || !("report" in reportPayload)) {
+        const errorPayload = reportPayload as ErrorResponse;
+        throw new Error(
+          errorPayload.detail ||
+            errorPayload.error ||
+            "Unable to build the full report right now.",
+        );
+      }
+
+      const pdfResponse = await fetch("/api/brand-report/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: targetUrl,
+          language: locale,
+          report: reportPayload.report,
+        }),
+      });
+
+      if (!pdfResponse.ok) {
+        const errorPayload = (await pdfResponse.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(
+          errorPayload.detail ||
+            errorPayload.error ||
+            "Unable to export the full PDF right now.",
+        );
+      }
+
+      const blob = await pdfResponse.blob();
+      triggerPdfDownload(
+        blob,
+        `${reportPayload.report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
+      );
+    } catch (downloadError) {
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Unable to export the full PDF right now.",
+      );
+    } finally {
       setIsDownloadingFullReport(false);
     }
   }
@@ -798,12 +853,14 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           <AnatomyColumn
             label={copy.mainFriction.toUpperCase()}
             tone="#E8B04C"
-            body={result.mainFriction}
+            body={copy.lockedTeaser}
+            locked
           />
           <AnatomyColumn
             label={copy.nextMove.toUpperCase()}
             tone={COLOR.text}
-            body={result.nextMove}
+            body={copy.lockedTeaser}
+            locked
             emphasis
           />
         </section>
@@ -1391,11 +1448,13 @@ function AnatomyColumn({
   tone,
   body,
   emphasis,
+  locked,
 }: {
   label: string;
   tone: string;
   body: string;
   emphasis?: boolean;
+  locked?: boolean;
 }) {
   return (
     <div>
@@ -1415,12 +1474,32 @@ function AnatomyColumn({
       <p
         className="mt-4 leading-7"
         style={{
-          color: emphasis ? COLOR.text : "rgba(237,237,242,0.82)",
+          color: locked
+            ? "rgba(237,237,242,0.52)"
+            : emphasis
+              ? COLOR.text
+              : "rgba(237,237,242,0.82)",
           fontSize: emphasis ? "16px" : "15px",
           fontWeight: emphasis ? 500 : 400,
         }}
       >
         {body}
+        {locked ? (
+          <span
+            className="ml-3 inline-flex items-center rounded-full border px-2.5 py-1 align-middle"
+            style={{
+              borderColor: "rgba(255,255,255,0.12)",
+              color: tone,
+              fontFamily: "var(--font-mono), ui-monospace, monospace",
+              fontSize: "9px",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              verticalAlign: "middle",
+            }}
+          >
+            Locked
+          </span>
+        ) : null}
       </p>
     </div>
   );

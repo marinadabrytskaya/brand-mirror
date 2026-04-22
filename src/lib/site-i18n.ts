@@ -243,6 +243,7 @@ export const siteCopy = {
       strongestSignal: "Strongest signal",
       mainFriction: "Main friction",
       nextMove: "One next move",
+      lockedTeaser: "Available in full report",
       unlockLabel: "Unlock full report",
       unlockBody:
         "This is where BrandMirror becomes the actual product. The paid layer explains what is off, why it matters, and what to fix first.",
@@ -583,6 +584,7 @@ export const siteCopy = {
       strongestSignal: "Señal más fuerte",
       mainFriction: "Fricción principal",
       nextMove: "Un siguiente movimiento",
+      lockedTeaser: "Disponible en el reporte completo",
       unlockLabel: "Desbloquear reporte completo",
       unlockBody:
         "Aquí es donde BrandMirror se convierte en el producto real. La capa pagada explica qué está mal, por qué importa y qué arreglar primero.",
@@ -923,6 +925,7 @@ export const siteCopy = {
       strongestSignal: "Самый сильный сигнал",
       mainFriction: "Главная friction point",
       nextMove: "Один следующий ход",
+      lockedTeaser: "Доступно в полном отчёте",
       unlockLabel: "Открыть полный отчёт",
       unlockBody:
         "Вот здесь BrandMirror становится настоящим продуктом. Платный слой объясняет, что именно не так, почему это важно и что исправить первым.",
