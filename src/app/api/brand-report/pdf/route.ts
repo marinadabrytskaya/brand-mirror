@@ -5,6 +5,7 @@ import {
   generateBrandReport,
 } from "@/lib/brand-report";
 import { getSiteLocale } from "@/lib/site-i18n";
+import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -14,12 +15,34 @@ export async function POST(request: Request) {
       url?: string;
       language?: string;
       report?: BrandReport;
+      sessionId?: string;
     };
     const language = getSiteLocale(body.language);
+    const paidAccess = isStripeConfigured()
+      ? await getPaidCheckoutAccess(body.sessionId)
+      : null;
+
+    if (isStripeConfigured() && !paidAccess) {
+      return new Response(
+        JSON.stringify({
+          error: "Full report PDF is locked until payment is confirmed.",
+          detail: "Complete checkout to unlock the paid BrandMirror PDF.",
+        }),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    }
+
     const report =
-      body.report && body.report.url
+      body.report &&
+      body.report.url &&
+      (!paidAccess || body.report.url === paidAccess.reportUrl)
         ? body.report
-        : await generateBrandReport(body.url || "", language);
+        : await generateBrandReport(paidAccess?.reportUrl || body.url || "", language);
     const scriptPath = path.join(process.cwd(), "scripts", "render_brand_report_pdf.py");
     const pdf = execFileSync("python3", [scriptPath], {
       input: Buffer.from(JSON.stringify({ report, language }), "utf8"),

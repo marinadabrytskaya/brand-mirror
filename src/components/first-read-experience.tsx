@@ -4,7 +4,6 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { type BrandReadResult } from "@/lib/brand-read";
-import { type BrandReport } from "@/lib/brand-report";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
@@ -23,9 +22,10 @@ type ErrorResponse = {
   detail?: string;
 };
 
-type ReportResponse = {
+type CheckoutResponse = {
   ok: boolean;
-  report: BrandReport;
+  checkoutUrl: string;
+  sessionId: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isDownloadingFullReport, setIsDownloadingFullReport] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Real clock, client-side only to avoid SSR/CSR hydration mismatch.
@@ -275,65 +275,46 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
   }
 
-  async function handleDownloadFullReportPdf() {
-    if (!currentUrl) return;
-    setIsDownloadingFullReport(true);
+  async function handleCheckout() {
+    const targetUrl = (currentUrl || url).trim();
+    if (!targetUrl) {
+      setError(copy.emptyUrl);
+      setStatus("");
+      return;
+    }
+
+    setIsCheckingOut(true);
     setError("");
+    setStatus(copy.unlockBusy);
 
     try {
-      const reportResponse = await fetch("/api/brand-report", {
+      const response = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: currentUrl, language: locale }),
+        body: JSON.stringify({ url: targetUrl, language: locale }),
       });
 
-      const reportPayload = (await reportResponse.json()) as
-        | ReportResponse
-        | ErrorResponse;
-
-      if (!reportResponse.ok || !("report" in reportPayload)) {
-        const errorPayload = reportPayload as ErrorResponse;
+      const payload = (await response.json()) as CheckoutResponse | ErrorResponse;
+      if (!response.ok || !("checkoutUrl" in payload)) {
+        const errorPayload = payload as ErrorResponse;
         throw new Error(
           errorPayload.detail ||
             errorPayload.error ||
-            "Unable to generate the full report right now.",
+            "Unable to open Stripe checkout right now.",
         );
       }
 
-      const pdfResponse = await fetch("/api/brand-report/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: currentUrl,
-          language: locale,
-          report: reportPayload.report,
-        }),
-      });
-
-      if (!pdfResponse.ok) {
-        const payload = (await pdfResponse.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(
-          payload.detail || payload.error || "Unable to export the PDF right now.",
-        );
-      }
-
-      const blob = await pdfResponse.blob();
-      triggerPdfDownload(
-        blob,
-        `${reportPayload.report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
-      );
-    } catch (downloadError) {
+      window.location.assign(payload.checkoutUrl);
+    } catch (checkoutError) {
       setError(
-        downloadError instanceof Error
-          ? downloadError.message
-          : "Unable to export the PDF right now.",
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : "Unable to open Stripe checkout right now.",
       );
-    } finally {
-      setIsDownloadingFullReport(false);
+      setStatus("");
+      setIsCheckingOut(false);
     }
   }
 
@@ -347,11 +328,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
     return `${(result.brandName || "brand").toLowerCase().replace(/\s+/g, "")}.com`;
   })();
-
-  const reportHref = siteI18n.withLang(
-    `/full-report${currentUrl || url ? `?url=${encodeURIComponent(currentUrl || url.trim())}` : ""}`,
-    locale,
-  );
 
   return (
     <main
@@ -844,8 +820,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               {copy.unlockBody}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={reportHref}
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={isCheckingOut}
                 className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 transition hover:-translate-y-px"
                 style={{
                   background: "#6FE0C2",
@@ -856,8 +834,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   fontWeight: 500,
                 }}
               >
-                &#9654;&nbsp;&nbsp;{copy.unlockCta.toUpperCase()}
-              </Link>
+                &#9654;&nbsp;&nbsp;
+                {(isCheckingOut ? copy.unlockBusy : copy.unlockCta).toUpperCase()}
+              </button>
               <Link
                 href={siteI18n.withLang("/sample-report", locale)}
                 className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
@@ -873,40 +852,19 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 {copy.unlockSecondary.toUpperCase()}
               </Link>
             </div>
-            {currentUrl ? (
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  onClick={handleDownloadFullReportPdf}
-                  disabled={isDownloadingFullReport}
-                  className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    borderColor: "rgba(111,224,194,0.35)",
-                    color: "#6FE0C2",
-                    fontSize: "12.5px",
-                    letterSpacing: "0.18em",
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontWeight: 500,
-                  }}
-                >
-                  {isDownloadingFullReport
-                    ? copy.unlockTestPdfBusy.toUpperCase()
-                    : copy.unlockTestPdfIdle.toUpperCase()}
-                </button>
-                <p
-                  style={{
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontSize: "10.5px",
-                    letterSpacing: "0.14em",
-                    color: isDownloadingFullReport ? "#6FE0C2" : COLOR.textMuted,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {isDownloadingFullReport
-                    ? copy.unlockTestPdfBusy
-                    : copy.unlockTestPdfNote}
-                </p>
-              </div>
+            {isCheckingOut ? (
+              <p
+                className="mt-3"
+                style={{
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "10.5px",
+                  letterSpacing: "0.14em",
+                  color: "#6FE0C2",
+                  textTransform: "uppercase",
+                }}
+              >
+                {copy.unlockBusy}
+              </p>
             ) : null}
           </div>
 

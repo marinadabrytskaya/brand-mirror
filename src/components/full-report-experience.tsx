@@ -3,7 +3,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { type BrandReport } from "@/lib/brand-report";
 import DiagnosticEvidenceBoard from "@/components/diagnostic-evidence-board";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -19,6 +18,12 @@ type ReportResponse = {
 type ErrorResponse = {
   error?: string;
   detail?: string;
+};
+
+type CheckoutResponse = {
+  ok: boolean;
+  checkoutUrl: string;
+  sessionId: string;
 };
 
 function triggerPdfDownload(blob: Blob, filename: string) {
@@ -510,7 +515,21 @@ function ScoreDashboardBlock({
   );
 }
 
-export function FullReportExperience({ locale }: { locale: SiteLocale }) {
+export function FullReportExperience({
+  locale,
+  initialUrl = "",
+  paymentRequired = false,
+  paymentUnlocked = false,
+  paymentSessionId = null,
+  accessError = "",
+}: {
+  locale: SiteLocale;
+  initialUrl?: string;
+  paymentRequired?: boolean;
+  paymentUnlocked?: boolean;
+  paymentSessionId?: string | null;
+  accessError?: string;
+}) {
   const copy = siteI18n.siteCopy[locale].fullReport;
   const labels = {
     en: {
@@ -697,18 +716,27 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
             "Conversion readiness": "Готовность к конверсии",
           }
         : {};
-  const searchParams = useSearchParams();
-  const [url, setUrl] = useState(searchParams.get("url") || "");
+  const [url, setUrl] = useState(initialUrl);
   const [report, setReport] = useState<BrandReport | null>(null);
-  const [status, setStatus] = useState<string>(copy.statusInitial);
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState<string>(
+    paymentUnlocked && initialUrl ? copy.paymentUnlockedStatus : copy.statusInitial,
+  );
+  const [error, setError] = useState(accessError);
   const [isPending, startTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState(paymentSessionId);
 
-  function handleGenerate(nextUrl?: string) {
+  function handleGenerate(nextUrl?: string, sessionId?: string | null) {
     const targetUrl = (nextUrl ?? url).trim();
     if (!targetUrl) {
       setError(copy.emptyUrl);
+      setStatus("");
+      return;
+    }
+
+    if (paymentRequired && !sessionId) {
+      setError(copy.paymentRequiredError);
       setStatus("");
       return;
     }
@@ -723,7 +751,11 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: targetUrl, language: locale }),
+          body: JSON.stringify({
+            url: targetUrl,
+            language: locale,
+            sessionId: sessionId || undefined,
+          }),
         });
 
         const payload = (await response.json()) as ReportResponse | ErrorResponse;
@@ -750,13 +782,59 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
   }
 
   useEffect(() => {
-    const initialUrl = searchParams.get("url");
-    if (initialUrl) {
-      setUrl(initialUrl);
-      handleGenerate(initialUrl);
+    setUrl(initialUrl);
+    setActiveSessionId(paymentSessionId);
+    if (accessError) {
+      setError(accessError);
+    }
+    if (initialUrl && (!paymentRequired || paymentUnlocked)) {
+      handleGenerate(initialUrl, paymentSessionId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [initialUrl, paymentRequired, paymentSessionId, paymentUnlocked, accessError]);
+
+  async function handleCheckout(nextUrl?: string) {
+    const targetUrl = (nextUrl ?? url).trim();
+    if (!targetUrl) {
+      setError(copy.emptyUrl);
+      setStatus("");
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setError("");
+    setStatus(copy.checkoutBusy);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: targetUrl, language: locale }),
+      });
+
+      const payload = (await response.json()) as CheckoutResponse | ErrorResponse;
+      if (!response.ok || !("checkoutUrl" in payload)) {
+        const errorPayload = payload as ErrorResponse;
+        throw new Error(
+          errorPayload.detail ||
+            errorPayload.error ||
+            "Unable to open Stripe checkout right now.",
+        );
+      }
+
+      window.location.assign(payload.checkoutUrl);
+    } catch (checkoutError) {
+      setError(
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : "Unable to open Stripe checkout right now.",
+      );
+      setStatus("");
+      setIsCheckingOut(false);
+    }
+  }
 
   async function handleDownloadPdf() {
     if (!report) return;
@@ -769,7 +847,12 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: report.url, language: locale, report }),
+        body: JSON.stringify({
+          url: report.url,
+          language: locale,
+          report,
+          sessionId: activeSessionId || undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -856,7 +939,11 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              handleGenerate();
+              if (paymentRequired && !activeSessionId) {
+                handleCheckout();
+                return;
+              }
+              handleGenerate(undefined, activeSessionId);
             }}
             className="grain-panel report-intro-panel rounded-[2rem] border border-[color:var(--line)] p-6 sm:p-8"
           >
@@ -889,10 +976,16 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
                   type="submit"
-                  disabled={isPending}
+                  disabled={isPending || isCheckingOut}
                   className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPending ? copy.submitBusy : copy.submitIdle}
+                  {isCheckingOut
+                    ? copy.checkoutBusy
+                    : isPending
+                      ? copy.submitBusy
+                      : paymentRequired && !activeSessionId
+                        ? copy.checkoutIdle
+                        : copy.submitIdle}
                 </button>
                 <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">
                   {status}
@@ -985,7 +1078,7 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
               <button
                 type="button"
                 onClick={handleDownloadPdf}
-                disabled={!report || isDownloading}
+                disabled={!report || isDownloading || (paymentRequired && !activeSessionId)}
                 className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                   {isDownloading ? copy.downloadBusy : copy.downloadIdle}
