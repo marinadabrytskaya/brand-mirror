@@ -643,13 +643,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 color: COLOR.text,
               }}
             >
-              Four indicator tiers. Five dimensions of the signal.
+              Five indicator tiers. Five dimensions of the signal.
             </h3>
             <p
               className="mt-5 max-w-md leading-7"
               style={{ color: COLOR.textSoft, fontSize: "14.5px" }}
             >
-              Each dimension is scored 0&ndash;100 and placed into one of four
+              Each dimension is scored 0&ndash;100 and placed into one of five
               tiers. The colour tells you how alive that signal is right now,
               not just whether it is red or green.
             </p>
@@ -1166,9 +1166,9 @@ function ScannerReadout({
       {/* Band legend */}
       <div className="mt-6">
         <div style={{ ...metaLabel, fontSize: 9.5 }}>INDICATOR&nbsp;SCALE</div>
-        <div className="mt-2 grid grid-cols-4 gap-1.5">
+        <div className="mt-2 grid grid-cols-5 gap-1.5">
           {BANDS.map((item) => {
-            const active = pct >= item.lo && pct <= item.hi;
+            const active = item.key === band.key;
             return (
               <div
                 key={item.label}
