@@ -21,6 +21,22 @@ type ErrorResponse = {
   detail?: string;
 };
 
+function triggerPdfDownload(blob: Blob, filename: string) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+
+  window.setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  }, 60_000);
+}
+
 function ReportSection({
   label,
   title,
@@ -764,14 +780,10 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
       }
 
       const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
+      triggerPdfDownload(
+        blob,
+        `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`,
+      );
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
@@ -981,6 +993,11 @@ export function FullReportExperience({ locale }: { locale: SiteLocale }) {
                 {copy.sampleCta}
               </Link>
             </div>
+            {isDownloading ? (
+              <p className="text-xs uppercase tracking-[0.16em] text-[#c9e7de]">
+                {copy.downloadBusy}
+              </p>
+            ) : null}
             <p className="max-w-md text-sm leading-6 text-[color:var(--foreground-soft)]">
               {copy.footerNote}
             </p>

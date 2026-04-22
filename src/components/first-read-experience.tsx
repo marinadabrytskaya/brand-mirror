@@ -130,6 +130,24 @@ const terminalText: React.CSSProperties = {
   color: COLOR.textMuted,
 };
 
+function triggerPdfDownload(blob: Blob, filename: string) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+
+  // Safari can cancel blob downloads if we tear down the link/object URL
+  // immediately after click.
+  window.setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  }, 60_000);
+}
+
 // ---------------------------------------------------------------------------
 
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
@@ -235,14 +253,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       }
 
       const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `${result.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
+      triggerPdfDownload(
+        blob,
+        `${result.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`,
+      );
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
@@ -616,11 +630,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 fontFamily: "var(--font-mono), ui-monospace, monospace",
                 fontSize: "10.5px",
                 letterSpacing: "0.14em",
-                color: COLOR.textMuted,
+                color: isDownloading ? "#6FE0C2" : COLOR.textMuted,
                 textTransform: "uppercase",
               }}
             >
-              {copy.freeBadge} / PDF
+              {isDownloading ? copy.downloadPdfBusy : `${copy.freeBadge} / PDF`}
             </p>
           </div>
         ) : null}
