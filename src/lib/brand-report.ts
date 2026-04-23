@@ -4,6 +4,7 @@ import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { type SiteLocale } from "@/lib/site-i18n";
+import { bandModifier, scoreBandLabel } from "@/lib/score-band";
 import { translateTexts } from "@/lib/text-translate";
 import {
   type BrandReadResult,
@@ -1338,8 +1339,65 @@ function buildScreenshotCallouts(
 }
 
 function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
+  const safeVisualWorld =
+    typeof read.visualWorld === "string" && read.visualWorld
+      ? read.visualWorld
+      : "sage";
+  const safeBrandName = normalizeWhitespace(read.brandName || "Brand");
+  const safeTitle = normalizeWhitespace(read.title || "The Clearer Signal");
+  const safeGenre = normalizeWhitespace(read.genre || "Editorial Diagnosis");
+  const safeTagline = normalizeWhitespace(
+    read.tagline || "The brand has quality. The promise still needs sharper edges.",
+  );
+  const safeWhatItDoes = normalizeWhitespace(
+    read.whatItDoes ||
+      `${safeBrandName} appears to offer a premium service with a stronger strategic signal than the current copy fully explains.`,
+  );
+  const safeSummary = normalizeWhitespace(
+    read.summary || "The brand looks credible. The offer still lands too softly.",
+  );
+  const safeCurrent = normalizeWhitespace(
+    read.current ||
+      "The visual signal feels capable, but the homepage still makes the visitor work too hard to understand the offer.",
+  );
+  const safeStrength = normalizeWhitespace(
+    read.strength || "The strongest signal is visual control and overall premium intent.",
+  );
+  const safeGap = normalizeWhitespace(
+    read.gap || "The missing layer is faster commercial clarity in the first screen.",
+  );
+  const safeMismatch = normalizeWhitespace(
+    read.mismatch || "The visual standard and the commercial story are not fully aligned yet.",
+  );
+  const safeVoice = normalizeWhitespace(
+    read.voice || "AI tools can partially describe the brand, but the homepage still leaves room for generic summaries.",
+  );
+  const safeDirection = normalizeWhitespace(
+    read.direction || "Sharpen the hero so the category, buyer, and payoff land earlier.",
+  );
+  const safeAmplify = normalizeWhitespace(
+    read.amplify || "Amplify the visual control and the sense of technical seriousness.",
+  );
+  const safeDrop = normalizeWhitespace(
+    read.drop || "Drop broad language that softens the opening promise.",
+  );
+  const safeStrongestSignal = normalizeWhitespace(
+    read.strongestSignal || "The brand already looks controlled, premium, and intentional.",
+  );
+  const safeMainFriction = normalizeWhitespace(
+    read.mainFriction || "The first screen delays clarity around the actual offer and outcome.",
+  );
+  const safeNextMove = normalizeWhitespace(
+    read.nextMove || "Tighten the opening promise so the value lands before the atmosphere takes over.",
+  );
+  const safePosterScore = clampScore(read.posterScore, 68);
+  const safePositioning = clampScore(read.positioningClarity, 68);
+  const safeAiDiscoverability = clampScore(read.toneCoherence, 70);
+  const safeVisual = clampScore(read.visualCredibility, 74);
+  const safeOffer = clampScore(read.offerSpecificity, 66);
+  const safeConversion = clampScore(read.conversionReadiness, 64);
   const industryHint = {
-    world: read.visualWorld,
+    world: safeVisualWorld,
     confidence: 0,
     label: "no clear industry pull",
   } satisfies IndustryArchetypeHint;
@@ -1364,21 +1422,21 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
 
   return {
     url,
-    brandName: read.brandName,
-    visualWorld: read.visualWorld,
-    title: read.title,
-    genre: read.genre,
-    tagline: read.tagline,
-    posterScore: read.posterScore,
-    scoreBand: read.scoreBand,
-    scoreModifier: read.scoreModifier,
-    whatItDoes: read.whatItDoes,
-    snapshot: read.summary,
-    whatItSignals: read.current,
-    whatIsMissing: read.gap,
-    whatToDoNext: read.direction,
-    whatToAmplify: read.amplify,
-    whatToDrop: read.drop,
+    brandName: safeBrandName,
+    visualWorld: safeVisualWorld,
+    title: safeTitle,
+    genre: safeGenre,
+    tagline: safeTagline,
+    posterScore: safePosterScore,
+    scoreBand: read.scoreBand || scoreBandLabel(safePosterScore),
+    scoreModifier: read.scoreModifier || bandModifier(safePosterScore),
+    whatItDoes: safeWhatItDoes,
+    snapshot: safeSummary,
+    whatItSignals: safeCurrent,
+    whatIsMissing: safeGap,
+    whatToDoNext: safeDirection,
+    whatToAmplify: safeAmplify,
+    whatToDrop: safeDrop,
     surfaceCaptures: [
       {
         label: "Current website",
@@ -1390,7 +1448,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       {
         label: "Brand signal",
         kind: "brand-signal",
-        imageUrl: resolveWorldPoster(read.visualWorld),
+        imageUrl: resolveWorldPoster(safeVisualWorld),
         note: "Poster layer used to frame the dominant visual world the brand suggests.",
         captureMethod: "poster",
       },
@@ -1399,14 +1457,14 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       {
         zone: "hero-promise",
         title: "Hero promise",
-        body: read.gap,
+        body: safeGap,
         x: 12,
         y: 13,
       },
       {
         zone: "proof-cta",
         title: "Proof and CTA zone",
-        body: read.nextMove,
+        body: safeNextMove,
         x: 57,
         y: 62,
       },
@@ -1414,43 +1472,43 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
     scorecard: [
       {
         label: "Positioning clarity",
-        score: read.positioningClarity,
+        score: safePositioning,
         note: "How quickly the offer becomes legible on the homepage.",
       },
       {
         label: "AI discoverability",
-        score: read.toneCoherence,
+        score: safeAiDiscoverability,
         note: "How accurately AI tools can find, describe, and recommend the brand.",
       },
       {
         label: "Visual credibility",
-        score: read.visualCredibility,
+        score: safeVisual,
         note: "How strongly the visual system implies quality and trust.",
       },
       {
         label: "Offer specificity",
-        score: read.offerSpecificity,
+        score: safeOffer,
         note: "How directly the brand explains what it does and why it matters.",
       },
       {
         label: "Conversion readiness",
-        score: read.conversionReadiness,
+        score: safeConversion,
         note: "How prepared the page feels to turn interest into a confident next step.",
       },
     ],
-    positioningRead: read.current,
-    toneCheck: read.voice,
-    visualIdentityRead: read.strength,
-    aboveTheFold: read.gap,
+    positioningRead: safeCurrent,
+    toneCheck: safeVoice,
+    visualIdentityRead: safeStrength,
+    aboveTheFold: safeGap,
     conversionRead:
       "The site creates interest and aesthetic trust, but it still leaves too much of the buying logic implicit. A stronger sense of proof, process, and expected outcome would make the next step feel more justified.",
     strategicDirection:
       "This brand should not move toward louder marketing. It should move toward sharper commercial clarity inside the premium signal it already owns. The strategy is to keep the atmosphere, but make the promise, proof, and decision path far more explicit so the brand reads as both desirable and commercially precise.",
     ...buildArchetypeLayer({
-      brandName: read.brandName,
-      visualWorld: read.visualWorld,
+      brandName: safeBrandName,
+      visualWorld: safeVisualWorld,
       industryHint,
-      toneCheck: read.voice,
+      toneCheck: safeVoice,
       messagingPriorities: [
         "Make the first line do more work: audience, outcome, and difference should all be visible quickly.",
       ],
@@ -1458,30 +1516,30 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
         "Move from broad brand mood to a more explicit commercial claim that says who the offer is for and why it matters now.",
       ],
       rewriteSuggestions: {
-        heroLine: `${read.brandName} helps clients understand the value faster, without losing the premium feel.`,
+        heroLine: `${safeBrandName} helps clients understand the value faster, without losing the premium feel.`,
       },
     }),
     audienceRead: baseAudienceRead,
     verbalImage: {
-      nameSignal: `${read.brandName} sounds like it should stand for a clear signal, not a vague category story.`,
+      nameSignal: `${safeBrandName} sounds like it should stand for a clear signal, not a vague category story.`,
       headlineSignal: "The opening line is still too soft for the level of visual control the brand already has.",
       firstScreenTone: "The first screen sounds considered, but not decisive enough.",
       risk: "If the first words stay softer than the first impression, the brand will look more confident than it sounds.",
     },
     namingFit: {
       verdict: "Partial fit: the name is strong enough to own a role, but the homepage still has to define that role faster.",
-      roleMatch: `The name can support a ${formatWorldName(read.visualWorld).toLowerCase()} position, but the page is not locking that role in quickly enough.`,
+      roleMatch: `The name can support a ${formatWorldName(safeVisualWorld).toLowerCase()} position, but the page is not locking that role in quickly enough.`,
       risk: "If the opening stays broad, the name will carry style before it carries meaning.",
       correction: "Use the hero to tell people exactly what kind of brand this is and what commercial territory it owns.",
     },
     headlineCorrection: {
       currentProblem: "The current first line is still building mood before it states the offer in business terms.",
       correctionLogic: "The headline should do three things fast: identify who it is for, state what changes, and make the value legible without a second read.",
-      rewrittenDirection: `${read.brandName} helps clients understand the value faster, without losing the premium feel.`,
+      rewrittenDirection: `${safeBrandName} helps clients understand the value faster, without losing the premium feel.`,
     },
-    brandKnownFor: `${read.brandName} should be known for the clarity of its signal, not just the taste of its presentation.`,
+    brandKnownFor: `${safeBrandName} should be known for the clarity of its signal, not just the taste of its presentation.`,
     industryFit: {
-      expectedArchetype: read.visualWorld.charAt(0).toUpperCase() + read.visualWorld.slice(1),
+      expectedArchetype: safeVisualWorld.charAt(0).toUpperCase() + safeVisualWorld.slice(1),
       assessment: "The category pull is not yet explicit here, so the current archetype read is being led by the surface signal.",
       leverage: "Use that signal to sharpen positioning faster instead of diluting it with softer category language.",
     },
@@ -1497,12 +1555,12 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       { name: "Creator test", verdict: "Partially passes: the point of view is there, but it is not yet tight enough commercially." },
     ],
     whatWorks: [
-      read.strongestSignal,
+      safeStrongestSignal,
       "The visual system already creates a premium first impression.",
       "There is already enough point of view here to feel distinct rather than generic.",
     ],
     whatsBroken: [
-      read.mainFriction,
+      safeMainFriction,
       "The homepage leans on atmosphere before a concrete commercial promise.",
       "The visitor still has to infer too much about the offer before feeling ready to act.",
     ],
@@ -1512,9 +1570,9 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       "The brand looks more resolved than the commercial story feels.",
     ],
     audienceMismatch: buildAudienceMismatchLayer(baseAudienceRead),
-    mixedSignals: read.mismatch,
+    mixedSignals: safeMismatch,
     frictionMap: [
-      read.mainFriction,
+      safeMainFriction,
       "The homepage leans on atmosphere before a concrete commercial promise.",
       "The verbal system needs to work as hard as the visual system already does.",
       "The first scroll does not resolve the buyer's uncertainty quickly enough.",
@@ -1547,7 +1605,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
     ],
     priorityFixes: {
       fixNow: [
-        read.nextMove,
+        safeNextMove,
         "Bring the core value proposition into the first screen.",
         "Add a visible proof or credibility cue before the midpoint of the page.",
       ],
@@ -1557,7 +1615,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
         "Make the CTA language more outcome-led so it feels like a natural decision, not just an invitation.",
       ],
       keep: [
-        read.strongestSignal,
+        safeStrongestSignal,
         "Preserve the visual restraint and premium pacing that already create trust.",
         "Keep the authored point of view and visual control, because that is part of what makes the brand memorable.",
       ],
@@ -1598,7 +1656,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       ],
     },
     rewriteSuggestions: {
-      heroLine: `${read.brandName} helps clients understand the value faster, without losing the premium feel.`,
+      heroLine: `${safeBrandName} helps clients understand the value faster, without losing the premium feel.`,
       subheadline:
         "A sharper headline, clearer offer framing, and more immediate certainty would make the current visual system convert more effectively.",
       cta: "See how it works",
@@ -1607,34 +1665,34 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       currentFrame: {
         label: "Before",
         title: "Current hero",
-        body: read.gap,
+        body: safeGap,
         focusX: 18,
         focusY: 18,
       },
       rewrittenFrame: {
         eyebrow: "After",
-        headline: `${read.brandName} helps clients understand the value faster, without losing the premium feel.`,
+        headline: `${safeBrandName} helps clients understand the value faster, without losing the premium feel.`,
         subheadline:
           "A sharper headline, clearer offer framing, and more immediate certainty would make the current visual system convert more effectively.",
         cta: "See how it works",
         note:
           "The rewritten hero should increase clarity without flattening the cinematic feel that already makes the brand memorable.",
-        posterUrl: resolveWorldPoster(read.visualWorld),
+        posterUrl: resolveWorldPoster(safeVisualWorld),
       },
     },
     brandWorldAlternatives: [
       {
-        world: read.visualWorld,
-        title: `${read.brandName} currently reads as ${formatWorldName(read.visualWorld)}`,
-        tagline: read.tagline,
+        world: safeVisualWorld,
+        title: `${safeBrandName} currently reads as ${formatWorldName(safeVisualWorld)}`,
+        tagline: safeTagline,
         note: "This is the dominant visual archetype the current site is already reinforcing.",
-        posterUrl: resolveWorldPoster(read.visualWorld),
+        posterUrl: resolveWorldPoster(safeVisualWorld),
         isCurrent: true,
       },
-      ...WORLD_ADJACENCY[read.visualWorld].map((world, index) => ({
+      ...WORLD_ADJACENCY[safeVisualWorld].map((world, index) => ({
         world,
         title: `${formatWorldName(world)} is the adjacent lane`,
-        tagline: index === 0 ? read.direction : read.mismatch,
+        tagline: index === 0 ? safeDirection : safeMismatch,
         note:
           index === 0
             ? "This adjacent world would make the brand feel more decisive without losing control."
@@ -1670,7 +1728,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       {
         label: "Frame 01",
         title: "First impression",
-        body: read.gap,
+        body: safeGap,
         focusX: 18,
         focusY: 18,
       },
@@ -1684,7 +1742,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       {
         label: "Frame 03",
         title: "Action layer",
-        body: read.nextMove,
+        body: safeNextMove,
         focusX: 72,
         focusY: 70,
       },
@@ -4601,7 +4659,7 @@ export async function generateBrandReportPdf(
       align: "center",
       characterSpacing: 1.1,
     });
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("brand-mirror-xi.vercel.app", contentLeft, 86, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("brandmirror.app", contentLeft, 86, {
       width: contentWidth,
       align: "center",
       characterSpacing: 1.2,

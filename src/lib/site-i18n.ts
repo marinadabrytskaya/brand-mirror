@@ -250,7 +250,7 @@ export const siteCopy = {
       testFullPdfBusy: "Building full PDF...",
       unlockLabel: "Unlock full report",
       unlockBody:
-        "This is where BrandMirror becomes the actual product. The paid layer explains what is off, why it matters, and what to fix first.",
+        "Unlock the complete BrandMirror diagnosis with deeper strategy, sharper commercial framing, and the implementation tools that turn this read into action.",
       included: "Included",
       unlockItems: [
         "Signal read + website surface",
@@ -260,14 +260,17 @@ export const siteCopy = {
         "Priority fix stack",
         "30-day action plan",
         "Headline rewrite direction",
+        "ROI calculator",
+        "Competitor comparison",
+        "Implementation playbook",
         "PDF export",
       ],
       unlockNotes: [
         "Scope: one website / one primary brand surface.",
         "Format: private web report with downloadable PDF.",
-        "Built as the paid layer above the first read, not as a generic upsell wall.",
+        "Built as a strategic working document, not as a generic upsell wall.",
       ],
-      unlockCta: "Unlock full report — $197",
+      unlockCta: "Unlock the full BrandMirror report — $197",
       unlockSecondary: "See full report structure",
     },
     fullReport: {
@@ -586,7 +589,7 @@ export const siteCopy = {
       testFullPdfBusy: "Generando PDF completo...",
       unlockLabel: "Desbloquear reporte completo",
       unlockBody:
-        "Aquí es donde BrandMirror se convierte en el producto real. La capa pagada explica qué está mal, por qué importa y qué arreglar primero.",
+        "Desbloquea el diagnóstico completo de BrandMirror con estrategia más profunda, framing comercial más claro y herramientas de implementación que convierten esta lectura en acción.",
       included: "Incluido",
       unlockItems: [
         "Signal read + website surface",
@@ -596,14 +599,17 @@ export const siteCopy = {
         "Fix stack prioritario",
         "Plan de 30 días",
         "Dirección de headline rewrite",
+        "Calculadora de ROI",
+        "Comparación con competidores",
+        "Playbook de implementación",
         "Exportación PDF",
       ],
       unlockNotes: [
         "Alcance: un sitio web / una superficie principal de marca.",
         "Formato: reporte web privado con PDF descargable.",
-        "Construido como la capa pagada encima de la primera lectura, no como un simple muro de upsell.",
+        "Construido como un documento de trabajo estratégico, no como un simple muro de upsell.",
       ],
-      unlockCta: "Desbloquear reporte completo — $197",
+      unlockCta: "Desbloquear el reporte completo de BrandMirror — $197",
       unlockSecondary: "Ver estructura del reporte completo",
     },
     fullReport: {
@@ -922,7 +928,7 @@ export const siteCopy = {
       testFullPdfBusy: "Собираю full PDF...",
       unlockLabel: "Открыть полный отчёт",
       unlockBody:
-        "Вот здесь BrandMirror становится настоящим продуктом. Платный слой объясняет, что именно не так, почему это важно и что исправить первым.",
+        "Откройте полный диагноз BrandMirror: более глубокую стратегию, более точную коммерческую рамку и инструменты внедрения, которые превращают этот read в действие.",
       included: "Включено",
       unlockItems: [
         "Signal read + website surface",
@@ -932,14 +938,17 @@ export const siteCopy = {
         "Priority fix stack",
         "30-day action plan",
         "Headline rewrite direction",
+        "ROI-калькулятор",
+        "Сравнение с конкурентами",
+        "Плейбук внедрения",
         "Экспорт PDF",
       ],
       unlockNotes: [
         "Scope: один сайт / одна главная поверхность бренда.",
         "Формат: приватный web-report с downloadable PDF.",
-        "Сделано как платный слой поверх first read, а не как generic upsell wall.",
+        "Сделано как стратегический рабочий документ, а не как generic upsell wall.",
       ],
-      unlockCta: "Открыть полный отчёт — $197",
+      unlockCta: "Открыть полный отчёт BrandMirror — $197",
       unlockSecondary: "Посмотреть структуру полного отчёта",
     },
     fullReport: {
