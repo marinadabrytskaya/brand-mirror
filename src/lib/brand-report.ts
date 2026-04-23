@@ -3597,6 +3597,16 @@ export async function generateBrandReportPdf(
         directionCues: "WHAT COMES NEXT",
         nextLabel: "WHAT COMES NEXT",
         nextTitle: "Three ways to act on this report while the diagnosis is still fresh",
+        playbookLabel: "IMPLEMENTATION PLAYBOOK",
+        playbookTitle: "30-day implementation map",
+        playbookIntro:
+          "Turn the diagnosis into a clear sequence. Do the highest-leverage clarity fixes first, then strengthen proof and visibility, then scale the page into a stronger commercial system.",
+        playbookNow: "NOW",
+        playbookNext: "NEXT",
+        playbookThen: "THEN",
+        playbookCtaLabel: "WORK WITH SAHAR",
+        playbookCtaBody:
+          "Use this as a self-guided implementation map, or work with SAHAR to turn the diagnosis into sharper positioning, cleaner copy, stronger proof, and a homepage that converts with less resistance.",
         nextCards: [
           { icon: "DIY", title: "Do it yourself", body: "Use the fix stack and action plan in this report as your roadmap.", price: "Included" },
           { icon: "REVIEWED", title: "BrandMirror - Reviewed", body: "Get a guided Loom walkthrough of the diagnosis and the next moves.", price: "$197" },
@@ -3711,6 +3721,16 @@ export async function generateBrandReportPdf(
         directionCues: "PISTAS DE DIRECCIÓN",
         nextLabel: "QUÉ VIENE DESPUÉS",
         nextTitle: "Tres formas de actuar sobre este reporte mientras el diagnóstico sigue fresco",
+        playbookLabel: "IMPLEMENTATION PLAYBOOK",
+        playbookTitle: "Mapa de implementación a 30 días",
+        playbookIntro:
+          "Convierte el diagnóstico en una secuencia clara. Primero corrige la claridad con más apalancamiento, luego fortalece la prueba y la visibilidad, y después escala la página como un sistema comercial más fuerte.",
+        playbookNow: "AHORA",
+        playbookNext: "LUEGO",
+        playbookThen: "DESPUÉS",
+        playbookCtaLabel: "TRABAJA CON SAHAR",
+        playbookCtaBody:
+          "Usa este mapa como guía de implementación por tu cuenta, o trabaja con SAHAR para convertir el diagnóstico en un posicionamiento más afilado, mejor copy, más prueba y una homepage que convierta con menos fricción.",
         nextCards: [
           { icon: "DIY", title: "Hazlo tú", body: "Usa el stack de fixes y el plan de acción de este reporte como hoja de ruta.", price: "Incluido" },
           { icon: "REVIEWED", title: "BrandMirror - Reviewed", body: "Recibe un Loom guiado con el diagnóstico y los siguientes pasos.", price: "$197" },
@@ -3825,6 +3845,16 @@ export async function generateBrandReportPdf(
         directionCues: "DIRECTION CUES",
         nextLabel: "ЧТО ДАЛЬШЕ",
         nextTitle: "Три пути, как использовать этот отчёт, пока диагноз ещё свежий",
+        playbookLabel: "IMPLEMENTATION PLAYBOOK",
+        playbookTitle: "30-day implementation map",
+        playbookIntro:
+          "Превратите диагноз в понятную последовательность действий. Сначала исправьте самые прибыльные вещи в ясности оффера, затем усилите proof и visibility, а потом дособерите страницу в более сильную коммерческую систему.",
+        playbookNow: "NOW",
+        playbookNext: "NEXT",
+        playbookThen: "THEN",
+        playbookCtaLabel: "WORK WITH SAHAR",
+        playbookCtaBody:
+          "Используйте это как self-guided implementation map, или работайте с SAHAR, чтобы превратить диагноз в более острое positioning, более ясный copy, более сильный proof и homepage, который конвертит с меньшим сопротивлением.",
         nextCards: [
           { icon: "DIY", title: "Сделать самому", body: "Используй stack fixes и action plan из этого отчёта как дорожную карту.", price: "Включено" },
           { icon: "REVIEWED", title: "BrandMirror - Reviewed", body: "Получи guided Loom-разбор диагноза и следующих шагов.", price: "$197" },
@@ -4989,66 +5019,71 @@ export async function generateBrandReportPdf(
       ) + 6;
     });
 
-    // Page 16: 30-Day Action Plan + Back Cover
+    // Page 16: Implementation Playbook
     addBasePage();
-    drawPageLabel(pdfCopy.plan30Label, pdfCopy.plan30Title, {
+    drawPageLabel(pdfCopy.playbookLabel, pdfCopy.playbookTitle, {
       width: 360,
       maxFont: 27,
       minFont: 22,
       maxHeight: 112,
     });
-    drawSectionTag(pdfCopy.next30, contentLeft, 196, colors.mint);
-    let actionY = 222;
-    report.actionPlan.next30Days.slice(0, 5).forEach((item) => {
-      actionY = drawParagraph(`- ${item}`, contentLeft, actionY, 244, 10.8, 6) + 8;
+    drawParagraph(pdfCopy.playbookIntro, contentLeft, 176, 372, 10.8, 5);
+    const nowItems = uniqueItems([
+      ...report.priorityFixes.fixNow,
+      report.rewriteSuggestions.heroLine
+        ? `Install the rewritten hero: ${report.rewriteSuggestions.heroLine}`
+        : "",
+    ], 3);
+    const nextItems = uniqueItems([
+      ...report.priorityFixes.fixNext,
+      ...report.actionPlan.next30Days.slice(0, 2),
+    ], 3);
+    const thenItems = uniqueItems([
+      ...report.actionPlan.next30Days,
+      ...report.priorityFixes.keep.map((item) => `Preserve what is already working: ${item}`),
+    ], 3);
+    const playbookColumns = [
+      { label: pdfCopy.playbookNow, items: nowItems, color: colors.terracotta },
+      { label: pdfCopy.playbookNext, items: nextItems, color: colors.amber },
+      { label: pdfCopy.playbookThen, items: thenItems, color: colors.mint },
+    ];
+    const columnWidth = (contentWidth - 24) / 3;
+    const cardTop = 252;
+    playbookColumns.forEach((column, index) => {
+      const x = contentLeft + index * (columnWidth + 12);
+      drawPanel(x, cardTop, columnWidth, 272, colors.panelSoft);
+      drawSectionTag(column.label, x + 18, cardTop + 18, column.color);
+      let y = cardTop + 48;
+      column.items.forEach((item) => {
+        y = drawParagraph(`- ${item}`, x + 18, y, columnWidth - 36, 10, 5) + 8;
+      });
     });
-    drawTextCard({
-      x: 332,
-      y: 194,
-      width: 207,
-      height: 262,
-      label: pdfCopy.headlineCorrection,
-      title: "AFTER",
-      body: `${report.rewriteSuggestions.heroLine}\n\nSUPPORT\n${report.rewriteSuggestions.subheadline}\n\nCTA\n${report.rewriteSuggestions.cta}`,
-      bodySize: 9.8,
-      bodyMin: 8.8,
-      titleSize: 12,
-      titleMin: 12,
-      titleFont: "Helvetica",
-      titleTopOffset: 40,
-      bodyTopOffset: 76,
-      fill: colors.panelSoft,
-    });
-    drawPanel(contentLeft, 492, contentWidth, 136, colors.panelSoft);
-    drawSectionTag("WORK WITH SAHAR", contentLeft + 18, 516, colors.mint);
+    drawPanel(contentLeft, 560, contentWidth, 154, colors.panelSoft);
+    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 584, colors.mint);
     drawParagraph(
-      "You can use this report as a self-guided fix plan, or work with SAHAR to turn it into a sharper homepage, offer system, and brand direction that is easier to trust and easier to buy.",
+      pdfCopy.playbookCtaBody,
       contentLeft + 18,
-      540,
-      contentWidth - 36,
+      608,
+      330,
       10.6,
       5,
     );
-    doc.moveTo(contentLeft, 652).lineTo(contentRight, 652).strokeColor(colors.rule).stroke();
-    doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(18).text(
-      pdfCopy.backCover,
-      contentLeft + 24,
-      686,
-      {
-        width: contentWidth - 48,
-        align: "center",
-        lineGap: 6,
-      },
-    );
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9).text(pdfCopy.powered, contentLeft, 64, {
-      width: contentWidth,
-      align: "center",
-      characterSpacing: 1.1,
-    });
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("brandmirror.app", contentLeft, 86, {
-      width: contentWidth,
-      align: "center",
-      characterSpacing: 1.2,
+    drawTextCard({
+      x: 392,
+      y: 578,
+      width: 147,
+      height: 118,
+      label: pdfCopy.headlineCorrection,
+      title: "AFTER",
+      body: `${report.rewriteSuggestions.heroLine}\n\nSUPPORT\n${report.rewriteSuggestions.subheadline}\n\nCTA\n${report.rewriteSuggestions.cta}`,
+      bodySize: 8.8,
+      bodyMin: 8,
+      titleSize: 11,
+      titleMin: 11,
+      titleFont: "Helvetica",
+      titleTopOffset: 38,
+      bodyTopOffset: 68,
+      fill: colors.panel,
     });
 
     doc.end();
