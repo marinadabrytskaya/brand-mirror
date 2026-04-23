@@ -308,27 +308,7 @@ function extractJson(text = "") {
 const require = createRequire(import.meta.url);
 
 function installPdfkitFontRedirect() {
-  const pdfkitEntry = require.resolve("pdfkit/js/pdfkit.js");
-  const actualDataDir = path.join(path.dirname(pdfkitEntry), "data");
-  const cjsFs = require("fs") as typeof import("node:fs");
-  const originalReadFileSync = cjsFs.readFileSync.bind(cjsFs);
-  const shouldRedirectPdfkitDataPath = (value: string) =>
-    value.includes("pdfkit/js/data/") || value.includes("pdfkit\\js\\data\\");
-
-  const redirectedReadFileSync = ((file: fs.PathOrFileDescriptor, ...args: unknown[]) => {
-    if (typeof file === "string" && shouldRedirectPdfkitDataPath(file)) {
-      const redirected = path.join(actualDataDir, path.basename(file));
-      return originalReadFileSync(redirected, ...(args as []));
-    }
-
-    return originalReadFileSync(file, ...(args as []));
-  }) as typeof cjsFs.readFileSync;
-
-  cjsFs.readFileSync = redirectedReadFileSync;
-
-  return () => {
-    cjsFs.readFileSync = originalReadFileSync;
-  };
+  return () => {};
 }
 
 function clampScore(value: unknown, fallback: number) {
