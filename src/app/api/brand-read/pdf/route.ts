@@ -94,6 +94,34 @@ function fitHeadlineLines(text: string, font: PDFFont, width: number, maxSize = 
   return { lines: lines.slice(0, 2), size: minSize, lineHeight: minSize * 1.04 };
 }
 
+function fitBodyText(
+  text: string,
+  font: PDFFont,
+  width: number,
+  height: number,
+  maxSize = 11.4,
+  minSize = 9.6,
+  lineHeightRatio = 1.48,
+) {
+  const clean = safeText(text);
+  for (let size = maxSize; size >= minSize; size -= 0.2) {
+    const lineHeight = size * lineHeightRatio;
+    const lines = wrapText(clean, font, size, width);
+    if (lines.length * lineHeight <= height) {
+      return { lines, size, lineHeight };
+    }
+  }
+  const size = minSize;
+  const lineHeight = size * lineHeightRatio;
+  const maxLines = Math.max(2, Math.floor(height / lineHeight));
+  const lines = wrapText(clean, font, size, width).slice(0, maxLines);
+  if (lines.length) {
+    const last = lines.length - 1;
+    lines[last] = `${lines[last].replace(/[ ,.;:]+$/, "")}...`;
+  }
+  return { lines, size, lineHeight };
+}
+
 function drawWrapped(
   page: PDFPage,
   text: string,
@@ -164,8 +192,10 @@ async function renderBrandReadPdf(
       : await pdf.embedPng(websiteImageBytes)
     : undefined;
   const normalizedBrand = safeBrandName.toLowerCase();
+  const normalizedTitle = safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const compactBrand = normalizedBrand.replace(/[^a-z0-9]+/g, " ").trim();
   const subtitleText =
-    safeTitle.toLowerCase().includes(normalizedBrand.slice(0, Math.min(normalizedBrand.length, 18)))
+    normalizedTitle.includes(compactBrand) || compactBrand.includes(normalizedTitle)
       ? "Free brand read"
       : safeTitle;
 
@@ -341,7 +371,18 @@ async function renderBrandReadPdf(
   y -= 12;
   drawLabel(page1, "Current state", PAGE.marginX, y);
   y -= 20;
-  drawWrapped(page1, safeText(result.current), sans, 11.2, PAGE.marginX, y, contentWidth, COLORS.text, 17);
+  const currentStateFit = fitBodyText(safeText(result.current), sans, contentWidth, y - 38, 11.2, 9.6, 1.52);
+  let currentY = y;
+  currentStateFit.lines.forEach((line) => {
+    page1.drawText(line, {
+      x: PAGE.marginX,
+      y: currentY,
+      size: currentStateFit.size,
+      font: sans,
+      color: COLORS.text,
+    });
+    currentY -= currentStateFit.lineHeight;
+  });
 
   page1.drawText("Powered by SAHAR / saharstudio.com", {
     x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
@@ -424,12 +465,19 @@ async function renderBrandReadPdf(
     color: rgb(7 / 255, 7 / 255, 10 / 255),
     opacity: 0.55,
   });
-  page2.drawText("INCLUDED IN FULL REPORT", {
-    x: PAGE.marginX + 40,
+  page2.drawText("UNLOCK FULL REPORT — $197", {
+    x: PAGE.marginX + 26,
     y: teaserY + 20,
     size: 10,
     font: sansBold,
     color: COLORS.text,
+  });
+  page2.drawText("ROI calculator · competitor comparison · implementation playbook", {
+    x: PAGE.marginX + 26,
+    y: teaserY + 8,
+    size: 8.8,
+    font: sans,
+    color: COLORS.soft,
   });
 
   const fixX = PAGE.marginX + teaserWidth + 20;
@@ -452,12 +500,19 @@ async function renderBrandReadPdf(
       });
     }
   });
-  page2.drawText("INCLUDED IN FULL REPORT", {
-    x: fixX + 40,
+  page2.drawText("UNLOCK FULL REPORT — $197", {
+    x: fixX + 26,
     y: teaserY + 20,
     size: 10,
     font: sansBold,
     color: COLORS.text,
+  });
+  page2.drawText("Fix stack · 30-day map · ROI · competitors · PDF export", {
+    x: fixX + 26,
+    y: teaserY + 8,
+    size: 8.8,
+    font: sans,
+    color: COLORS.soft,
   });
   y2 = teaserY - 24;
 
@@ -471,7 +526,7 @@ async function renderBrandReadPdf(
   drawLabel(page2, "Unlock full report", PAGE.marginX + 20, y2 - 18, COLORS.accent);
   const ctaY = drawWrapped(
     page2,
-    "Unlock the full BrandMirror report to see the sharpest rewrite direction, the full fix stack, ROI upside, competitor comparison, and the implementation playbook.",
+    "Unlock the full BrandMirror report to get the sharpest rewrite direction, the full fix stack, ROI upside, competitor comparison, and the implementation playbook that shows what to do now, next, and then.",
     serif,
     18,
     PAGE.marginX + 20,
@@ -493,6 +548,13 @@ async function renderBrandReadPdf(
     size: 13,
     font: sansBold,
     color: posterBandColor,
+  });
+  page2.drawText("Includes ROI calculator, competitor comparison, implementation playbook", {
+    x: PAGE.marginX + 20,
+    y: ctaY - 28,
+    size: 9.5,
+    font: sans,
+    color: COLORS.soft,
   });
 
   page2.drawText("Powered by SAHAR / saharstudio.com", {

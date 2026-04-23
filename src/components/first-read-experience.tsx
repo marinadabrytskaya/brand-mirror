@@ -569,15 +569,15 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               {"\u201C"}{result.summary}{"\u201D"}
             </p>
-            <p className="mt-6" style={metaLabel}>
-              {copy.currentState}
-            </p>
-            <p
-              className="mt-3 max-w-[44rem] leading-7"
-              style={{ color: COLOR.textSoft, fontSize: "15px" }}
-            >
-              {result.current}
-            </p>
+            <div className="mt-8 rounded-xl border px-5 py-5" style={{ borderColor: COLOR.lineSoft, background: "rgba(255,255,255,0.02)" }}>
+              <p style={metaLabel}>{copy.currentState}</p>
+              <p
+                className="mt-3 max-w-[44rem] leading-7"
+                style={{ color: COLOR.textSoft, fontSize: "15px" }}
+              >
+                {result.current}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -697,7 +697,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
             <p style={{ ...metaLabel, color: COLOR.accent }}>HEADLINE&nbsp;REWRITE</p>
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 min-h-[15.5rem] space-y-4 pb-16">
               <div>
                 <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>AFTER</p>
                 <div
@@ -732,24 +732,33 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 </div>
               </div>
             </div>
-            {/* Lock overlay */}
             <div
-              className="absolute inset-0 flex items-end justify-center pb-6"
-              style={{ background: "linear-gradient(to bottom, transparent 20%, rgba(7,7,10,0.85) 80%)" }}
+              className="absolute inset-x-0 bottom-0 border-t px-6 py-5 sm:px-8"
+              style={{
+                borderColor: COLOR.lineSoft,
+                background: "linear-gradient(to bottom, rgba(7,7,10,0.2), rgba(7,7,10,0.96) 42%)",
+              }}
             >
-              <p
-                className="rounded-full border px-5 py-2"
-                style={{
-                  ...metaLabel,
-                  fontSize: "10px",
-                  borderColor: "rgba(255,255,255,0.2)",
-                  color: COLOR.text,
-                  background: "rgba(7,7,10,0.7)",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                &#x1F512;&nbsp;&nbsp;INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT
-              </p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.text }}>INCLUDED IN FULL REPORT</p>
+                  <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
+                    Rewrite direction, ROI calculator, competitor comparison, implementation playbook.
+                  </p>
+                </div>
+                <Link
+                  href={reportHref}
+                  className="shrink-0 rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                  style={{
+                    ...metaLabel,
+                    fontSize: "10px",
+                    borderColor: "rgba(255,255,255,0.16)",
+                    color: COLOR.text,
+                  }}
+                >
+                  UNLOCK&nbsp;&mdash;&nbsp;$197
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -759,7 +768,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
             <p style={{ ...metaLabel, color: COLOR.accent }}>FIX&nbsp;STACK</p>
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 min-h-[15.5rem] space-y-4 pb-16">
               {[
                 { label: "FIX NOW", color: "#E07A5F", count: 3 },
                 { label: "FIX NEXT", color: "#E8B04C", count: 3 },
@@ -795,24 +804,33 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               What to fix first, what can wait, and what is already earning trust — prioritised by commercial impact.
             </p>
-            {/* Lock overlay */}
             <div
-              className="absolute inset-0 flex items-end justify-center pb-6"
-              style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(7,7,10,0.8) 85%)" }}
+              className="absolute inset-x-0 bottom-0 border-t px-6 py-5 sm:px-8"
+              style={{
+                borderColor: COLOR.lineSoft,
+                background: "linear-gradient(to bottom, rgba(7,7,10,0.2), rgba(7,7,10,0.96) 42%)",
+              }}
             >
-              <p
-                className="rounded-full border px-5 py-2"
-                style={{
-                  ...metaLabel,
-                  fontSize: "10px",
-                  borderColor: "rgba(255,255,255,0.2)",
-                  color: COLOR.text,
-                  background: "rgba(7,7,10,0.7)",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                &#x1F512;&nbsp;&nbsp;INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT
-              </p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.text }}>INCLUDED IN FULL REPORT</p>
+                  <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
+                    Full fix stack, 30-day map, ROI scenarios, competitor benchmark, PDF export.
+                  </p>
+                </div>
+                <Link
+                  href={reportHref}
+                  className="shrink-0 rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                  style={{
+                    ...metaLabel,
+                    fontSize: "10px",
+                    borderColor: "rgba(255,255,255,0.16)",
+                    color: COLOR.text,
+                  }}
+                >
+                  UNLOCK&nbsp;&mdash;&nbsp;$197
+                </Link>
+              </div>
             </div>
           </div>
         </section>

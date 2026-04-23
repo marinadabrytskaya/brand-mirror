@@ -129,7 +129,7 @@ export const DIMENSIONS: readonly Dimension[] = [
   {
     key: "toneCoherence",
     label: "AI visibility",
-    shortLabel: "AI DISCOVERY",
+    shortLabel: "AI VISIBILITY",
     summary: "Can AI tools find, understand, and confidently recommend your brand?",
   },
   {
