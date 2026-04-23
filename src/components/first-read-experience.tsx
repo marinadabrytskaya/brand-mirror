@@ -817,6 +817,38 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </div>
         </section>
 
+        {currentUrl ? (
+          <section className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p style={metaLabel}>FREE REPORT EXPORT</p>
+              <p
+                className="mt-2 leading-6"
+                style={{ color: COLOR.textMuted, fontSize: "12.5px" }}
+              >
+                Save the free first read as a shareable PDF snapshot.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadFreePdf}
+              disabled={isDownloadingFreePdf}
+              className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                borderColor: "rgba(255,255,255,0.2)",
+                color: COLOR.text,
+                fontSize: "12.5px",
+                letterSpacing: "0.18em",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontWeight: 500,
+              }}
+            >
+              {isDownloadingFreePdf
+                ? copy.freePdfBusy.toUpperCase()
+                : copy.freePdfIdle.toUpperCase()}
+            </button>
+          </section>
+        ) : null}
+
         <hr
           className="mt-12"
           style={{ border: 0, height: "0.5px", background: COLOR.line }}
@@ -876,6 +908,28 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 {copy.unlockSecondary.toUpperCase()}
               </Link>
             </div>
+            {currentUrl ? (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleTestFullPdf}
+                  disabled={isTestingFullPdf}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.2)",
+                    color: COLOR.text,
+                    fontSize: "12.5px",
+                    letterSpacing: "0.18em",
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontWeight: 500,
+                  }}
+                >
+                  {isTestingFullPdf
+                    ? copy.testFullPdfBusy.toUpperCase()
+                    : copy.testFullPdfIdle.toUpperCase()}
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div>
