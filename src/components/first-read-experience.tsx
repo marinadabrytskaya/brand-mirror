@@ -743,7 +743,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 <div>
                   <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    $197 at brandmirror.app — headline direction, ROI calculator, competitor comparison, and the full PDF.
+                    $197 at brandmirror.app — signal read, commercial impact, competitor comparison, and the full PDF.
                   </p>
                 </div>
                 <Link
@@ -815,7 +815,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 <div>
                   <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    $197 at brandmirror.app — full fix stack, implementation playbook, competitor benchmark, and PDF export.
+                    $197 at brandmirror.app — priority fix stack, implementation playbook, competitor position, and PDF export.
                   </p>
                 </div>
                 <Link
