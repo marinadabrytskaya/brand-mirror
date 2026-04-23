@@ -741,9 +741,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.text }}>INCLUDED IN FULL REPORT</p>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    Rewrite direction, ROI calculator, competitor comparison, implementation playbook.
+                    $197 at brandmirror.app — headline direction, ROI calculator, competitor comparison, and the full PDF.
                   </p>
                 </div>
                 <Link
@@ -813,9 +813,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.text }}>INCLUDED IN FULL REPORT</p>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    Full fix stack, 30-day map, ROI scenarios, competitor benchmark, PDF export.
+                    $197 at brandmirror.app — full fix stack, implementation playbook, competitor benchmark, and PDF export.
                   </p>
                 </div>
                 <Link

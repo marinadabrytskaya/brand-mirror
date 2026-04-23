@@ -2111,12 +2111,13 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
           }))
         : fallback.screenshotCallouts,
     scorecard: scorecardSource.slice(0, 5).map((item, index) => ({
-      label:
-        truncate(
-          normalizeWhitespace(item.label || fallback.scorecard[index]?.label || "Score"),
-          48,
-        ) || fallback.scorecard[index]?.label || "Score",
-      score: clampScore(item.score, fallback.scorecard[index]?.score || 70),
+      label: fallback.scorecard[index]?.label || "Score",
+      score: clampScore(
+        typeof item.score === "number" && Number.isFinite(item.score)
+          ? item.score
+          : fallback.scorecard[index]?.score,
+        70,
+      ),
       note:
         truncate(
           normalizeWhitespace(item.note || fallback.scorecard[index]?.note || ""),
@@ -3425,7 +3426,13 @@ export async function generateBrandReportPdf(
   language: SiteLocale = "en",
 ) {
   const websiteSurface = report.surfaceCaptures.find((surface) => surface.kind === "website");
-  const websiteImageSource = await loadPdfImageSource(websiteSurface?.imageUrl);
+  let websiteImageSource = await loadPdfImageSource(
+    websiteSurface?.imageUrl || report.beforeAfterHero?.currentFrame?.imageUrl,
+  );
+  if (!websiteImageSource && report.url) {
+    const capture = await captureWebsiteSurface(report.url).catch(() => null);
+    websiteImageSource = await loadPdfImageSource(capture?.dataUrl);
+  }
   const archetypePosterSource = await loadPdfImageSource(resolveWorldPoster(report.visualWorld));
   const heroCallout = report.screenshotCallouts.find((item) => item.zone === "hero-promise");
   const ctaCallout = report.screenshotCallouts.find((item) => item.zone === "proof-cta");
@@ -3485,7 +3492,7 @@ export async function generateBrandReportPdf(
     const contentLeft = 56;
     const contentRight = 539;
     const contentWidth = contentRight - contentLeft;
-    const totalPages = 16;
+    const totalPages = 17;
     let pageNumber = 0;
     const overallScore = Math.round(
       report.scorecard.reduce((sum, item) => sum + item.score, 0) / Math.max(report.scorecard.length, 1),
@@ -3500,7 +3507,7 @@ export async function generateBrandReportPdf(
           "Five commercial signals that decide whether the brand gets understood, trusted, and chosen",
         whatThisIsIntro: [
           `BrandMirror reads the brand the way a sharp buyer reads the first screen: before the copy has fully explained itself, before the proof has earned trust, before the click has happened.`,
-          "This report measures five signals that shape that decision: clarity, discoverability, credibility, specificity, and readiness to act.",
+          "This report measures five signals that shape that decision: clarity, AI visibility, credibility, specificity, and readiness to act.",
           "The goal is not to score taste. The goal is to show where the page is helping the sale, where it is slowing it down, and what to fix first.",
         ],
         reportSnapshot: "REPORT SNAPSHOT",
@@ -3514,28 +3521,28 @@ export async function generateBrandReportPdf(
         methodologyLabel: "HOW BRANDMIRROR SCORES YOUR BRAND",
         methodologyTitle: "What each score is measuring and why the numbers are there",
         roiLabel: "COMMERCIAL IMPACT",
-        roiTitle: "What the upside can look like across three realistic scenarios",
+        roiTitle: "What current visibility can realistically unlock across three demand scenarios",
         roiIntro:
-          "Based on your current brand scores and industry profile, these scenarios model how clearer positioning, specificity, and conversion flow can translate into commercial lift.",
-        roiRecommended: "RECOMMENDED FOR YOUR BRAND",
-        roiConservative: "CONSERVATIVE",
-        roiRealistic: "REALISTIC",
-        roiOptimistic: "OPTIMISTIC",
-        roiScale1: "New / small",
-        roiScale2: "Typical",
-        roiScale3: "Established",
-        roiVisitors: "Monthly Visitors",
-        roiAov: "Average Order Value",
-        roiCurrentRevenue: "Current Revenue/mo",
-        roiProjectedLift: "PROJECTED LIFT",
-        roiMonthlyLift: "Monthly Revenue Lift",
-        roiAnnualLift: "Annual Revenue Lift",
-        roiImplementation: "IMPLEMENTATION",
-        roiCost: "Estimated Cost",
-        roiPayback: "Payback Period",
-        roiAnnualRoi: "Annual ROI",
+          "Based on current brand scores, category context, and external visibility signals, these scenarios show a directional view of what clearer positioning, stronger proof, and cleaner conversion could unlock.",
+        roiRecommended: "BEST-FIT BASELINE",
+        roiConservative: "LOW VISIBILITY",
+        roiRealistic: "MODERATE VISIBILITY",
+        roiOptimistic: "STRONGER VISIBILITY",
+        roiScale1: "Cautious planning",
+        roiScale2: "Working baseline",
+        roiScale3: "Upside case",
+        roiVisitors: "Likely monthly traffic",
+        roiAov: "Qualified visits / mo",
+        roiCurrentRevenue: "Qualified inquiries / mo",
+        roiProjectedLift: "MODELED UPSIDE",
+        roiMonthlyLift: "Likely demand lift",
+        roiAnnualLift: "Illustrative revenue range",
+        roiImplementation: "CONFIDENCE",
+        roiCost: "Confidence level",
+        roiPayback: "Best use of this model",
+        roiAnnualRoi: "Illustrative annual range",
         roiFootnote:
-          "Modeled estimate based on current scores, category benchmarks, and the priority fixes in this report. Actual performance depends on implementation quality, market conditions, and offer fit.",
+          "Directional estimate based on third-party visibility signals, category benchmarks, and the priority fixes in this report. This is not first-party analytics and not guaranteed revenue.",
         competitiveLabel: "COMPETITIVE POSITION",
         competitiveTitle: "Where you stand in the category right now",
         competitiveAverage: "Competitive avg",
@@ -3567,7 +3574,7 @@ export async function generateBrandReportPdf(
         ],
         whatScoreTells: "What this score is telling us",
         revealingLine: "MOST REVEALING LINE",
-        forBrand: `FOR ${report.brandName.toUpperCase()}`,
+        forBrand: "CURRENT CONTEXT",
         benchmark: "PRACTICAL READ",
         archetypeLabel: "BRAND ARCHETYPE",
         archetypeTitle: `${report.archetypeRead.primary} with ${report.archetypeRead.secondary} pull`,
@@ -3578,7 +3585,7 @@ export async function generateBrandReportPdf(
           "What is missing, where the signal drifts, and what the AI layer can actually understand",
         brandPromises: "WHAT IS MISSING",
         pageDelivers: "MIXED SIGNALS",
-        commercialCost: "AI DISCOVERABILITY CHECK",
+        commercialCost: "AI VISIBILITY CHECK",
         fixesLabel: "PRIORITY FIX STACK",
         fixesTitle:
           "What to fix now, what can wait, and what is already earning trust",
@@ -3624,7 +3631,7 @@ export async function generateBrandReportPdf(
           "Cinco señales comerciales que deciden si la marca se entiende, se confía y se elige",
         whatThisIsIntro: [
           `BrandMirror lee la marca como la lee un comprador agudo en la primera pantalla: antes de que el copy termine de explicarse, antes de que la prueba gane confianza, antes del clic.`,
-          "Este reporte mide cinco señales que modelan esa decisión: claridad, discoverability, credibilidad, especificidad y preparación para convertir.",
+          "Este reporte mide cinco señales que modelan esa decisión: claridad, visibilidad de IA, credibilidad, especificidad y preparación para convertir.",
           "La meta no es puntuar gusto. La meta es mostrar dónde la página ayuda a la venta, dónde la frena y qué corregir primero.",
         ],
         reportSnapshot: "RESUMEN DEL REPORTE",
@@ -3638,28 +3645,28 @@ export async function generateBrandReportPdf(
         methodologyLabel: "CÓMO BRANDMIRROR PUNTÚA TU MARCA",
         methodologyTitle: "Qué mide cada score y por qué esos números importan",
         roiLabel: "IMPACTO COMERCIAL",
-        roiTitle: "Cómo puede verse el upside en tres escenarios realistas",
+        roiTitle: "Qué puede desbloquear la visibilidad actual en tres escenarios de demanda",
         roiIntro:
-          "Según los scores actuales de la marca y el perfil del sector, estos escenarios modelan cómo una mejor claridad, especificidad y conversión pueden traducirse en impacto comercial.",
-        roiRecommended: "RECOMENDADO PARA TU MARCA",
-        roiConservative: "CONSERVADOR",
-        roiRealistic: "REALISTA",
-        roiOptimistic: "OPTIMISTA",
-        roiScale1: "Nueva / pequeña",
-        roiScale2: "Típica",
-        roiScale3: "Establecida",
-        roiVisitors: "Visitantes mensuales",
-        roiAov: "Valor medio",
-        roiCurrentRevenue: "Ingreso actual/mes",
-        roiProjectedLift: "LIFT PROYECTADO",
-        roiMonthlyLift: "Lift mensual",
-        roiAnnualLift: "Lift anual",
-        roiImplementation: "IMPLEMENTACIÓN",
-        roiCost: "Coste estimado",
-        roiPayback: "Recuperación",
+          "Basado en los scores actuales, el contexto de la categoría y señales externas de visibilidad, estos escenarios muestran una lectura direccional de lo que podrían desbloquear una mejor claridad, más prueba y una conversión más limpia.",
+        roiRecommended: "BASE MÁS CREÍBLE",
+        roiConservative: "VISIBILIDAD BAJA",
+        roiRealistic: "VISIBILIDAD MEDIA",
+        roiOptimistic: "VISIBILIDAD MÁS FUERTE",
+        roiScale1: "Plan prudente",
+        roiScale2: "Base de trabajo",
+        roiScale3: "Caso de upside",
+        roiVisitors: "Tráfico mensual probable",
+        roiAov: "Visitas calificadas / mes",
+        roiCurrentRevenue: "Consultas calificadas / mes",
+        roiProjectedLift: "UPSIDE MODELADO",
+        roiMonthlyLift: "Lift probable de demanda",
+        roiAnnualLift: "Rango ilustrativo de ingresos",
+        roiImplementation: "CONFIANZA",
+        roiCost: "Nivel de confianza",
+        roiPayback: "Mejor uso del modelo",
         roiAnnualRoi: "ROI anual",
         roiFootnote:
-          "Estimación modelada basada en los scores actuales, benchmarks del sector y los priority fixes de este reporte. El resultado real depende de la implementación, del mercado y del encaje de la oferta.",
+          "Estimación direccional basada en señales externas de visibilidad, benchmarks de categoría y los priority fixes de este reporte. No es analítica de primera mano ni una promesa de ingresos.",
         competitiveLabel: "POSICIÓN COMPETITIVA",
         competitiveTitle: "Dónde estás hoy dentro de la categoría",
         competitiveAverage: "Promedio competitivo",
@@ -3691,7 +3698,7 @@ export async function generateBrandReportPdf(
         ],
         whatScoreTells: "Qué nos está diciendo este score",
         revealingLine: "LÍNEA MÁS REVELADORA",
-        forBrand: `PARA ${report.brandName.toUpperCase()}`,
+        forBrand: "CONTEXTO ACTUAL",
         benchmark: "LECTURA PRÁCTICA",
         archetypeLabel: "ARQUETIPO DE MARCA",
         archetypeTitle: `${report.archetypeRead.primary} con un pull hacia ${report.archetypeRead.secondary}`,
@@ -3702,7 +3709,7 @@ export async function generateBrandReportPdf(
           "Qué falta, dónde se mezcla la señal y qué puede entender de verdad la capa de IA",
         brandPromises: "QUÉ FALTA",
         pageDelivers: "SEÑALES MEZCLADAS",
-        commercialCost: "CHEQUEO DE AI DISCOVERABILITY",
+        commercialCost: "CHEQUEO DE AI VISIBILITY",
         fixesLabel: "STACK DE FIXES PRIORITARIOS",
         fixesTitle:
           "Qué arreglar ahora, qué puede esperar y qué ya está trabajando a favor de la marca",
@@ -3748,7 +3755,7 @@ export async function generateBrandReportPdf(
           "Пять коммерческих сигналов, которые решают, поймут ли бренд, поверят ли ему и выберут ли его",
         whatThisIsIntro: [
           `BrandMirror читает бренд так, как его читает внимательный покупатель на первом экране: до того, как текст всё объяснил, до того, как proof заслужил доверие, до клика.`,
-          "Этот отчёт измеряет пять сигналов, которые формируют это решение: clarity, discoverability, credibility, specificity и readiness to act.",
+          "Этот отчёт измеряет пять сигналов, которые формируют это решение: clarity, AI visibility, credibility, specificity и readiness to act.",
           "Задача не в том, чтобы оценить вкус. Задача — показать, где страница помогает продаже, где тормозит её и что чинить первым.",
         ],
         reportSnapshot: "СНИМОК ОТЧЁТА",
@@ -3762,28 +3769,28 @@ export async function generateBrandReportPdf(
         methodologyLabel: "КАК BRANDMIRROR ОЦЕНИВАЕТ БРЕНД",
         methodologyTitle: "Что измеряет каждый score и почему этим цифрам можно доверять",
         roiLabel: "КОММЕРЧЕСКИЙ ЭФФЕКТ",
-        roiTitle: "Как может выглядеть upside в трёх реалистичных сценариях",
+        roiTitle: "Что текущая видимость может realistically unlock в трёх сценариях спроса",
         roiIntro:
-          "На основе текущих scores бренда и профиля категории эти сценарии показывают, как более ясное positioning, specificity и conversion flow могут превратиться в коммерческий результат.",
-        roiRecommended: "РЕКОМЕНДОВАНО ДЛЯ ВАШЕГО БРЕНДА",
-        roiConservative: "КОНСЕРВАТИВНЫЙ",
-        roiRealistic: "РЕАЛИСТИЧНЫЙ",
-        roiOptimistic: "ОПТИМИСТИЧНЫЙ",
-        roiScale1: "Новый / маленький",
-        roiScale2: "Типичный",
-        roiScale3: "Устоявшийся",
-        roiVisitors: "Посетители в месяц",
-        roiAov: "Средний чек",
-        roiCurrentRevenue: "Текущая выручка/мес",
-        roiProjectedLift: "ПРОГНОЗИРУЕМЫЙ РОСТ",
-        roiMonthlyLift: "Рост в месяц",
-        roiAnnualLift: "Рост в год",
-        roiImplementation: "ВНЕДРЕНИЕ",
-        roiCost: "Оценка стоимости",
-        roiPayback: "Окупаемость",
+          "На основе текущих scores бренда, контекста категории и внешних сигналов видимости эти сценарии дают направленную оценку того, что могут открыть более ясный positioning, stronger proof и cleaner conversion flow.",
+        roiRecommended: "САМЫЙ ПРАВДОПОДОБНЫЙ БАЗОВЫЙ СЦЕНАРИЙ",
+        roiConservative: "НИЗКАЯ ВИДИМОСТЬ",
+        roiRealistic: "СРЕДНЯЯ ВИДИМОСТЬ",
+        roiOptimistic: "БОЛЕЕ СИЛЬНАЯ ВИДИМОСТЬ",
+        roiScale1: "Осторожный план",
+        roiScale2: "Рабочая база",
+        roiScale3: "Upside-сценарий",
+        roiVisitors: "Вероятный трафик в месяц",
+        roiAov: "Квалифицированные визиты / мес",
+        roiCurrentRevenue: "Квалифицированные inquiries / мес",
+        roiProjectedLift: "МОДЕЛИРУЕМЫЙ UPSIDE",
+        roiMonthlyLift: "Вероятный рост спроса",
+        roiAnnualLift: "Иллюстративный диапазон выручки",
+        roiImplementation: "УРОВЕНЬ УВЕРЕННОСТИ",
+        roiCost: "Уровень confidence",
+        roiPayback: "Как лучше использовать модель",
         roiAnnualRoi: "ROI за год",
         roiFootnote:
-          "Это модельная оценка на основе текущих scores, benchmarks категории и priority fixes из отчёта. Реальный результат зависит от качества внедрения, рынка и fit вашего offer.",
+          "Это направленная оценка на основе внешних сигналов видимости, benchmarks категории и priority fixes из отчёта. Это не first-party analytics и не обещание выручки.",
         competitiveLabel: "КОНКУРЕНТНАЯ ПОЗИЦИЯ",
         competitiveTitle: "Где бренд стоит внутри своей категории прямо сейчас",
         competitiveAverage: "Среднее по конкурентам",
@@ -3815,7 +3822,7 @@ export async function generateBrandReportPdf(
         ],
         whatScoreTells: "Что нам говорит этот score",
         revealingLine: "САМАЯ ПОКАЗАТЕЛЬНАЯ ЛИНИЯ",
-        forBrand: `ДЛЯ ${report.brandName.toUpperCase()}`,
+        forBrand: "ТЕКУЩИЙ КОНТЕКСТ",
         benchmark: "ПРАКТИЧЕСКОЕ ЧТЕНИЕ",
         archetypeLabel: "АРХЕТИП БРЕНДА",
         archetypeTitle: `${report.archetypeRead.primary} с тягой к ${report.archetypeRead.secondary}`,
@@ -3826,7 +3833,7 @@ export async function generateBrandReportPdf(
           "Чего не хватает, где сигнал распадается и что вообще может понять AI-слой",
         brandPromises: "ЧЕГО НЕ ХВАТАЕТ",
         pageDelivers: "СМЕШАННЫЕ СИГНАЛЫ",
-        commercialCost: "AI DISCOVERABILITY CHECK",
+        commercialCost: "AI VISIBILITY CHECK",
         fixesLabel: "СТЕК ПРИОРИТЕТНЫХ FIXES",
         fixesTitle:
           "Что исправить сейчас, что может подождать и что уже работает на бренд",
@@ -4103,6 +4110,34 @@ export async function generateBrandReportPdf(
       }
     };
 
+    const drawRoundedImageFit = (
+      source: Buffer | string | undefined,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      radius = 14,
+    ) => {
+      if (!source) {
+        return false;
+      }
+
+      doc.save();
+      try {
+        doc.roundedRect(x, y, width, height, radius).clip();
+        doc.image(source, x, y, {
+          fit: [width, height],
+          align: "center",
+          valign: "center",
+        });
+        return true;
+      } catch {
+        return false;
+      } finally {
+        doc.restore();
+      }
+    };
+
     const drawScoreMeter = (x: number, y: number, width: number, score: number) => {
       doc.roundedRect(x, y, width, 8, 4).fill(colors.rule);
       doc.roundedRect(x, y, Math.max(8, width * (score / 100)), 8, 4).fill(
@@ -4204,6 +4239,12 @@ export async function generateBrandReportPdf(
       drawParagraph(fittedBody.text, x + 18, bodyTop, width - 36, fittedBody.size, fittedBody.lineGap);
     };
 
+    const stripBrandLead = (text: string) => {
+      const clean = bodyCopy(text);
+      const brandPattern = new RegExp(`^(for\\s+)?${report.brandName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b[\\s—:-]*`, "i");
+      return clean.replace(brandPattern, "").replace(/^For\s+/i, "").trim();
+    };
+
     const scoreByLabel = (label: string) =>
       report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase());
 
@@ -4272,11 +4313,11 @@ export async function generateBrandReportPdf(
     );
 
     const metricCards = [
-      "Positioning Clarity - does the buyer know what you are within one read?",
-      "AI Visibility - can AI tools find, read, and recommend the brand clearly and consistently?",
-      "Visual Credibility - does the design earn the price and the promise?",
-      "Offer Specificity - could someone repeat what you sell without your help?",
-      "Conversion Readiness - when someone is ready, is there a door to walk through?",
+      { title: "Positioning Clarity", body: "Does the buyer know what you are within one read?" },
+      { title: "AI Visibility", body: "Can AI tools find, read, and recommend the brand clearly and consistently?" },
+      { title: "Visual Credibility", body: "Does the design earn the price and the promise?" },
+      { title: "Offer Specificity", body: "Could someone repeat what you sell without your help?" },
+      { title: "Conversion Readiness", body: "When someone is ready, is there a door to walk through?" },
     ];
 
     const aiRubric = [
@@ -4327,103 +4368,92 @@ export async function generateBrandReportPdf(
       return map[category] || map["B2B Services"];
     };
 
-    const estimateLift = (
-      visitors: number,
-      bounceRate: number,
-      conversionRate: number,
-      aov: number,
-      scoreMultiplier: number,
-    ) => {
-      const currentQualified = visitors * (1 - bounceRate / 100);
-      const currentConversions = currentQualified * (conversionRate / 100);
-      const currentRevenue = currentConversions * aov;
-      const projectedBounce = Math.max(42, bounceRate - (3 + scoreMultiplier * 2));
-      const projectedConversion = conversionRate + (0.12 + scoreMultiplier * 0.18);
-      const projectedQualified = visitors * (1 - projectedBounce / 100);
-      const projectedConversions = projectedQualified * (projectedConversion / 100);
-      const projectedRevenue = projectedConversions * aov;
-      const monthlyLift = Math.max(0, projectedRevenue - currentRevenue);
-      const implementationCost = 3200;
-      const annualLift = monthlyLift * 12;
-      const roi = implementationCost > 0 ? annualLift / implementationCost : 0;
-      const paybackMonths = monthlyLift > 0 ? implementationCost / monthlyLift : 999;
-      const payback =
-        paybackMonths < 0.5 ? "1-2 weeks" :
-        paybackMonths < 1 ? "2-4 weeks" :
-        paybackMonths < 2 ? "1-2 months" :
-        `${Math.ceil(paybackMonths)} months`;
-      return {
-        currentRevenue: Math.round(currentRevenue),
-        monthlyLift: Math.round(monthlyLift),
-        annualLift: Math.round(annualLift),
-        cost: implementationCost,
-        payback,
-        roi: Math.max(1, Math.round(roi)),
+    const getCommercialInputs = (category: string) => {
+      const map: Record<
+        string,
+        {
+          qualifiedRate: number;
+          closeRate: number;
+          implementationCost: number;
+        }
+      > = {
+        "B2B Services": { qualifiedRate: 0.012, closeRate: 0.18, implementationCost: 3200 },
+        "B2B SaaS": { qualifiedRate: 0.014, closeRate: 0.12, implementationCost: 3600 },
+        "E-commerce": { qualifiedRate: 0.024, closeRate: 0.025, implementationCost: 2800 },
+        Agency: { qualifiedRate: 0.01, closeRate: 0.2, implementationCost: 3400 },
       };
+      return map[category] || map["B2B Services"];
     };
+
+    const formatMoney = (value: number) => `$${Math.max(0, Math.round(value)).toLocaleString()}`;
+    const formatMoneyRange = (low: number, high: number) =>
+      `${formatMoney(low)}-${formatMoney(high)}`;
+    const formatCountRange = (low: number, high: number) =>
+      `${Math.max(0, Math.round(low)).toLocaleString()}-${Math.max(0, Math.round(high)).toLocaleString()}`;
 
     const category = mapGenreToCategory(report.genre);
     const benchmark = getIndustryBenchmarks(category);
+    const commercialInputs = getCommercialInputs(category);
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
+    const baselineTraffic = Math.max(
+      140,
+      Math.round(benchmark.avgTraffic * (0.14 + (scoreAverage / 100) * 0.08)),
+    );
+    const visibilityConfidence = report.competitiveLandscape?.competitors?.length
+      ? "Moderate"
+      : websiteImageSource
+        ? "Low to moderate"
+        : "Low";
     const recommendationReason =
       scoreAverage < 65
-        ? "Your current scores suggest a conservative commercial upside until the foundational fixes land."
+        ? "Current visibility signals point to a low-confidence baseline. Treat the first scenario as the most believable planning range until the first clarity fixes land."
         : scoreAverage < 78
-          ? "Your current scores point to a realistic mid-market upside if the top fixes are implemented well."
-          : "Your current scores suggest the stronger scenario is credible once the brand sharpens its highest-friction points.";
-    const recommendedScenario = scoreAverage < 65 ? "Conservative" : scoreAverage < 78 ? "Realistic" : "Optimistic";
+          ? "Current signals support a mid-range planning baseline if the top fixes are implemented cleanly and the offer becomes easier to repeat."
+          : "The stronger scenario becomes credible only if the page sharpens its highest-friction points and the commercial story starts landing faster.";
+    const recommendedScenario = scoreAverage < 65 ? "Low visibility" : scoreAverage < 78 ? "Moderate visibility" : "Stronger visibility";
     const roiScenarios = [
       {
         label: pdfCopy.roiConservative,
         description: pdfCopy.roiScale1,
-        assumptions: {
-          visitors: Math.round(benchmark.avgTraffic * 0.65),
-          aov: Math.round(benchmark.avgAov * 0.8),
-          bounce: benchmark.avgBounce + 9,
-          conversion: benchmark.avgConversion * 0.82,
-        },
-        ...estimateLift(
-          Math.round(benchmark.avgTraffic * 0.65),
-          benchmark.avgBounce + 9,
-          benchmark.avgConversion * 0.82,
-          Math.round(benchmark.avgAov * 0.8),
-          Math.max(0.08, (scoreAverage - 52) / 95),
+        visitors: Math.round(baselineTraffic * 0.8),
+        qualifiedVisits: Math.round(baselineTraffic * 0.8 * 0.36),
+        inquiries: Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)),
+        demandLift: "+6% to +12%",
+        revenueRange: formatMoneyRange(
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)) * 0.55,
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)) * 0.9,
         ),
+        confidence: visibilityConfidence,
+        bestUse: "Planning baseline",
       },
       {
         label: pdfCopy.roiRealistic,
         description: pdfCopy.roiScale2,
-        assumptions: {
-          visitors: Math.round(benchmark.avgTraffic * 1.1),
-          aov: Math.round(benchmark.avgAov),
-          bounce: benchmark.avgBounce + 6,
-          conversion: benchmark.avgConversion * 0.95,
-        },
-        ...estimateLift(
-          Math.round(benchmark.avgTraffic * 1.1),
-          benchmark.avgBounce + 6,
-          benchmark.avgConversion * 0.95,
-          Math.round(benchmark.avgAov),
-          Math.max(0.12, (scoreAverage - 55) / 72),
+        visitors: baselineTraffic,
+        qualifiedVisits: Math.round(baselineTraffic * 0.42),
+        inquiries: Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)),
+        demandLift: "+12% to +20%",
+        revenueRange: formatMoneyRange(
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)) * 0.7,
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)) * 1.15,
         ),
+        confidence: visibilityConfidence,
+        bestUse: "Working forecast",
       },
       {
         label: pdfCopy.roiOptimistic,
         description: pdfCopy.roiScale3,
-        assumptions: {
-          visitors: Math.round(benchmark.avgTraffic * 1.6),
-          aov: Math.round(benchmark.avgAov * 1.15),
-          bounce: benchmark.avgBounce + 3,
-          conversion: benchmark.avgConversion * 1.05,
-        },
-        ...estimateLift(
-          Math.round(benchmark.avgTraffic * 1.6),
-          benchmark.avgBounce + 3,
-          benchmark.avgConversion * 1.05,
-          Math.round(benchmark.avgAov * 1.15),
-          Math.max(0.18, (scoreAverage - 58) / 60),
+        visitors: Math.round(baselineTraffic * 1.28),
+        qualifiedVisits: Math.round(baselineTraffic * 1.28 * 0.48),
+        inquiries: Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)),
+        demandLift: "+20% to +32%",
+        revenueRange: formatMoneyRange(
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)) * 0.82,
+          benchmark.avgAov * commercialInputs.closeRate * Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)) * 1.28,
         ),
+        confidence: visibilityConfidence === "Low" ? "Low to moderate" : visibilityConfidence,
+        bestUse: "Upside case",
       },
     ];
 
@@ -4466,7 +4496,7 @@ export async function generateBrandReportPdf(
       lineGap: coverTagline.lineGap,
     });
     if (archetypePosterSource) {
-      drawRoundedImage(archetypePosterSource, 94, 326, contentWidth - 76, 246, 22);
+      drawRoundedImageFit(archetypePosterSource, 94, 326, contentWidth - 76, 246, 22);
       doc.save();
       doc.fillOpacity(0.62);
       doc.rect(94, 326, contentWidth - 76, 246).fill(colors.dark);
@@ -4501,24 +4531,50 @@ export async function generateBrandReportPdf(
       page2Y = drawParagraph(paragraph, contentLeft, page2Y, 230, 11, 6) + 16;
     }
     const page2CardY = 188;
-    drawPanel(318, page2CardY, 221, 186);
+    drawPanel(318, page2CardY, 221, 212);
     drawSectionTag("FIVE AXES", 338, page2CardY + 22);
-    let metricY = page2CardY + 42;
-    for (const item of metricCards) {
-      metricY = drawParagraph(`- ${item}`, 338, metricY, 183, 9.2, 4) + 6;
-    }
-    drawPanel(contentLeft, 434, contentWidth, 118, colors.panelSoft);
+    let metricY = page2CardY + 44;
+    metricCards.forEach((item, index) => {
+      const color = [colors.terracotta, colors.amber, colors.mint, colors.accent, colors.textMuted][index] || colors.textMuted;
+      doc.roundedRect(338, metricY + 3, 14, 6, 3).fill(color);
+      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(9.1).text(item.title, 360, metricY, {
+        width: 150,
+      });
+      metricY = drawParagraph(item.body, 360, metricY + 14, 150, 8.5, 3.5) + 8;
+    });
+    drawSectionTag(pdfCopy.readingScale, 338, page2CardY + 180, colors.textMuted);
+    let legendTextY = page2CardY + 198;
+    pdfCopy.legend.slice(0, 2).forEach((item) => {
+      legendTextY = drawParagraph(`${item.title} — ${item.body}`, 338, legendTextY, 176, 7.8, 3.4) + 4;
+    });
+    drawPanel(contentLeft, 434, contentWidth, 138, colors.panelSoft);
     doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text("How to use this report", contentLeft + 22, 456);
     drawParagraph(
-      "Start with the First Read and Score Dashboard. Then move into the Signal Read, the deep-dive axes, and the Priority Fix Stack. The Action Plan is there to turn diagnosis into movement.",
+      "Start with the First Read and Score Dashboard. Then move into the Signal Read, the deep-dive axes, and the Priority Fix Stack. The Implementation Playbook turns the diagnosis into an ordered sequence of action.",
       contentLeft + 22,
       482,
       contentWidth - 44,
-      11,
-      6,
+      10.6,
+      5,
     );
-    doc.fillColor(colors.accent).font("Times-Roman").fontSize(17).text(
-      "A score. A diagnosis. A fix stack. One clear answer about what to sharpen first.",
+    const legendY = 536;
+    [
+      { label: "0-30", name: "Flatlining", color: "#B65C5C" },
+      { label: "30-50", name: "Fragile", color: colors.terracotta },
+      { label: "50-70", name: "Developing", color: colors.amber },
+      { label: "70-85", name: "Stable", color: colors.mint },
+      { label: "85-100", name: "Leading", color: colors.accent },
+    ].forEach((item, index) => {
+      const pillW = (contentWidth - 40) / 5;
+      const x = contentLeft + 22 + index * (pillW + 4.5);
+      drawPanel(x, legendY, pillW, 26, item.color);
+      doc.fillColor(item.color === colors.amber ? colors.dark : colors.dark)
+        .font("Helvetica")
+        .fontSize(8)
+        .text(item.label, x, legendY + 7, { width: pillW, align: "center", characterSpacing: 0.8 });
+    });
+    doc.fillColor(colors.accent).font("Times-Roman").fontSize(16).text(
+      "Five axes. Five signal bands. One commercial read of where the page earns trust and where it loses it.",
       92,
       612,
       { width: contentWidth - 72, align: "center", lineGap: 5 },
@@ -4537,28 +4593,27 @@ export async function generateBrandReportPdf(
     drawSectionTag("CURRENT STATE", contentLeft, firstReadY);
     const currentBox = fitTextToBox(report.whatItSignals, 256, 130, 11.2, 10, 6);
     drawParagraph(currentBox.text, contentLeft, firstReadY + 24, 256, currentBox.size, 6);
-    drawTextCard({
-      x: 344,
-      y: Math.max(page3Top + 10, 214),
-      width: 195,
-      height: 296,
-      label: pdfCopy.reportSnapshot,
-      body: truncate(report.scoreModifier, 120),
-      bodySize: 9.6,
-      bodyMin: 9.2,
-      bodyTopOffset: 168,
+    const snapshotX = 344;
+    const snapshotY = Math.max(page3Top + 10, 214);
+    const snapshotW = 195;
+    const snapshotH = 328;
+    drawPanel(snapshotX, snapshotY, snapshotW, snapshotH, colors.panelSoft);
+    drawSectionTag(pdfCopy.reportSnapshot, snapshotX + 20, snapshotY + 18);
+    drawSectionTag("CURRENT READ", snapshotX + 20, snapshotY + 42, colors.mint);
+    const currentReadBox = fitTextToBox(firstSentence(report.snapshot), snapshotW - 40, 66, 9.8, 8.4, 4);
+    drawParagraph(currentReadBox.text, snapshotX + 20, snapshotY + 66, snapshotW - 40, currentReadBox.size, currentReadBox.lineGap);
+    doc.fillColor(bandColor(overallScore)).font("Helvetica").fontSize(14).text(report.scoreBand, snapshotX + 20, snapshotY + 162, {
+      width: snapshotW - 40,
+      characterSpacing: 0.7,
     });
-    drawSectionTag("CURRENT READ", 364, 240, colors.mint);
-    const currentReadBox = fitTextToBox(firstSentence(report.snapshot), 159, 58, 10.3, 9.3, 4);
-    drawParagraph(currentReadBox.text, 364, 264, 159, currentReadBox.size, 4);
-    doc.fillColor(bandColor(overallScore)).font("Helvetica").fontSize(16).text(report.scoreBand, 364, 340, {
-      width: 159,
-      characterSpacing: 0.6,
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(31).text(`${overallScore}/100`, snapshotX + 20, snapshotY + 194, {
+      width: snapshotW - 40,
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10).text(pdfCopy.overallReadiness, 364, 368, {
-      width: 159,
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.6).text(pdfCopy.overallReadiness, snapshotX + 20, snapshotY + 236, {
+      width: snapshotW - 40,
     });
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(30).text(`${overallScore}/100`, 364, 394);
+    const scoreModifierBox = fitTextToBox(bodyCopy(report.scoreModifier), snapshotW - 40, 58, 8.4, 7.8, 3.6);
+    drawParagraph(scoreModifierBox.text, snapshotX + 20, snapshotY + 254, snapshotW - 40, scoreModifierBox.size, scoreModifierBox.lineGap);
 
     // Page 4: Score Dashboard
     addBasePage();
@@ -4608,113 +4663,114 @@ export async function generateBrandReportPdf(
       });
     });
 
-    // Page 5: Commercial Impact
-    addBasePage();
-    const page5TitleBottom = drawPageLabel(pdfCopy.roiLabel, pdfCopy.roiTitle, {
-      width: 360,
-      maxFont: 24,
-      minFont: 20,
-      maxHeight: 96,
-    });
-    drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 18, 178), contentWidth - 20, 11, 6);
-    drawPanel(96, 214, 420, 66, colors.panelSoft);
-    drawSectionTag(pdfCopy.roiRecommended, 116, 232, colors.textMuted);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(`${recommendedScenario} Scenario`, 116, 248);
-    drawParagraph(recommendationReason, 286, 228, 198, 9.2, 4);
-
-    const tableX = contentLeft;
-    const tableY = 294;
-    const tableW = contentWidth;
-    const labelCol = 142;
-    const dataCol = (tableW - labelCol) / 3;
-    const headerH = 46;
-    drawPanel(tableX, tableY, tableW, headerH, colors.panelSoft);
-    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.2).text(pdfCopy.roiConservative, tableX + labelCol + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
-    doc.text(pdfCopy.roiRealistic, tableX + labelCol + dataCol + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
-    doc.text(pdfCopy.roiOptimistic, tableX + labelCol + dataCol * 2 + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
-    doc.font("Helvetica").fontSize(7.8).fillColor(colors.mutedOnDark).text(pdfCopy.roiScale1, tableX + labelCol + 8, tableY + 26, { width: dataCol - 16, align: "center" });
-    doc.text(pdfCopy.roiScale2, tableX + labelCol + dataCol + 8, tableY + 26, { width: dataCol - 16, align: "center" });
-    doc.text(pdfCopy.roiScale3, tableX + labelCol + dataCol * 2 + 8, tableY + 26, { width: dataCol - 16, align: "center" });
-
-    const roiRows = [
-      { label: pdfCopy.roiVisitors, values: roiScenarios.map((s) => s.assumptions.visitors.toLocaleString()) },
-      { label: pdfCopy.roiAov, values: roiScenarios.map((s) => `$${s.assumptions.aov.toLocaleString()}`) },
-      { label: pdfCopy.roiCurrentRevenue, values: roiScenarios.map((s) => `$${s.currentRevenue.toLocaleString()}`) },
-      { label: pdfCopy.roiProjectedLift, values: ["", "", ""], header: true },
-      { label: pdfCopy.roiMonthlyLift, values: roiScenarios.map((s) => `+$${s.monthlyLift.toLocaleString()}`), accent: true },
-      { label: pdfCopy.roiAnnualLift, values: roiScenarios.map((s) => `$${s.annualLift.toLocaleString()}`) },
-      { label: pdfCopy.roiImplementation, values: ["", "", ""], header: true },
-      { label: pdfCopy.roiCost, values: roiScenarios.map((s) => `$${s.cost.toLocaleString()}`) },
-      { label: pdfCopy.roiPayback, values: roiScenarios.map((s) => s.payback), accent: true },
-    ];
-    let rowY = tableY + headerH + 6;
-    roiRows.forEach((row) => {
-      const height = row.header ? 28 : 32;
-      drawPanel(tableX, rowY, tableW, height, row.header ? colors.panel : colors.panelSoft);
-      doc.fillColor(row.header ? colors.accent : colors.textMuted).font("Helvetica").fontSize(row.header ? 8.2 : 8.8).text(row.label, tableX + 14, rowY + (row.header ? 10 : 11), {
-        width: labelCol - 18,
-        characterSpacing: row.header ? 1.1 : 0,
+    const renderCommercialImpactPage = () => {
+      addBasePage();
+      const page5TitleBottom = drawPageLabel(pdfCopy.roiLabel, pdfCopy.roiTitle, {
+        width: 360,
+        maxFont: 24,
+        minFont: 20,
+        maxHeight: 96,
       });
-      if (!row.header) {
-        row.values.forEach((value, idx) => {
-          doc.fillColor(row.accent ? colors.accent : colors.textOnDark).font("Helvetica").fontSize(9.2).text(
-            value,
-            tableX + labelCol + dataCol * idx + 8,
-            rowY + 10,
-            { width: dataCol - 16, align: "center" },
-          );
+      drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 18, 178), contentWidth - 20, 11, 6);
+      drawPanel(96, 214, 420, 66, colors.panelSoft);
+      drawSectionTag(pdfCopy.roiRecommended, 116, 232, colors.textMuted);
+      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(`${recommendedScenario} Scenario`, 116, 248);
+      drawParagraph(recommendationReason, 286, 228, 198, 9.2, 4);
+
+      const tableX = contentLeft;
+      const tableY = 294;
+      const tableW = contentWidth;
+      const labelCol = 142;
+      const dataCol = (tableW - labelCol) / 3;
+      const headerH = 46;
+      drawPanel(tableX, tableY, tableW, headerH, colors.panelSoft);
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.2).text(pdfCopy.roiConservative, tableX + labelCol + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
+      doc.text(pdfCopy.roiRealistic, tableX + labelCol + dataCol + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
+      doc.text(pdfCopy.roiOptimistic, tableX + labelCol + dataCol * 2 + 8, tableY + 12, { width: dataCol - 16, align: "center", characterSpacing: 1.1 });
+      doc.font("Helvetica").fontSize(7.8).fillColor(colors.mutedOnDark).text(pdfCopy.roiScale1, tableX + labelCol + 8, tableY + 26, { width: dataCol - 16, align: "center" });
+      doc.text(pdfCopy.roiScale2, tableX + labelCol + dataCol + 8, tableY + 26, { width: dataCol - 16, align: "center" });
+      doc.text(pdfCopy.roiScale3, tableX + labelCol + dataCol * 2 + 8, tableY + 26, { width: dataCol - 16, align: "center" });
+
+      const roiRows = [
+        { label: pdfCopy.roiVisitors, values: roiScenarios.map((s) => s.visitors.toLocaleString()) },
+        { label: pdfCopy.roiAov, values: roiScenarios.map((s) => s.qualifiedVisits.toLocaleString()) },
+        { label: pdfCopy.roiCurrentRevenue, values: roiScenarios.map((s) => s.inquiries.toLocaleString()) },
+        { label: pdfCopy.roiProjectedLift, values: ["", "", ""], header: true },
+        { label: pdfCopy.roiMonthlyLift, values: roiScenarios.map((s) => s.demandLift), accent: true },
+        { label: pdfCopy.roiAnnualLift, values: roiScenarios.map((s) => s.revenueRange) },
+        { label: pdfCopy.roiImplementation, values: ["", "", ""], header: true },
+        { label: pdfCopy.roiCost, values: roiScenarios.map((s) => s.confidence) },
+        { label: pdfCopy.roiPayback, values: roiScenarios.map((s) => s.bestUse), accent: true },
+      ];
+      let rowY = tableY + headerH + 6;
+      roiRows.forEach((row) => {
+        const height = row.header ? 28 : 32;
+        drawPanel(tableX, rowY, tableW, height, row.header ? colors.panel : colors.panelSoft);
+        doc.fillColor(row.header ? colors.accent : colors.textMuted).font("Helvetica").fontSize(row.header ? 8.2 : 8.8).text(row.label, tableX + 14, rowY + (row.header ? 10 : 11), {
+          width: labelCol - 18,
+          characterSpacing: row.header ? 1.1 : 0,
         });
-      }
-      rowY += height + 6;
-    });
-    const competitiveY = rowY - 2;
-    const competitiveH = 64;
-    drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
-    drawSectionTag(pdfCopy.competitiveLabel, contentLeft + 18, competitiveY + 14, colors.textMuted);
-    if (report.competitiveLandscape?.competitors?.length) {
-      const rankingText = `#${report.competitiveLandscape.analysis.ranking} of ${report.competitiveLandscape.competitors.length + 1}`;
-      const leadLine =
-        report.competitiveLandscape.analysis.gapToLeader > 0
-          ? `${report.competitiveLandscape.analysis.gapToLeader} pts behind leader`
-          : "Currently leading the competitive set";
-      const benchmarkLine =
-        report.competitiveLandscape.analysis.weaknesses[0]
-          ? `${report.competitiveLandscape.analysis.weaknesses[0].axis}: ${report.competitiveLandscape.analysis.weaknesses[0].yourScore} vs ${report.competitiveLandscape.analysis.weaknesses[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
-          : report.competitiveLandscape.analysis.strengths[0]
-            ? `${report.competitiveLandscape.analysis.strengths[0].axis}: ${report.competitiveLandscape.analysis.strengths[0].yourScore} vs ${report.competitiveLandscape.analysis.strengths[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
-            : `Overall: ${report.posterScore} vs ${report.competitiveLandscape.industryBenchmark.overall} ${pdfCopy.competitiveAverage.toLowerCase()}`;
-
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(rankingText, contentLeft + 18, competitiveY + 28);
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.4).text(leadLine, contentLeft + 18, competitiveY + 48, {
-        width: 140,
+        if (!row.header) {
+          row.values.forEach((value, idx) => {
+            doc.fillColor(row.accent ? colors.accent : colors.textOnDark).font("Helvetica").fontSize(9.2).text(
+              value,
+              tableX + labelCol + dataCol * idx + 8,
+              rowY + 10,
+              { width: dataCol - 16, align: "center" },
+            );
+          });
+        }
+        rowY += height + 6;
       });
-      drawParagraph(
-        report.competitiveLandscape.analysis.quickestWin?.message || benchmarkLine,
-        contentLeft + 178,
-        competitiveY + 28,
-        206,
-        8.8,
-        4,
-      );
-      drawParagraph(
-        benchmarkLine,
-        contentLeft + 396,
-        competitiveY + 28,
-        126,
-        8.6,
-        4,
-      );
-    } else {
-      drawParagraph(
-        pdfCopy.competitiveNoData,
-        contentLeft + 18,
-        competitiveY + 28,
-        contentWidth - 36,
-        8.8,
-        4,
-      );
-    }
-    drawParagraph(pdfCopy.roiFootnote, contentLeft, competitiveY + competitiveH + 6, contentWidth, 8.4, 4);
+      const competitiveY = rowY - 2;
+      const competitiveH = 64;
+      drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
+      drawSectionTag(pdfCopy.competitiveLabel, contentLeft + 18, competitiveY + 14, colors.textMuted);
+      if (report.competitiveLandscape?.competitors?.length) {
+        const rankingText = `#${report.competitiveLandscape.analysis.ranking} of ${report.competitiveLandscape.competitors.length + 1}`;
+        const leadLine =
+          report.competitiveLandscape.analysis.gapToLeader > 0
+            ? `${report.competitiveLandscape.analysis.gapToLeader} pts behind leader`
+            : "Currently leading the competitive set";
+        const benchmarkLine =
+          report.competitiveLandscape.analysis.weaknesses[0]
+            ? `${report.competitiveLandscape.analysis.weaknesses[0].axis}: ${report.competitiveLandscape.analysis.weaknesses[0].yourScore} vs ${report.competitiveLandscape.analysis.weaknesses[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
+            : report.competitiveLandscape.analysis.strengths[0]
+              ? `${report.competitiveLandscape.analysis.strengths[0].axis}: ${report.competitiveLandscape.analysis.strengths[0].yourScore} vs ${report.competitiveLandscape.analysis.strengths[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
+              : `Overall: ${report.posterScore} vs ${report.competitiveLandscape.industryBenchmark.overall} ${pdfCopy.competitiveAverage.toLowerCase()}`;
+
+        doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(rankingText, contentLeft + 18, competitiveY + 28);
+        doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.4).text(leadLine, contentLeft + 18, competitiveY + 48, {
+          width: 140,
+        });
+        drawParagraph(
+          report.competitiveLandscape.analysis.quickestWin?.message || benchmarkLine,
+          contentLeft + 178,
+          competitiveY + 28,
+          206,
+          8.8,
+          4,
+        );
+        drawParagraph(
+          benchmarkLine,
+          contentLeft + 396,
+          competitiveY + 28,
+          126,
+          8.6,
+          4,
+        );
+      } else {
+        drawParagraph(
+          pdfCopy.competitiveNoData,
+          contentLeft + 18,
+          competitiveY + 28,
+          contentWidth - 36,
+          8.8,
+          4,
+        );
+      }
+      drawParagraph(pdfCopy.roiFootnote, contentLeft, competitiveY + competitiveH + 6, contentWidth, 8.4, 4);
+    };
 
     // Page 6: Signal Read Part 1
     addBasePage();
@@ -4730,12 +4786,17 @@ export async function generateBrandReportPdf(
       y: page6TitleBottom + 10,
       width: contentWidth,
       height: 156,
-      label: pdfCopy.commercialCost,
+      label: `${pdfCopy.commercialCost} · ${scoreByLabel("AI visibility")?.score ?? overallScore}/100`,
+      title: scoreBandLabel(scoreByLabel("AI visibility")?.score ?? overallScore),
       body: report.toneCheck,
+      titleFont: "Helvetica",
+      titleSize: 15,
+      titleMin: 13,
       bodySize: 11.2,
       bodyMin: 9.8,
       labelColor: colors.mint,
-      bodyTopOffset: 52,
+      titleTopOffset: 40,
+      bodyTopOffset: 72,
       fill: colors.panelSoft,
     });
     drawTextCard({
@@ -4779,7 +4840,7 @@ export async function generateBrandReportPdf(
       bodySize: 11.2,
       bodyMin: 10,
       labelColor: colors.terracotta,
-      bodyTopOffset: 52,
+      bodyTopOffset: 58,
       fill: colors.panelSoft,
     });
     drawTextCard({
@@ -4791,7 +4852,7 @@ export async function generateBrandReportPdf(
       body: report.whatToDoNext,
       bodySize: 11.2,
       bodyMin: 9.6,
-      bodyTopOffset: 50,
+      bodyTopOffset: 58,
     });
     drawTextCard({
       x: contentLeft + signalCardWidth + 18,
@@ -4802,7 +4863,7 @@ export async function generateBrandReportPdf(
       body: report.whatToAmplify,
       bodySize: 11.2,
       bodyMin: 9.6,
-      bodyTopOffset: 50,
+      bodyTopOffset: 58,
     });
 
     // Page 8: Website Surface
@@ -4844,17 +4905,17 @@ export async function generateBrandReportPdf(
         x,
         y: page8ImageY + 316,
         width: websiteCalloutWidth,
-        height: 112,
+        height: 122,
         label: item.label,
         title: item.title,
         body: item.body,
-        bodySize: 9.8,
-        bodyMin: 9,
-        titleSize: 16,
-        titleMin: 13,
+        bodySize: 10.9,
+        bodyMin: 9.8,
+        titleSize: 18,
+        titleMin: 14,
       });
     });
-    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 444, contentWidth, 10.4, 5);
+    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 458, contentWidth, 11.2, 5);
 
     // Pages 9-13: axis deep dives
     scorePages.forEach((item, index) => {
@@ -4888,7 +4949,7 @@ export async function generateBrandReportPdf(
         fill: colors.panelSoft,
       });
       doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.whatScoreTells, contentLeft, 292);
-      const diagnosisText = fitTextToBox(item.diagnosis, 248, 182, 11.1, 10, 5);
+      const diagnosisText = fitTextToBox(bodyCopy(item.diagnosis), 248, 182, 10.8, 9.8, 5);
       drawParagraph(diagnosisText.text, contentLeft, 320, 248, diagnosisText.size, diagnosisText.lineGap);
       drawPanel(332, 320, 207, 236);
       if (item.title === "Visual Credibility" && websiteImageSource) {
@@ -4902,23 +4963,23 @@ export async function generateBrandReportPdf(
           { x: report.beforeAfterHero.currentFrame.focusX, y: report.beforeAfterHero.currentFrame.focusY },
         );
         drawSectionTag(pdfCopy.revealingLine, 352, 344);
-        const revealVisual = fitTextToBox(truncate(firstSentence(item.quote), 155), 167, 44, 12.2, 10.2, 4, "Times-Roman");
+        const revealVisual = fitTextToBox(firstSentence(item.quote), 167, 54, 11.8, 9.8, 4, "Times-Roman");
         doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealVisual.size).text(revealVisual.text, 352, 364, {
           width: 167,
           lineGap: revealVisual.lineGap,
         });
         drawSectionTag(pdfCopy.forBrand, 352, 492, colors.textMuted);
-        const implicationVisual = fitTextToBox(item.implication, 167, 44, 10.2, 9, 4);
+        const implicationVisual = fitTextToBox(stripBrandLead(item.implication), 167, 50, 9.6, 8.8, 4);
         drawParagraph(implicationVisual.text, 352, 512, 167, implicationVisual.size, implicationVisual.lineGap);
       } else {
         drawSectionTag(pdfCopy.revealingLine, 352, 344);
-        const revealText = fitTextToBox(truncate(firstSentence(item.quote), 155), 167, 66, 12.8, 10.8, 4, "Times-Roman");
+        const revealText = fitTextToBox(firstSentence(item.quote), 167, 76, 11.8, 9.8, 4, "Times-Roman");
         doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealText.size).text(revealText.text, 352, 364, {
           width: 167,
           lineGap: revealText.lineGap,
         });
         drawSectionTag(pdfCopy.forBrand, 352, 470, colors.textMuted);
-        const implicationText = fitTextToBox(item.implication, 167, 62, 10, 9, 4);
+        const implicationText = fitTextToBox(stripBrandLead(item.implication), 167, 82, 9.4, 8.6, 4);
         drawParagraph(implicationText.text, 352, 490, 167, implicationText.size, implicationText.lineGap);
       }
       drawScoreMeter(contentLeft, 598, contentWidth, item.score.score);
@@ -4950,13 +5011,16 @@ export async function generateBrandReportPdf(
     }
     drawPanel(324, page14Top, 215, 338);
     if (archetypePosterSource) {
-      drawRoundedImage(archetypePosterSource, 344, page14Top + 20, 175, 182, 14);
+      drawRoundedImageFit(archetypePosterSource, 344, page14Top + 20, 175, 170, 14);
     }
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(report.title, 344, page14Top + 224, {
-      width: 175,
+    const posterTitle = fitTextToBox(report.title, 151, 92, 15.5, 11.8, 2.5, "Times-Bold");
+    doc.fillColor(colors.textOnDark).font(posterTitle.font).fontSize(posterTitle.size).text(posterTitle.text, 356, page14Top + 212, {
+      width: 151,
       align: "center",
+      lineGap: posterTitle.lineGap,
     });
-    drawParagraph(firstSentence(report.tagline), 356, page14Top + 258, 151, 9.6, 4);
+    const posterTagline = fitTextToBox(firstSentence(report.tagline), 151, 44, 8.4, 7.6, 2.8);
+    drawParagraph(posterTagline.text, 356, page14Top + 292, 151, posterTagline.size, posterTagline.lineGap);
     drawSectionTag(pdfCopy.archetypeSoWhat, contentLeft, 596);
     const implicationWidth = (contentWidth - 24) / 3;
     archetypeSoWhat.forEach((line, index) => {
@@ -4965,11 +5029,11 @@ export async function generateBrandReportPdf(
         x,
         y: 618,
         width: implicationWidth,
-        height: 98,
+        height: 106,
         body: line,
-        bodySize: 10,
-        bodyMin: 9,
-        bodyTopOffset: 26,
+        bodySize: 9.1,
+        bodyMin: 8.2,
+        bodyTopOffset: 22,
         fill: colors.panelSoft,
       });
     });
@@ -5000,24 +5064,16 @@ export async function generateBrandReportPdf(
       });
       bandTop += 124;
     });
-    const weakestAxes = [...scorePages].sort((a, b) => a.score.score - b.score.score).slice(0, 2);
-    drawPanel(contentLeft, 604, contentWidth, 118, colors.panelSoft);
-    drawSectionTag("WHERE TO START", contentLeft + 18, 628, colors.mint);
-    let weakestY = 650;
-    weakestAxes.forEach((axis) => {
-      const fix =
-        axis.score.score < 60
-          ? practicalMoves[axis.title as keyof typeof practicalMoves]?.low
-          : practicalMoves[axis.title as keyof typeof practicalMoves]?.mid;
-      weakestY = drawParagraph(
-        `${axis.title} (${axis.score.score}/100): ${fix}`,
-        contentLeft + 18,
-        weakestY,
-        contentWidth - 36,
-        9.8,
-        4,
-      ) + 6;
-    });
+    drawPanel(contentLeft, 604, contentWidth, 96, colors.panelSoft);
+    drawSectionTag("WHY THIS ORDER", contentLeft + 18, 628, colors.mint);
+    drawParagraph(
+      "Fix Now is where the page is currently losing meaning or trust. Fix Next strengthens the offer once the first screen starts landing. Keep protects the signals that are already earning confidence and should not be diluted in the rewrite.",
+      contentLeft + 18,
+      650,
+      contentWidth - 36,
+      9.8,
+      4,
+    );
 
     // Page 16: Implementation Playbook
     addBasePage();
@@ -5028,12 +5084,7 @@ export async function generateBrandReportPdf(
       maxHeight: 112,
     });
     drawParagraph(pdfCopy.playbookIntro, contentLeft, 176, 372, 10.8, 5);
-    const nowItems = uniqueItems([
-      ...report.priorityFixes.fixNow,
-      report.rewriteSuggestions.heroLine
-        ? `Install the rewritten hero: ${report.rewriteSuggestions.heroLine}`
-        : "",
-    ], 3);
+    const nowItems = uniqueItems(report.priorityFixes.fixNow, 3);
     const nextItems = uniqueItems([
       ...report.priorityFixes.fixNext,
       ...report.actionPlan.next30Days.slice(0, 2),
@@ -5073,10 +5124,10 @@ export async function generateBrandReportPdf(
       y: 578,
       width: 147,
       height: 118,
-      label: pdfCopy.headlineCorrection,
-      title: "AFTER",
-      body: `${report.rewriteSuggestions.heroLine}\n\nSUPPORT\n${report.rewriteSuggestions.subheadline}\n\nCTA\n${report.rewriteSuggestions.cta}`,
-      bodySize: 8.8,
+      label: "NEXT STEP",
+      title: "WITH SAHAR",
+      body: "Translate the diagnosis into sharper positioning, cleaner page structure, stronger proof order, and a homepage that becomes easier to recommend and easier to buy from.",
+      bodySize: 8.5,
       bodyMin: 8,
       titleSize: 11,
       titleMin: 11,
@@ -5085,6 +5136,8 @@ export async function generateBrandReportPdf(
       bodyTopOffset: 68,
       fill: colors.panel,
     });
+
+    renderCommercialImpactPage();
 
     doc.end();
   });

@@ -371,7 +371,15 @@ async function renderBrandReadPdf(
   y -= 12;
   drawLabel(page1, "Current state", PAGE.marginX, y);
   y -= 20;
-  const currentStateFit = fitBodyText(safeText(result.current), sans, contentWidth, y - 38, 11.2, 9.6, 1.52);
+  const currentStateFit = fitBodyText(
+    safeText(result.current),
+    sans,
+    contentWidth,
+    Math.max(88, y - 88),
+    10.8,
+    8.6,
+    1.5,
+  );
   let currentY = y;
   currentStateFit.lines.forEach((line) => {
     page1.drawText(line, {
