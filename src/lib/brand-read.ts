@@ -1,5 +1,6 @@
 // @ts-nocheck
 import * as cheerio from "cheerio";
+import { analyzeAeo, summarizeAeoAudit, type AeoAudit } from "@/lib/aeo-audit";
 import { type SiteLocale } from "@/lib/site-i18n";
 import { translateTexts } from "@/lib/text-translate";
 import { scoreBandLabel, bandModifier } from "@/lib/score-band";
@@ -1579,6 +1580,68 @@ type FiveAxisScores = {
   conversionReadiness: number;
 };
 
+function buildAiVisibilityTechnicalNote(aeoAudit: AeoAudit | null) {
+  if (!aeoAudit) {
+    return "";
+  }
+
+  const technical = aeoAudit.breakdown?.technical?.details || {};
+  const schema = aeoAudit.breakdown?.schema?.details || {};
+  const blocksGpt = technical.hasOwnProperty("blocksGpt")
+    ? Boolean(technical.blocksGpt)
+    : false;
+  const blocksClaude = technical.hasOwnProperty("blocksClaude")
+    ? Boolean(technical.blocksClaude)
+    : false;
+  const hasLlmsTxt = technical.hasOwnProperty("hasLlmsTxt")
+    ? Boolean(technical.hasLlmsTxt)
+    : false;
+  const schemaCount =
+    typeof schema.schemaBlockCount === "number" ? schema.schemaBlockCount : 0;
+
+  const lines = [
+    `Technical AEO layer: external audit ${aeoAudit.totalScore}/100${aeoAudit.grade ? ` (${aeoAudit.grade})` : ""}.`,
+    blocksGpt || blocksClaude
+      ? "AI crawler access is partially blocked and needs fixing."
+      : "AI crawlers are not visibly blocked.",
+    hasLlmsTxt ? "llms.txt is present." : "llms.txt is missing.",
+    schemaCount > 0
+      ? `Structured data exists (${schemaCount} schema blocks), but the page still needs cleaner AI-readable signals.`
+      : "Structured data is currently too thin for strong AI visibility.",
+  ];
+
+  if (aeoAudit.issues.length > 0) {
+    lines.push(`Main technical blockers: ${aeoAudit.issues.slice(0, 2).join("; ")}.`);
+  }
+
+  return lines.join(" ");
+}
+
+function mergeAeoVisibilityScore(
+  semanticScore: number,
+  aeoAudit: AeoAudit | null,
+) {
+  if (!aeoAudit) {
+    return semanticScore;
+  }
+
+  const technical = aeoAudit.breakdown?.technical?.details || {};
+  const blocksGpt = technical.hasOwnProperty("blocksGpt")
+    ? Boolean(technical.blocksGpt)
+    : false;
+  const blocksClaude = technical.hasOwnProperty("blocksClaude")
+    ? Boolean(technical.blocksClaude)
+    : false;
+
+  let merged = Math.round(semanticScore * 0.7 + aeoAudit.totalScore * 0.3);
+
+  if (blocksGpt || blocksClaude) {
+    merged = Math.min(merged, 58);
+  }
+
+  return Math.max(0, Math.min(100, merged));
+}
+
 // Take the raw LLM scores and apply deterministic caps based on evidence.
 // Rules are intentionally few and blunt — we would rather slightly under-score
 // a good site than inflate a weak one.
@@ -1643,6 +1706,7 @@ function normalizeResult(
   data: RawBrandReadResult,
   hints: VisualHints,
   websiteContext: WebsiteContext,
+  aeoAudit: AeoAudit | null,
   sourceUrl: string = "",
 ): BrandReadResult {
   const rawWorld = String(data.visualWorld || "").toLowerCase();
@@ -1673,6 +1737,11 @@ function normalizeResult(
   };
   const platformSignals = detectPlatformSignals(websiteContext, sourceUrl);
   const calibratedScores = applyCalibrationCaps(rawScores, platformSignals);
+  const mergedAiVisibility = mergeAeoVisibilityScore(
+    calibratedScores.toneCoherence,
+    aeoAudit,
+  );
+  const aiVisibilityNote = buildAiVisibilityTechnicalNote(aeoAudit);
 
   return enrichPosterSystem(
     {
@@ -1709,8 +1778,13 @@ function normalizeResult(
         truncate(normalizeWhitespace(data.mismatch || ""), 760) ||
         "Some parts feel polished and confident, while others still feel softer or less sure of themselves.",
       voice:
-        truncate(normalizeWhitespace(data.voice || ""), 900) ||
-        "The tone should sound more confident, more direct, and more assured.",
+        truncate(
+          normalizeWhitespace(
+            [data.voice || "", aiVisibilityNote].filter(Boolean).join(" "),
+          ),
+          900,
+        ) ||
+        "AI visibility is directionally strong, but the brand still needs clearer machine-readable signals and more explicit category language.",
       direction:
         truncate(normalizeWhitespace(data.direction || ""), 900) ||
         "Say the main promise faster, trim the fluff, and let one strong idea lead the whole brand.",
@@ -1721,7 +1795,7 @@ function normalizeResult(
         truncate(normalizeWhitespace(data.drop || ""), 760) ||
         "Drop anything vague, padded, or over-explained. If it weakens the main impression, it should probably go.",
       positioningClarity: calibratedScores.positioningClarity,
-      toneCoherence: calibratedScores.toneCoherence,
+      toneCoherence: mergedAiVisibility,
       visualCredibility: calibratedScores.visualCredibility,
       offerSpecificity: calibratedScores.offerSpecificity,
       conversionReadiness: calibratedScores.conversionReadiness,
@@ -1746,10 +1820,27 @@ async function requestGeminiBrandRead(
 ) {
   const apiKey = process.env.OPENAI_API_KEY;
   const hints = inferVisualWorldHints(websiteContext);
+  const aeoAudit = await analyzeAeo(url);
   const targetLanguage = LANGUAGE_NAMES[language];
 
   if (!apiKey) {
-    return buildHeuristicRead(url, websiteContext, hints);
+    const heuristic = buildHeuristicRead(url, websiteContext, hints);
+    const adjustedAiVisibility = mergeAeoVisibilityScore(
+      heuristic.toneCoherence,
+      aeoAudit,
+    );
+    return {
+      ...heuristic,
+      toneCoherence: adjustedAiVisibility,
+      voice: truncate(
+        normalizeWhitespace(
+          [heuristic.voice, buildAiVisibilityTechnicalNote(aeoAudit)]
+            .filter(Boolean)
+            .join(" "),
+        ),
+        900,
+      ),
+    };
   }
 
   // Pre-compute the industry lens so we can tell the model explicitly which
@@ -1812,6 +1903,9 @@ Likely dominant visual world based on lexical brand signals:
 - Top signal worlds: ${hints.topSignals.map(([world, score]) => `${world}(${score})`).join(", ") || "none"}
 - Likely industry archetype pull: ${hints.industryHint.world} (${hints.industryHint.confidence})
 
+AEO technical audit layer:
+${summarizeAeoAudit(aeoAudit)}
+
 Scoring rubric. Each score is an integer 0-100. Anchor your numbers to the bands below, not to a gut feeling. A brand you would call "strong" usually lives in the 70-85 range, not 90+. 85+ is reserved for pages that already convert before the copy has to do any explaining.
 
 CALIBRATION GUARDS — read these before you assign any score.
@@ -1828,12 +1922,12 @@ positioningClarity — how quickly the homepage makes the offer legible to a fir
 - 70-85  offer and audience are legible inside the hero frame. A first-time visitor can describe what this company does.
 - 85-100 offer, audience, and reason-to-care all land before the first scroll. Anchor: Stripe homepage hero, Linear hero, Notion hero.
 
-toneCoherence — AI discoverability: whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand based on its website content.
-- 0-30   AI tools cannot find or describe the brand at all. No structured data, no meta descriptions, no indexable content. Completely invisible to AI search.
-- 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries. No Schema.org, no FAQ, poor meta tags.
-- 50-70  AI tools find the brand and get the category right but miss specifics. Some meta descriptions exist but lack precision. No structured data or FAQ content.
-- 70-85  AI tools can accurately describe what the brand does and for whom. Clear meta descriptions, some structured data, natural-language content on key pages.
-- 85-100 Brand is fully optimized for AI discovery. Rich structured data, comprehensive FAQ, consistent naming, clear claims AI can quote. Anchor: Stripe, Linear, Notion.
+toneCoherence — AI visibility: whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand based on its website content AND its technical AEO readiness.
+- 0-30   AI tools cannot find or describe the brand at all. No structured data, no meta descriptions, no indexable content, or crawler access is broken.
+- 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries. Weak schema, weak metadata, weak AI-readable structure.
+- 50-70  AI tools find the brand and get the category right but miss specifics. Some metadata exists, but the technical and narrative signals are still incomplete.
+- 70-85  AI tools can accurately describe what the brand does and for whom. The site has clear claims, stable metadata, and decent technical AI-readiness.
+- 85-100 Brand is fully optimized for AI visibility. Rich structured data, comprehensive FAQ, consistent naming, strong metadata, and no technical friction for AI crawlers. Anchor: Stripe, Linear, Notion.
 
 visualCredibility — whether the design signals quality, control, and category trust.
 - 0-30   amateur feel, broken layout, stock imagery mismatched to brand, typographic chaos. The design actively repels trust.
@@ -1870,7 +1964,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
   "strength": "what already feels strong or convincing, 3-5 sentences",
   "gap": "what is missing or unclear, 4-6 sentences",
   "mismatch": "where the brand feels slightly out of sync with itself, 3-5 sentences",
-  "voice": "AI discoverability assessment: how well AI tools can find, parse, and recommend this brand based on its website content — check for structured data, clear meta descriptions, natural-language descriptions, FAQ presence, and consistent naming. 4-6 sentences",
+  "voice": "AI visibility assessment: combine recommendation readiness with technical AEO readiness — check for structured data, clear meta descriptions, natural-language descriptions, FAQ presence, AI crawler access, llms.txt if present, and consistent naming. 4-6 sentences",
   "direction": "what to do next, 4-6 sentences",
   "amplify": "what to lean into more, 3-5 sentences",
   "drop": "what to reduce, simplify, or remove, 3-5 sentences",
@@ -1957,7 +2051,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
     throw new Error("OpenAI returned an empty response");
   }
 
-  return normalizeResult(extractJson(text), hints, websiteContext, url);
+  return normalizeResult(extractJson(text), hints, websiteContext, aeoAudit, url);
 }
 
 async function localizeBrandReadResult(

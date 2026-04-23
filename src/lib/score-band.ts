@@ -3,7 +3,7 @@
 // Two things live in this file and nowhere else:
 //   1. The 5-tier color-banded indicator system (FLATLINING / FRAGILE /
 //      DEVELOPING / STABLE / LEADING) that encodes a numeric score as a vital sign.
-//   2. The 5-axis dimension model — positioningClarity, toneCoherence (AI discoverability),
+//   2. The 5-axis dimension model — positioningClarity, toneCoherence (AI visibility),
 //      visualCredibility, offerSpecificity, conversionReadiness — with
 //      canonical labels and rendering order.
 //
@@ -128,9 +128,9 @@ export const DIMENSIONS: readonly Dimension[] = [
   },
   {
     key: "toneCoherence",
-    label: "AI discoverability",
+    label: "AI visibility",
     shortLabel: "AI DISCOVERY",
-    summary: "Can AI tools find, understand, and recommend your brand?",
+    summary: "Can AI tools find, understand, and confidently recommend your brand?",
   },
   {
     key: "visualCredibility",

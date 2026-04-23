@@ -56,10 +56,10 @@ export const siteCopy = {
             "BrandMirror reads how clearly your offer lands, where your promise becomes vague, and whether your positioning feels premium, specific, or too polished to convert.",
         },
         {
-          label: "AI discoverability",
+          label: "AI visibility",
           title: "How visible your brand is to AI-powered search",
           body:
-            "It checks whether AI tools like ChatGPT, Gemini, and Perplexity can find, understand, and accurately recommend your brand. AI discoverability is treated as a commercial channel, not a technical checkbox.",
+            "It checks whether AI tools like ChatGPT, Gemini, and Perplexity can find, understand, and accurately recommend your brand. AI visibility combines recommendation readiness with a technical AEO layer: metadata, schema, crawler access, and AI-readable structure.",
         },
         {
           label: "Visual identity",
@@ -146,7 +146,7 @@ export const siteCopy = {
           {
             step: "03",
             title: "Unlock the full report",
-            body: "Pay $197 to open the complete brand diagnosis with positioning, AI discoverability, visual identity, fixes, and rewrite suggestions.",
+            body: "Pay $197 to open the complete brand diagnosis with positioning, AI visibility, visual identity, fixes, and rewrite suggestions.",
           },
         ],
       },
@@ -162,7 +162,7 @@ export const siteCopy = {
           "Why clients don't choose you",
           "Audience mismatch",
           "Positioning read",
-          "AI discoverability audit",
+          "AI visibility audit",
           "Visual identity read",
           "Above-the-fold audit",
           "Priority fixes",
@@ -255,7 +255,7 @@ export const siteCopy = {
       unlockItems: [
         "Signal read + website surface",
         "5 commercial deep dives",
-        "AI discoverability audit",
+        "AI visibility audit",
         "Brand archetype + poster",
         "Priority fix stack",
         "30-day action plan",
@@ -333,7 +333,7 @@ export const siteCopy = {
       secondaryCta: "Return to landing page",
       scoreRows: [
         { label: "Positioning clarity", score: "72", note: "Strong premise, soft edge." },
-        { label: "AI discoverability", score: "81", note: "Elegant and controlled." },
+        { label: "AI visibility", score: "81", note: "Elegant and controlled." },
         { label: "Visual credibility", score: "89", note: "Highly trusted on sight." },
         { label: "Offer specificity", score: "58", note: "Too delayed." },
       ],
@@ -347,7 +347,7 @@ export const siteCopy = {
             "Move the value proposition earlier and sharpen the language around business outcomes without losing the quiet-luxury tone.",
         },
         {
-          label: "AI discoverability read",
+          label: "AI visibility read",
           title: "The voice is intelligent, but slightly withheld.",
           body:
             "The copy sounds elevated and self-aware. That supports the premium impression, yet several sections lean so far into refinement that urgency disappears. The brand is saying 'we are discerning' more clearly than it is saying 'we solve this problem now.'",
@@ -933,7 +933,7 @@ export const siteCopy = {
       unlockItems: [
         "Signal read + website surface",
         "5 коммерческих deep dives",
-        "Аудит AI discoverability",
+        "Аудит AI visibility",
         "Brand archetype + poster",
         "Priority fix stack",
         "30-day action plan",

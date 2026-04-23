@@ -430,7 +430,7 @@ function HowWeReadBrandsBlock({
             </p>
             <div className="editorial-rule mt-5 space-y-4 border-[rgba(243,236,223,0.12)] pt-5 text-sm leading-7 text-[rgba(243,236,223,0.68)]">
               <p>Positioning Clarity — can someone explain the offer without your help?</p>
-              <p>AI Discoverability — can AI tools find and recommend your brand?</p>
+              <p>AI Visibility — can AI tools find, read, and recommend your brand?</p>
               <p>Visual Credibility — does the surface match the price being asked?</p>
               <p>Offer Specificity — does the proposition arrive fast enough to buy?</p>
               <p>Conversion Readiness — is there a clear next step when the buyer is ready?</p>
@@ -485,7 +485,7 @@ function ScoreDashboardBlock({
             </div>
             <div className="editorial-rule border-[rgba(243,236,223,0.12)] pt-5">
               <p className="max-w-xl text-sm leading-7 text-[rgba(243,236,223,0.7)]">
-                Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Unstable, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.
+                Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Developing, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.
               </p>
             </div>
           </div>
@@ -713,7 +713,7 @@ export function FullReportExperience({
     locale === "es"
       ? {
           "Positioning clarity": "Claridad de posicionamiento",
-          "AI discoverability": "Descubribilidad por IA",
+          "AI visibility": "Visibilidad en IA",
           "Visual credibility": "Credibilidad visual",
           "Offer specificity": "Especificidad de la oferta",
           "Conversion readiness": "Preparación para convertir",
@@ -721,7 +721,7 @@ export function FullReportExperience({
       : locale === "ru"
         ? {
             "Positioning clarity": "Ясность позиционирования",
-            "AI discoverability": "AI-видимость",
+            "AI visibility": "AI-видимость",
             "Visual credibility": "Визуальная убедительность",
             "Offer specificity": "Точность оффера",
             "Conversion readiness": "Готовность к конверсии",

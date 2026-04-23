@@ -1456,9 +1456,9 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
         note: "How quickly the offer becomes legible on the homepage.",
       },
       {
-        label: "AI discoverability",
+        label: "AI visibility",
         score: safeAiDiscoverability,
-        note: "How accurately AI tools can find, describe, and recommend the brand.",
+        note: "How clearly AI tools can find, read, and recommend the brand, including its technical AEO readiness.",
       },
       {
         label: "Visual credibility",
@@ -2363,7 +2363,7 @@ Important rules:
 - Keep structural enums and machine-readable fields stable:
   - Keep screenshotCallouts.zone values in English.
   - Keep surfaceCaptures.kind and captureMethod values in English.
-  - Keep scorecard labels exactly as: Positioning clarity, AI discoverability, Visual credibility, Offer specificity, Conversion readiness.
+  - Keep scorecard labels exactly as: Positioning clarity, AI visibility, Visual credibility, Offer specificity, Conversion readiness.
 - Return only valid JSON.
 
 Website URL:
@@ -2378,13 +2378,13 @@ Existing first-read:
 - Strength: ${firstRead.strength}
 - Gap: ${firstRead.gap}
 - Mismatch: ${firstRead.mismatch}
-- AI discoverability read: ${firstRead.voice}
+- AI visibility read: ${firstRead.voice}
 - Next move: ${firstRead.direction}
 - Strongest signal: ${firstRead.strongestSignal}
 - Main friction: ${firstRead.mainFriction}
 - Clarity score (positioning): ${firstRead.positioningClarity}
 - Visual credibility: ${firstRead.visualCredibility}
-- AI discoverability: ${firstRead.toneCoherence}
+- AI visibility: ${firstRead.toneCoherence}
 - Offer specificity: ${firstRead.offerSpecificity}
 - Conversion readiness: ${firstRead.conversionReadiness}
 
@@ -2401,7 +2401,7 @@ ${websiteContext.callsToAction.map((item) => `  - ${item}`).join("\n") || "  - n
 - Visible text:
 ${websiteContext.visibleText || "n/a"}
 
-Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, AI discoverability, Visual credibility, Offer specificity, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
+Scorecard rules. The scorecard MUST contain exactly five items, in this order: Positioning clarity, AI visibility, Visual credibility, Offer specificity, Conversion readiness. Do not omit any item. Do not add any item. Do not reorder. Each score is an integer 0-100.
 
 Scoring rubric. Anchor every score to the bands below rather than going on feel. The bands are: 0-30 FLATLINING, 30-50 FRAGILE, 50-70 DEVELOPING, 70-85 STABLE, 85-100 LEADING. A brand most people would call "strong" usually lives in 70-85. 85+ is reserved for pages that already convert before the copy does any explaining.
 
@@ -2417,12 +2417,12 @@ Positioning clarity — how quickly the homepage makes the offer legible to a fi
 - 70-85  offer and audience are legible inside the hero frame.
 - 85-100  offer, audience, and reason-to-care all land before the first scroll.
 
-AI discoverability — whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand.
-- 0-30   AI tools cannot find or describe the brand at all. Completely invisible to AI search.
-- 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries.
-- 50-70  AI tools find the brand and get the category right but miss specifics. Some meta descriptions exist but lack precision.
-- 70-85  AI tools can accurately describe what the brand does and for whom. Clear meta descriptions, some structured data.
-- 85-100  Brand is fully optimized for AI discovery. Rich structured data, comprehensive FAQ, consistent naming, clear claims AI can quote.
+AI visibility — whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand, combining recommendation readiness with a technical AEO layer.
+- 0-30   AI tools cannot find or describe the brand at all. The brand is effectively invisible or unreadable to AI systems.
+- 30-50  AI tools find the domain but describe it generically or incorrectly. Technical signals and brand clarity are too weak to support confident recommendation.
+- 50-70  AI tools find the brand and mostly get the category right, but flatten the specifics. Some metadata or structured signals exist, but not enough to make the offer reliably retrievable.
+- 70-85  AI tools can accurately describe the brand and connect it to likely user intent. Category language, naming, metadata, and structure are clear enough to support recommendation.
+- 85-100  The brand is optimized for AI visibility. Structured data, consistent naming, clear claims, AI-readable metadata, and accessible technical signals make it easy for AI systems to find, quote, and recommend.
 
 Visual credibility — whether the design signals quality, control, and category trust.
 - 0-30   amateur feel, broken layout, stock imagery mismatched to brand. Design actively repels trust.
@@ -2467,7 +2467,7 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
   ],
   "scorecard": [
     { "label": "Positioning clarity", "score": 78, "note": "short note" },
-    { "label": "AI discoverability", "score": 82, "note": "short note" },
+    { "label": "AI visibility", "score": 82, "note": "short note" },
     { "label": "Visual credibility", "score": 86, "note": "short note" },
     { "label": "Offer specificity", "score": 71, "note": "short note" },
     { "label": "Conversion readiness", "score": 74, "note": "short note" }
@@ -3207,7 +3207,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "PROOF AND CTA ZONE",
         methodologyBullets: [
           "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-          "AI Discoverability measures whether AI tools can find, summarize, and recommend the brand accurately.",
+          "AI Visibility measures whether AI tools can find, read, and recommend the brand, combining recommendation readiness with a technical AEO layer: metadata, schema, crawler access, and AI-readable structure.",
           "Visual Credibility measures whether the design signals quality and control.",
           "Offer Specificity measures how directly the page explains what it does and why it matters.",
           "Conversion Readiness measures whether the page has earned a confident next step.",
@@ -3314,7 +3314,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "AI Discoverability mide si las herramientas de IA pueden encontrar, resumir y recomendar la marca con precisión.",
+          "AI Visibility mide si las herramientas de IA pueden encontrar, leer y recomendar la marca, combinando legibilidad para IA con una capa técnica de AEO: metadatos, schema, acceso para crawlers y estructura legible por IA.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
@@ -3421,7 +3421,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ЗОНА PROOF И CTA",
         methodologyBullets: [
           "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "AI Discoverability измеряет, могут ли AI tools найти бренд, точно описать его и рекомендовать его.",
+          "AI Visibility измеряет, могут ли AI tools найти бренд, корректно прочитать его и рекомендовать, объединяя recommendation readiness с техническим AEO-слоем: metadata, schema, crawler access и AI-readable structure.",
           "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
           "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
           "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
@@ -3827,8 +3827,8 @@ export async function generateBrandReportPdf(
         implication: report.headlineCorrection.currentProblem,
       },
       {
-        label: "AI discoverability",
-        title: "AI Discoverability",
+        label: "AI visibility",
+        title: "AI Visibility",
         diagnosis: report.toneCheck,
         quote: report.audienceMismatch[1] || report.toneCheck,
         implication: report.verbalImage.firstScreenTone,
@@ -3884,7 +3884,7 @@ export async function generateBrandReportPdf(
 
     const metricCards = [
       "Positioning Clarity - does the buyer know what you are within one read?",
-      "AI Discoverability - can AI tools find, describe, and recommend the brand accurately?",
+      "AI Visibility - can AI tools find, read, and recommend the brand clearly and consistently?",
       "Visual Credibility - does the design earn the price and the promise?",
       "Offer Specificity - could someone repeat what you sell without your help?",
       "Conversion Readiness - when someone is ready, is there a door to walk through?",
@@ -3902,9 +3902,9 @@ export async function generateBrandReportPdf(
         low: "Rewrite the first screen so it states what you do, for whom, and why it matters in one read. Remove mood-first language that delays meaning.",
         mid: "Pull the strongest proof point above the fold so the promise lands faster and with more authority.",
       },
-      "AI Discoverability": {
-        low: "Add clearer category language, explicit service nouns, and metadata that AI tools can quote without guessing.",
-        mid: "Tighten naming consistency across headline, metadata, and supporting copy so AI summaries stop flattening the offer.",
+      "AI Visibility": {
+        low: "Add clearer category language, explicit service nouns, stronger metadata, and technical AEO signals so AI tools can quote the brand without guessing.",
+        mid: "Tighten naming consistency across headline, metadata, schema, and supporting copy so AI summaries stop flattening the offer.",
       },
       "Visual Credibility": {
         low: "Replace template cues and generic imagery. The page has to look as controlled as the price point it implies.",
