@@ -101,6 +101,55 @@ type ArchetypeTest = {
   verdict: string;
 };
 
+type CompetitiveAxisSummary = {
+  axis: string;
+  yourScore: number;
+  competitorAvg: number;
+  lead?: number;
+  gap?: number;
+  leader?: string;
+  leaderScore?: number;
+  message: string;
+};
+
+type CompetitiveLandscape = {
+  competitors: Array<{
+    name: string;
+    url: string;
+    scores: {
+      positioning: number;
+      aiVisibility: number;
+      visual: number;
+      offer: number;
+      conversion: number;
+      overall: number;
+    };
+    tier: string;
+    strengths: string[];
+    snapshot: string;
+  }>;
+  analysis: {
+    ranking: number;
+    gapToLeader: number;
+    strengths: CompetitiveAxisSummary[];
+    weaknesses: CompetitiveAxisSummary[];
+    quickestWin: {
+      axis: string;
+      currentGap: number;
+      targetScore: number;
+      message: string;
+    } | null;
+  };
+  industryBenchmark: {
+    positioning: number;
+    aiVisibility: number;
+    visual: number;
+    offer: number;
+    conversion: number;
+    overall: number;
+  };
+};
+
 export type BrandReport = {
   url: string;
   brandName: string;
@@ -207,6 +256,7 @@ export type BrandReport = {
     next30Days: string[];
   };
   strategicNextMove: string;
+  competitiveLandscape?: CompetitiveLandscape;
 };
 
 type RawBrandReport = Partial<BrandReport> & {
@@ -291,6 +341,7 @@ type RawBrandReport = Partial<BrandReport> & {
     next7Days?: string[];
     next30Days?: string[];
   };
+  competitiveLandscape?: CompetitiveLandscape;
 };
 
 function extractJson(text = "") {
@@ -322,6 +373,24 @@ function clampScore(value: unknown, fallback: number) {
 
 function truncate(value = "", maxLength = 300) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+}
+
+function average(values: number[]) {
+  return values.length
+    ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+    : 0;
+}
+
+function hostnameOf(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return url
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0]
+      .toLowerCase();
+  }
 }
 
 function escapeRegExp(value: string) {
@@ -1740,6 +1809,225 @@ export async function generateBrandReportPreviewFromRead(
   return buildFallbackReport(normalized, read);
 }
 
+async function identifyCompetitors(
+  url: string,
+  report: Pick<BrandReport, "brandName" | "genre" | "whatItDoes">,
+) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return [];
+
+  const prompt = `
+You are identifying direct competitors for a premium brand audit.
+
+BRAND:
+- Name: ${report.brandName}
+- URL: ${url}
+- Genre: ${report.genre}
+- What it does: ${report.whatItDoes}
+
+Return the 3 most direct public competitors for this brand.
+
+Rules:
+- Prefer direct competitors over adjacent players.
+- Prefer same category, same business model, similar audience, similar market.
+- Only include websites with public homepages.
+- Avoid directories, marketplaces, portfolio aggregators, or giant irrelevant enterprises.
+- Return valid JSON only.
+
+{
+  "competitors": [
+    { "name": "Competitor name", "url": "https://example.com", "reason": "brief reason" }
+  ]
+}
+`;
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || DEFAULT_MODEL || "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a competitive intelligence analyst. Return only valid JSON.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    }),
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const payload = await response.json();
+  const text = payload?.choices?.[0]?.message?.content || "";
+  const parsed = extractJson(text);
+  const currentHost = hostnameOf(url);
+
+  return Array.isArray(parsed?.competitors)
+    ? parsed.competitors
+        .map((item: any) => ({
+          name: normalizeWhitespace(item?.name || ""),
+          url: normalizeUrl(item?.url || ""),
+          reason: normalizeWhitespace(item?.reason || ""),
+        }))
+        .filter((item: any) => item.name && item.url && hostnameOf(item.url) !== currentHost)
+        .slice(0, 3)
+    : [];
+}
+
+async function generateCompetitiveLandscape(
+  url: string,
+  report: BrandReport,
+  language: SiteLocale,
+): Promise<CompetitiveLandscape | undefined> {
+  const competitorsFound = await identifyCompetitors(url, report);
+  if (!competitorsFound.length) {
+    return undefined;
+  }
+
+  const competitorResults = await Promise.allSettled(
+    competitorsFound.map(async (competitor) => {
+      const read = await generateBrandRead(competitor.url, language);
+      const result = read.result;
+      return {
+        name: competitor.name || result.brandName,
+        url: competitor.url,
+        scores: {
+          positioning: clampScore(result.positioningClarity, 70),
+          aiVisibility: clampScore(result.toneCoherence, 70),
+          visual: clampScore(result.visualCredibility, 70),
+          offer: clampScore(result.offerSpecificity, 70),
+          conversion: clampScore(result.conversionReadiness, 70),
+          overall: clampScore(result.posterScore, 70),
+        },
+        tier: result.scoreBand || scoreBandLabel(result.posterScore),
+        strengths: [result.strongestSignal, result.summary]
+          .filter(Boolean)
+          .map((item) => truncate(normalizeWhitespace(item), 140))
+          .slice(0, 2),
+        snapshot: truncate(
+          normalizeWhitespace(result.summary || result.whatItDoes || competitor.reason),
+          180,
+        ),
+      };
+    }),
+  );
+
+  const competitors = competitorResults
+    .filter(
+      (
+        item,
+      ): item is PromiseFulfilledResult<CompetitiveLandscape["competitors"][number]> =>
+        item.status === "fulfilled",
+    )
+    .map((item) => item.value)
+    .filter((item) => item.name && item.url);
+
+  if (!competitors.length) {
+    return undefined;
+  }
+
+  const scoreValue = (label: string, fallback = report.posterScore) =>
+    report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase())?.score ??
+    fallback;
+
+  const yourScores = {
+    positioning: scoreValue("Positioning clarity", 70),
+    aiVisibility: scoreValue("AI visibility", 70),
+    visual: scoreValue("Visual credibility", 70),
+    offer: scoreValue("Offer specificity", 70),
+    conversion: scoreValue("Conversion readiness", 70),
+    overall: clampScore(report.posterScore, 70),
+  };
+
+  const axisConfig = [
+    { key: "positioning" as const, label: "Positioning Clarity" },
+    { key: "aiVisibility" as const, label: "AI Visibility" },
+    { key: "visual" as const, label: "Visual Credibility" },
+    { key: "offer" as const, label: "Offer Specificity" },
+    { key: "conversion" as const, label: "Conversion Readiness" },
+  ];
+
+  const strengths: CompetitiveAxisSummary[] = [];
+  const weaknesses: CompetitiveAxisSummary[] = [];
+
+  for (const axis of axisConfig) {
+    const competitorAvg = average(competitors.map((item) => item.scores[axis.key]));
+    const yourScore = yourScores[axis.key];
+    const diff = yourScore - competitorAvg;
+
+    if (diff >= 3) {
+      strengths.push({
+        axis: axis.label,
+        yourScore,
+        competitorAvg,
+        lead: diff,
+        message: `Your ${axis.label.toLowerCase()} (${yourScore}) is ahead of the competitive average (${competitorAvg}).`,
+      });
+    } else if (diff <= -3) {
+      const leader = [...competitors].sort((a, b) => b.scores[axis.key] - a.scores[axis.key])[0];
+      weaknesses.push({
+        axis: axis.label,
+        yourScore,
+        competitorAvg,
+        gap: Math.abs(diff),
+        leader: leader.name,
+        leaderScore: leader.scores[axis.key],
+        message: `${leader.name} leads ${axis.label.toLowerCase()} (${leader.scores[axis.key]}) while your brand is at ${yourScore}.`,
+      });
+    }
+  }
+
+  const sortedOverall = [yourScores.overall, ...competitors.map((item) => item.scores.overall)].sort(
+    (a, b) => b - a,
+  );
+  const ranking = sortedOverall.indexOf(yourScores.overall) + 1;
+  const leaderOverall = sortedOverall[0] || yourScores.overall;
+  const gapToLeader = Math.max(0, leaderOverall - yourScores.overall);
+
+  const quickestWin =
+    weaknesses
+      .map((item) => ({
+        axis: item.axis,
+        currentGap: item.gap || 0,
+        targetScore: (item.leaderScore || item.competitorAvg) + 1,
+        message: `Lift ${item.axis} by ${Math.max(
+          3,
+          (item.leaderScore || item.competitorAvg) - item.yourScore + 1,
+        )} points to close the fastest visible market gap.`,
+      }))
+      .sort((a, b) => a.currentGap - b.currentGap)[0] || null;
+
+  return {
+    competitors,
+    analysis: {
+      ranking,
+      gapToLeader,
+      strengths: strengths.slice(0, 2),
+      weaknesses: weaknesses.slice(0, 3),
+      quickestWin,
+    },
+    industryBenchmark: {
+      positioning: average([yourScores.positioning, ...competitors.map((item) => item.scores.positioning)]),
+      aiVisibility: average([yourScores.aiVisibility, ...competitors.map((item) => item.scores.aiVisibility)]),
+      visual: average([yourScores.visual, ...competitors.map((item) => item.scores.visual)]),
+      offer: average([yourScores.offer, ...competitors.map((item) => item.scores.offer)]),
+      conversion: average([yourScores.conversion, ...competitors.map((item) => item.scores.conversion)]),
+      overall: average([yourScores.overall, ...competitors.map((item) => item.scores.overall)]),
+    },
+  };
+}
+
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
@@ -2698,6 +2986,15 @@ async function localizeBrandReport(report: BrandReport, language: SiteLocale) {
       ...report.actionPlan.next7Days,
       ...report.actionPlan.next30Days,
       report.strategicNextMove,
+      ...(report.competitiveLandscape?.analysis.strengths.flatMap((item) => [item.axis, item.message]) || []),
+      ...(report.competitiveLandscape?.analysis.weaknesses.flatMap((item) => [item.axis, item.message, item.leader || ""]) || []),
+      ...(report.competitiveLandscape?.analysis.quickestWin
+        ? [
+            report.competitiveLandscape.analysis.quickestWin.axis,
+            report.competitiveLandscape.analysis.quickestWin.message,
+          ]
+        : []),
+      ...(report.competitiveLandscape?.competitors.flatMap((item) => [item.snapshot, ...item.strengths]) || []),
     ],
     language,
   );
@@ -2854,6 +3151,37 @@ async function localizeBrandReport(report: BrandReport, language: SiteLocale) {
       next30Days: report.actionPlan.next30Days.map(() => next()),
     },
     strategicNextMove: next(),
+    competitiveLandscape: report.competitiveLandscape
+      ? {
+          ...report.competitiveLandscape,
+          analysis: {
+            ...report.competitiveLandscape.analysis,
+            strengths: report.competitiveLandscape.analysis.strengths.map((item) => ({
+              ...item,
+              axis: next(),
+              message: next(),
+            })),
+            weaknesses: report.competitiveLandscape.analysis.weaknesses.map((item) => ({
+              ...item,
+              axis: next(),
+              message: next(),
+              leader: next(),
+            })),
+            quickestWin: report.competitiveLandscape.analysis.quickestWin
+              ? {
+                  ...report.competitiveLandscape.analysis.quickestWin,
+                  axis: next(),
+                  message: next(),
+                }
+              : null,
+          },
+          competitors: report.competitiveLandscape.competitors.map((item) => ({
+            ...item,
+            snapshot: next(),
+            strengths: item.strengths.map(() => next()),
+          })),
+        }
+      : undefined,
   };
 }
 
@@ -3075,6 +3403,16 @@ export async function generateBrandReport(
       : commercialDiagnosis.audienceMismatch;
   report.brandMyth = report.brandMyth || archetypeLayer.brandMyth;
 
+  try {
+    report.competitiveLandscape = await generateCompetitiveLandscape(
+      normalized,
+      report,
+      language,
+    );
+  } catch {
+    report.competitiveLandscape = undefined;
+  }
+
   if (!modelReport && language !== "en") {
     return localizeBrandReport(report, language);
   }
@@ -3198,6 +3536,13 @@ export async function generateBrandReportPdf(
         roiAnnualRoi: "Annual ROI",
         roiFootnote:
           "Modeled estimate based on current scores, category benchmarks, and the priority fixes in this report. Actual performance depends on implementation quality, market conditions, and offer fit.",
+        competitiveLabel: "COMPETITIVE POSITION",
+        competitiveTitle: "Where you stand in the category right now",
+        competitiveAverage: "Competitive avg",
+        competitiveLeader: "Leader",
+        competitiveQuickestWin: "QUICKEST COMPETITIVE WIN",
+        competitiveNoData:
+          "Competitive benchmarking is not available for this run, but the ROI scenarios above still show the likely commercial upside of the priority fixes.",
         websiteEvidenceLabel: "CURRENT WEBSITE SURFACE",
         websiteEvidenceTitle:
           "What the buyer sees before the copy has earned trust",
@@ -3305,6 +3650,13 @@ export async function generateBrandReportPdf(
         roiAnnualRoi: "ROI anual",
         roiFootnote:
           "Estimación modelada basada en los scores actuales, benchmarks del sector y los priority fixes de este reporte. El resultado real depende de la implementación, del mercado y del encaje de la oferta.",
+        competitiveLabel: "POSICIÓN COMPETITIVA",
+        competitiveTitle: "Dónde estás hoy dentro de la categoría",
+        competitiveAverage: "Promedio competitivo",
+        competitiveLeader: "Líder",
+        competitiveQuickestWin: "GANANCIA COMPETITIVA MÁS RÁPIDA",
+        competitiveNoData:
+          "El benchmarking competitivo no está disponible en esta ejecución, pero los escenarios de ROI siguen mostrando el upside comercial más probable de los priority fixes.",
         websiteEvidenceLabel: "SUPERFICIE ACTUAL DEL SITIO",
         websiteEvidenceTitle:
           "Lo que ve el comprador antes de que el copy haya ganado confianza",
@@ -3412,6 +3764,13 @@ export async function generateBrandReportPdf(
         roiAnnualRoi: "ROI за год",
         roiFootnote:
           "Это модельная оценка на основе текущих scores, benchmarks категории и priority fixes из отчёта. Реальный результат зависит от качества внедрения, рынка и fit вашего offer.",
+        competitiveLabel: "КОНКУРЕНТНАЯ ПОЗИЦИЯ",
+        competitiveTitle: "Где бренд стоит внутри своей категории прямо сейчас",
+        competitiveAverage: "Среднее по конкурентам",
+        competitiveLeader: "Лидер",
+        competitiveQuickestWin: "САМЫЙ БЫСТРЫЙ КОНКУРЕНТНЫЙ ВЫИГРЫШ",
+        competitiveNoData:
+          "Конкурентный benchmarking недоступен для этого запуска, но ROI-сценарии выше всё равно показывают наиболее вероятный коммерческий upside от priority fixes.",
         websiteEvidenceLabel: "ТЕКУЩАЯ ПОВЕРХНОСТЬ САЙТА",
         websiteEvidenceTitle:
           "Что видит покупатель до того, как текст успевает заслужить доверие",
@@ -4278,7 +4637,54 @@ export async function generateBrandReportPdf(
       }
       rowY += height + 6;
     });
-    drawParagraph(pdfCopy.roiFootnote, contentLeft, 708, contentWidth, 8.8, 4);
+    const competitiveY = rowY - 2;
+    const competitiveH = 64;
+    drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
+    drawSectionTag(pdfCopy.competitiveLabel, contentLeft + 18, competitiveY + 14, colors.textMuted);
+    if (report.competitiveLandscape?.competitors?.length) {
+      const rankingText = `#${report.competitiveLandscape.analysis.ranking} of ${report.competitiveLandscape.competitors.length + 1}`;
+      const leadLine =
+        report.competitiveLandscape.analysis.gapToLeader > 0
+          ? `${report.competitiveLandscape.analysis.gapToLeader} pts behind leader`
+          : "Currently leading the competitive set";
+      const benchmarkLine =
+        report.competitiveLandscape.analysis.weaknesses[0]
+          ? `${report.competitiveLandscape.analysis.weaknesses[0].axis}: ${report.competitiveLandscape.analysis.weaknesses[0].yourScore} vs ${report.competitiveLandscape.analysis.weaknesses[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
+          : report.competitiveLandscape.analysis.strengths[0]
+            ? `${report.competitiveLandscape.analysis.strengths[0].axis}: ${report.competitiveLandscape.analysis.strengths[0].yourScore} vs ${report.competitiveLandscape.analysis.strengths[0].competitorAvg} ${pdfCopy.competitiveAverage.toLowerCase()}`
+            : `Overall: ${report.posterScore} vs ${report.competitiveLandscape.industryBenchmark.overall} ${pdfCopy.competitiveAverage.toLowerCase()}`;
+
+      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(rankingText, contentLeft + 18, competitiveY + 28);
+      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.4).text(leadLine, contentLeft + 18, competitiveY + 48, {
+        width: 140,
+      });
+      drawParagraph(
+        report.competitiveLandscape.analysis.quickestWin?.message || benchmarkLine,
+        contentLeft + 178,
+        competitiveY + 28,
+        206,
+        8.8,
+        4,
+      );
+      drawParagraph(
+        benchmarkLine,
+        contentLeft + 396,
+        competitiveY + 28,
+        126,
+        8.6,
+        4,
+      );
+    } else {
+      drawParagraph(
+        pdfCopy.competitiveNoData,
+        contentLeft + 18,
+        competitiveY + 28,
+        contentWidth - 36,
+        8.8,
+        4,
+      );
+    }
+    drawParagraph(pdfCopy.roiFootnote, contentLeft, competitiveY + competitiveH + 6, contentWidth, 8.4, 4);
 
     // Page 6: Signal Read Part 1
     addBasePage();
