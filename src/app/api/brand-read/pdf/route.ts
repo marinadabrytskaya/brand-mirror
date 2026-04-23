@@ -3,6 +3,7 @@ import {
   type BrandReadResult,
   generateBrandRead,
 } from "@/lib/brand-read";
+import { captureWebsiteSurface } from "@/lib/site-capture";
 import { getSiteLocale } from "@/lib/site-i18n";
 import { DIMENSIONS, bandFor } from "@/lib/score-band";
 
@@ -115,7 +116,36 @@ function drawWrapped(
   return cursor;
 }
 
-async function renderBrandReadPdf(result: BrandReadResult, url: string) {
+async function loadPdfImageBytes(imageUrl?: string) {
+  if (!imageUrl) {
+    return undefined;
+  }
+
+  if (imageUrl.startsWith("data:")) {
+    const base64 = imageUrl.split(",")[1];
+    return base64 ? Buffer.from(base64, "base64") : undefined;
+  }
+
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        return undefined;
+      }
+      return Buffer.from(await response.arrayBuffer());
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+async function renderBrandReadPdf(
+  result: BrandReadResult,
+  url: string,
+  websiteCaptureDataUrl?: string,
+) {
   const pdf = await PDFDocument.create();
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
   const sansBold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -127,6 +157,12 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
   const contentWidth = PAGE.width - PAGE.marginX * 2;
   const safeBrandName = safeText(result.brandName, "BrandMirror");
   const safeTitle = safeText(result.title, "Free brand read");
+  const websiteImageBytes = await loadPdfImageBytes(websiteCaptureDataUrl);
+  const websiteImage = websiteImageBytes
+    ? websiteCaptureDataUrl?.includes("image/jpeg")
+      ? await pdf.embedJpg(websiteImageBytes)
+      : await pdf.embedPng(websiteImageBytes)
+    : undefined;
   const normalizedBrand = safeBrandName.toLowerCase();
   const subtitleText =
     safeTitle.toLowerCase().includes(normalizedBrand.slice(0, Math.min(normalizedBrand.length, 18)))
@@ -467,6 +503,81 @@ async function renderBrandReadPdf(result: BrandReadResult, url: string) {
     color: COLORS.faint,
   });
 
+  if (websiteImage) {
+    const page3 = addPage();
+    let y3 = PAGE.height - PAGE.marginY;
+
+    drawLabel(page3, "BrandMirror / Free First Read", PAGE.marginX, y3);
+    page3.drawText(safeUrl, {
+      x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeUrl, 10),
+      y: y3,
+      size: 10,
+      font: sans,
+      color: COLORS.faint,
+    });
+    y3 -= 34;
+
+    drawLabel(page3, "Website surface", PAGE.marginX, y3);
+    y3 -= 22;
+    y3 = drawWrapped(
+      page3,
+      "A live above-the-fold capture of the homepage BrandMirror is diagnosing.",
+      serifBold,
+      18,
+      PAGE.marginX,
+      y3,
+      contentWidth,
+      COLORS.text,
+      22,
+    );
+    y3 -= 16;
+
+    const imageBoxHeight = 456;
+    page3.drawRectangle({
+      x: PAGE.marginX,
+      y: y3 - imageBoxHeight,
+      width: contentWidth,
+      height: imageBoxHeight,
+      color: COLORS.panel,
+    });
+
+    const targetWidth = contentWidth;
+    const scale = Math.min(targetWidth / websiteImage.width, imageBoxHeight / websiteImage.height);
+    const imageWidth = websiteImage.width * scale;
+    const imageHeight = websiteImage.height * scale;
+    const imageX = PAGE.marginX + (targetWidth - imageWidth) / 2;
+    const imageY = y3 - imageBoxHeight + (imageBoxHeight - imageHeight) / 2;
+
+    page3.drawImage(websiteImage, {
+      x: imageX,
+      y: imageY,
+      width: imageWidth,
+      height: imageHeight,
+    });
+
+    const noteY = y3 - imageBoxHeight - 26;
+    drawLabel(page3, "Why this matters", PAGE.marginX, noteY, COLORS.accent);
+    drawWrapped(
+      page3,
+      "This screenshot lets the free read show the exact visual surface a first-time visitor sees before the deeper diagnosis, ROI calculator, competitor comparison, and implementation playbook in the full report.",
+      sans,
+      11.1,
+      PAGE.marginX,
+      noteY - 20,
+      contentWidth,
+      COLORS.soft,
+      17,
+    );
+
+    page3.drawText("Powered by SAHAR / saharstudio.com", {
+      x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
+      y: 24,
+      size: 9.5,
+      font: sans,
+      color: COLORS.faint,
+    });
+  }
+
   return Buffer.from(await pdf.save());
 }
 
@@ -483,7 +594,13 @@ export async function POST(request: Request) {
         ? { url: body.url, result: body.result }
         : await generateBrandRead(body.url || "", language);
 
-    const pdf = await renderBrandReadPdf(payload.result, payload.url);
+    const websiteCapture = await captureWebsiteSurface(payload.url).catch(() => null);
+
+    const pdf = await renderBrandReadPdf(
+      payload.result,
+      payload.url,
+      websiteCapture?.dataUrl,
+    );
 
     return new Response(new Uint8Array(pdf), {
       headers: {
