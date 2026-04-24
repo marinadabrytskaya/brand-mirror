@@ -802,7 +802,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       {band.label}
                     </span>
                   </div>
-                  <div className="flex max-w-[17rem] flex-1 gap-2 pr-2">
+                  <div className="flex max-w-[11.5rem] flex-1 gap-2 pr-6">
                     {Array.from({ length: band.count }).map((_, i) => (
                       <div
                         key={i}
@@ -833,6 +833,20 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
                     $197 at brandmirror.app — priority fix stack, implementation playbook, competitor position, and PDF export.
                   </p>
+                  <a
+                    href="https://brandmirror.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 underline-offset-4 hover:underline"
+                    style={{
+                      color: "#6FE0C2",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "11px",
+                      letterSpacing: "0.14em",
+                    }}
+                  >
+                    brandmirror.app
+                  </a>
                 </div>
                 <Link
                   href={reportHref}
