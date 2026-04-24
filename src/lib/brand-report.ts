@@ -4409,6 +4409,64 @@ export async function generateBrandReportPdf(
       },
     } as const;
 
+    const concreteImplementationByAxis = [
+      {
+        title: "Positioning",
+        body:
+          report.priorityFixes.fixNow[0] ||
+          "Rewrite the first screen so it states what the company does, for whom, and what changes in one read.",
+      },
+      {
+        title: "AI Visibility",
+        body:
+          "Add exact category nouns to the H1, title tag, meta description, and schema. Keep naming identical across the homepage, metadata, and directory profiles.",
+      },
+      {
+        title: "Offer",
+        body:
+          report.priorityFixes.fixNow[1] ||
+          "Replace broad sector language with 2-3 named offers or use cases, each with a buyer, an outcome, and one proof cue.",
+      },
+      {
+        title: "Conversion",
+        body:
+          report.priorityFixes.fixNow[2] ||
+          "Make the CTA a specific next step. Put proof next to it and make the visitor understand what happens after the click.",
+      },
+      {
+        title: "Visual",
+        body:
+          "Keep the premium restraint, but make it earn trust: tighten spacing, strengthen section hierarchy, and move authority cues higher in the page.",
+      },
+    ];
+
+    const concretePlaybookNow = uniqueItems(
+      [
+        `Positioning: ${concreteImplementationByAxis[0].body}`,
+        `Offer: ${concreteImplementationByAxis[2].body}`,
+        `Conversion: ${concreteImplementationByAxis[3].body}`,
+      ],
+      3,
+    );
+
+    const concretePlaybookNext = uniqueItems(
+      [
+        `AI Visibility: ${concreteImplementationByAxis[1].body}`,
+        `Visual: ${concreteImplementationByAxis[4].body}`,
+        `Proof: Move one credibility cue above the fold and one trust block beside the CTA.`,
+      ],
+      3,
+    );
+
+    const concretePlaybookThen = uniqueItems(
+      [
+        "AI Visibility: Publish stronger schema, FAQ support, and consistent entity naming so external systems can read the brand without guessing.",
+        "Offer: Turn the sharpened homepage message into service pages, case studies, and repeatable sales assets.",
+        "Conversion: Keep testing the CTA, proof order, and response path until the homepage feels easier to choose from.",
+      ],
+      3,
+    );
+
     const mapGenreToCategory = (genre: string) => {
       const lower = bodyCopy(genre).toLowerCase();
       if (lower.includes("saas") || lower.includes("software")) return "B2B SaaS";
@@ -5087,16 +5145,21 @@ export async function generateBrandReportPdf(
     ];
     let bandTop = 214;
     bands.forEach((band) => {
-      drawPanel(contentLeft, bandTop, contentWidth, 108);
-      doc.roundedRect(contentLeft, bandTop, 122, 108, 16).fill(band.color);
+      drawPanel(contentLeft, bandTop, contentWidth, 118);
+      doc.roundedRect(contentLeft, bandTop, 122, 118, 16).fill(band.color);
       doc.fillColor(band.title === pdfCopy.keep ? colors.dark : colors.textOnDark).font("Helvetica").fontSize(12).text(band.title, contentLeft + 18, bandTop + 43, {
         characterSpacing: 1.8,
       });
-      let itemY = bandTop + 18;
-      band.items.slice(0, 3).forEach((text) => {
-        itemY = drawParagraph(`- ${text}`, contentLeft + 148, itemY, 312, 10.4, 5) + 6;
-      });
-      bandTop += 124;
+      const bandFit = fitTextToBox(
+        band.items.slice(0, 3).map((text) => `- ${text}`).join("\n"),
+        312,
+        84,
+        10.2,
+        8.6,
+        4,
+      );
+      drawParagraph(bandFit.text, contentLeft + 148, bandTop + 16, 312, bandFit.size, bandFit.lineGap);
+      bandTop += 132;
     });
 
     // Page 15: Implementation Playbook I
@@ -5108,19 +5171,10 @@ export async function generateBrandReportPdf(
       maxHeight: 112,
     });
     drawParagraph(pdfCopy.playbookIntro, contentLeft, 176, 372, 10.8, 5);
-    const nowItems = uniqueItems(report.priorityFixes.fixNow, 3);
-    const nextItems = uniqueItems([
-      ...report.priorityFixes.fixNext,
-      ...report.actionPlan.next30Days.slice(0, 2),
-    ], 3);
-    const thenItems = uniqueItems([
-      ...report.actionPlan.next30Days,
-      ...report.priorityFixes.keep.map((item) => `Preserve what is already working: ${item}`),
-    ], 3);
     const playbookColumns = [
-      { label: pdfCopy.playbookNow, items: nowItems, color: colors.terracotta },
-      { label: pdfCopy.playbookNext, items: nextItems, color: colors.amber },
-      { label: pdfCopy.playbookThen, items: thenItems, color: colors.mint },
+      { label: pdfCopy.playbookNow, items: concretePlaybookNow, color: colors.terracotta },
+      { label: pdfCopy.playbookNext, items: concretePlaybookNext, color: colors.amber },
+      { label: pdfCopy.playbookThen, items: concretePlaybookThen, color: colors.mint },
     ];
     const columnWidth = (contentWidth - 24) / 3;
     const cardTop = 252;
@@ -5128,64 +5182,63 @@ export async function generateBrandReportPdf(
       const x = contentLeft + index * (columnWidth + 12);
       drawPanel(x, cardTop, columnWidth, 426, colors.panelSoft);
       drawSectionTag(column.label, x + 18, cardTop + 18, column.color);
-      let y = cardTop + 48;
-      column.items.forEach((item) => {
-        y = drawParagraph(`- ${item}`, x + 18, y, columnWidth - 36, 9.4, 4) + 8;
-      });
-    });
-    drawPanel(contentLeft, 694, contentWidth, 84, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 716, colors.mint);
-    drawParagraph(
-      "Use this sequence as a self-guided rollout, or work with SAHAR to turn the diagnosis into sharper positioning, stronger proof, and a homepage that converts with less resistance.",
-      contentLeft + 18,
-      736,
-      contentWidth - 132,
-      9.4,
-      4,
-    );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.5).text("brandmirror.app", contentRight - 112, 742, {
-      width: 94,
-      align: "right",
-      link: "https://brandmirror.app",
-      underline: true,
+      const blockFit = fitTextToBox(
+        column.items.map((item) => `- ${item}`).join("\n"),
+        columnWidth - 36,
+        338,
+        9.6,
+        8.2,
+        4,
+      );
+      drawParagraph(blockFit.text, x + 18, cardTop + 48, columnWidth - 36, blockFit.size, blockFit.lineGap);
     });
 
     // Page 16: Implementation Playbook II
     addBasePage();
-    drawPageLabel(pdfCopy.playbookLabel, "Work with SAHAR or implement the highest-leverage corrections in sequence", {
-      width: 380,
-      maxFont: 27,
-      minFont: 22,
+    drawPageLabel(pdfCopy.playbookLabel, "Make the fixes concrete and apply them in the order that changes the buying decision first", {
+      width: 420,
+      maxFont: 25,
+      minFont: 20,
       maxHeight: 112,
     });
-    drawPanel(contentLeft, 188, contentWidth, 176, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 212, colors.mint);
-    drawParagraph(
-      pdfCopy.playbookCtaBody,
-      contentLeft + 18,
-      242,
-      contentWidth - 36,
-      11,
-      6,
-    );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.5).text("brandmirror.app", contentLeft + 18, 326, {
-      link: "https://brandmirror.app",
-      underline: true,
-    });
-    const implementationMap = [
-      { label: pdfCopy.playbookNow, items: uniqueItems([...report.priorityFixes.fixNow, ...report.actionPlan.next7Days], 3), color: colors.terracotta },
-      { label: pdfCopy.playbookNext, items: uniqueItems([...report.priorityFixes.fixNext, ...report.actionPlan.next30Days], 3), color: colors.amber },
-      { label: pdfCopy.playbookThen, items: uniqueItems(report.priorityFixes.keep.map((item) => `Preserve and sharpen: ${item}`), 3), color: colors.mint },
+    const implCards = [
+      concreteImplementationByAxis[0],
+      concreteImplementationByAxis[1],
+      concreteImplementationByAxis[2],
+      concreteImplementationByAxis[3],
     ];
-    let mapTop = 402;
-    implementationMap.forEach((block) => {
-      drawPanel(contentLeft, mapTop, contentWidth, 102, colors.panelSoft);
-      drawSectionTag(block.label, contentLeft + 18, mapTop + 18, block.color);
-      let itemY = mapTop + 42;
-      block.items.forEach((item) => {
-        itemY = drawParagraph(`- ${item}`, contentLeft + 18, itemY, contentWidth - 36, 9.2, 4) + 5;
-      });
-      mapTop += 118;
+    const implCardWidth = (contentWidth - 16) / 2;
+    const implCardHeight = 132;
+    implCards.forEach((card, index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const x = contentLeft + col * (implCardWidth + 16);
+      const y = 194 + row * (implCardHeight + 16);
+      drawPanel(x, y, implCardWidth, implCardHeight, colors.panelSoft);
+      drawSectionTag(card.title.toUpperCase(), x + 18, y + 18, colors.accent);
+      const fit = fitTextToBox(card.body, implCardWidth - 36, 74, 10.2, 8.8, 4);
+      drawParagraph(fit.text, x + 18, y + 42, implCardWidth - 36, fit.size, fit.lineGap);
+    });
+    drawPanel(contentLeft, 490, contentWidth, 108, colors.panelSoft);
+    drawSectionTag(concreteImplementationByAxis[4].title.toUpperCase(), contentLeft + 18, 512, colors.accent);
+    const visualFit = fitTextToBox(concreteImplementationByAxis[4].body, contentWidth - 36, 54, 10.6, 9.2, 4);
+    drawParagraph(visualFit.text, contentLeft + 18, 536, contentWidth - 36, visualFit.size, visualFit.lineGap);
+
+    drawPanel(contentLeft, 620, contentWidth, 104, colors.panelSoft);
+    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 642, colors.mint);
+    drawParagraph(
+      "If you want this turned into sharper positioning, clearer copy, stronger proof, and a homepage that converts with less resistance, work with SAHAR on the implementation.",
+      contentLeft + 18,
+      666,
+      contentWidth - 160,
+      10.2,
+      5,
+    );
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text("saharstudio.com", contentRight - 120, 686, {
+      width: 102,
+      align: "right",
+      link: "https://saharstudio.com",
+      underline: true,
     });
 
     renderCommercialImpactPage();
