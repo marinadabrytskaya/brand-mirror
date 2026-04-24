@@ -1633,7 +1633,7 @@ function mergeAeoVisibilityScore(
     ? Boolean(technical.blocksClaude)
     : false;
 
-  let merged = Math.round(semanticScore * 0.7 + aeoAudit.totalScore * 0.3);
+  let merged = Math.round(semanticScore * 0.5 + aeoAudit.totalScore * 0.5);
 
   if (blocksGpt || blocksClaude) {
     merged = Math.min(merged, 58);
