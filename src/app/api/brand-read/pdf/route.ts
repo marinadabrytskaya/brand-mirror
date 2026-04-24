@@ -527,17 +527,18 @@ async function renderBrandReadPdf(
   sectionBody("Current state", safeText(result.current), 120);
 
   const signalWidth = (contentWidth - 24) / 3;
-  const signalY = Math.max(110, y2 - 118);
+  const signalCardHeight = 134;
+  const signalY = Math.max(94, y2 - signalCardHeight - 14);
   [
     { label: "Strongest signal", body: safeText(result.strongestSignal), color: COLORS.accent },
     { label: "Main friction", body: safeText(result.mainFriction), color: COLORS.warn },
     { label: "Next move", body: "Available in full report", color: COLORS.soft },
   ].forEach((card, index) => {
     const x = PAGE.marginX + index * (signalWidth + 12);
-    page2.drawRectangle({ x, y: signalY, width: signalWidth, height: 116, color: COLORS.panel });
-    drawLabel(page2, card.label, x + 16, signalY + 90, card.color);
-    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 54, 11.2, 9.2, 1.48);
-    let cardY = signalY + 62;
+    page2.drawRectangle({ x, y: signalY, width: signalWidth, height: signalCardHeight, color: COLORS.panel });
+    drawLabel(page2, card.label, x + 16, signalY + signalCardHeight - 26, card.color);
+    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 74, 11.2, 8.8, 1.42);
+    let cardY = signalY + signalCardHeight - 56;
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
         x: x + 16,
