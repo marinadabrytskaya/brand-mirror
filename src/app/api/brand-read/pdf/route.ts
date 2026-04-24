@@ -41,7 +41,7 @@ function slugify(value: string) {
 
 function scoreRows(result: BrandReadResult) {
   return DIMENSIONS.map((dimension) => [
-    dimension.label,
+    dimension.shortLabel,
     safeNumber(result[dimension.key]),
   ] as const);
 }
@@ -151,6 +151,34 @@ function drawWrapped(
   return cursor;
 }
 
+function drawCenteredWrapped(
+  page: PDFPage,
+  text: string,
+  font: PDFFont,
+  size: number,
+  centerX: number,
+  y: number,
+  width: number,
+  color: ReturnType<typeof rgb>,
+  lineHeight = size * 1.35,
+) {
+  const lines = wrapText(text, font, size, width);
+  let cursor = y;
+
+  for (const line of lines) {
+    page.drawText(line, {
+      x: centerX - font.widthOfTextAtSize(line, size) / 2,
+      y: cursor,
+      size,
+      font,
+      color,
+    });
+    cursor -= lineHeight;
+  }
+
+  return cursor;
+}
+
 function addExternalLink(
   page: PDFPage,
   x: number,
@@ -173,6 +201,41 @@ function addExternalLink(
 
   const linkRef = page.doc.context.register(link);
   page.node.addAnnot(linkRef);
+}
+
+function drawGauge(
+  page: PDFPage,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  score: number,
+  color: ReturnType<typeof rgb>,
+  track: ReturnType<typeof rgb>,
+  thickness = 8,
+) {
+  const steps = 36;
+  const drawArc = (start: number, end: number, strokeColor: ReturnType<typeof rgb>) => {
+    let prevX = centerX + Math.cos(start) * radius;
+    let prevY = centerY + Math.sin(start) * radius;
+
+    for (let i = 1; i <= steps; i += 1) {
+      const t = i / steps;
+      const angle = start + (end - start) * t;
+      const nextX = centerX + Math.cos(angle) * radius;
+      const nextY = centerY + Math.sin(angle) * radius;
+      page.drawLine({
+        start: { x: prevX, y: prevY },
+        end: { x: nextX, y: nextY },
+        thickness,
+        color: strokeColor,
+      });
+      prevX = nextX;
+      prevY = nextY;
+    }
+  };
+
+  drawArc(Math.PI, 0, track);
+  drawArc(Math.PI, Math.PI * (1 - score / 100), color);
 }
 
 async function loadPdfImageBytes(imageUrl?: string) {
@@ -324,93 +387,94 @@ async function renderBrandReadPdf(
   ] as const;
 
   const page1 = addPage();
-  let y = PAGE.height - PAGE.marginY;
+  const centerX = PAGE.width / 2;
+  const nowLabel = `${new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Africa/Johannesburg",
+  }).format(new Date())} GMT+2`;
 
-  drawLabel(page1, "BrandMirror / Free First Read", PAGE.marginX, y);
-  page1.drawText(safeUrl, {
-    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeUrl, 10),
-    y,
+  drawLabel(page1, "Live scan", PAGE.marginX, 706);
+  page1.drawText(nowLabel, {
+    x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(nowLabel, 10),
+    y: 706,
     size: 10,
     font: sans,
     color: COLORS.faint,
   });
-  y -= 34;
 
-  const headline = fitHeadlineLines(safeBrandName, serifBold, contentWidth, 31, 21);
+  const headline = fitHeadlineLines(safeBrandName.toLowerCase(), sansBold, contentWidth - 80, 28, 20);
+  let headlineY = 668;
   for (const line of headline.lines) {
     page1.drawText(line, {
-      x: PAGE.marginX,
-      y,
+      x: centerX - sansBold.widthOfTextAtSize(line, headline.size) / 2,
+      y: headlineY,
       size: headline.size,
-      font: serifBold,
+      font: sansBold,
       color: COLORS.text,
     });
-    y -= headline.lineHeight;
+    headlineY -= headline.lineHeight;
   }
-  y -= 10;
 
-  page1.drawText(subtitleText, {
-    x: PAGE.marginX,
-    y,
-    size: 11,
+  page1.drawText(safeUrl.replace(/^https?:\/\//, "").toUpperCase(), {
+    x: centerX - sans.widthOfTextAtSize(safeUrl.replace(/^https?:\/\//, "").toUpperCase(), 9) / 2,
+    y: 626,
+    size: 9,
     font: sans,
-    color: posterBandColor,
-  });
-  y -= 22;
-
-  y = drawWrapped(page1, safeText(result.tagline), serif, 18, PAGE.marginX, y, contentWidth, COLORS.soft, 22);
-  y -= 20;
-
-  page1.drawRectangle({
-    x: PAGE.marginX,
-    y: y - 84,
-    width: contentWidth,
-    height: 104,
-    color: COLORS.panel,
+    color: COLORS.faint,
   });
 
-  drawLabel(page1, "Brand signal score", PAGE.marginX + 24, y);
+  drawGauge(page1, centerX, 536, 74, safeNumber(result.posterScore), posterBandColor, COLORS.line, 8);
   page1.drawText(String(safeNumber(result.posterScore)), {
-    x: PAGE.marginX + 24,
-    y: y - 42,
+    x: centerX - sansBold.widthOfTextAtSize(String(safeNumber(result.posterScore)), 42) / 2,
+    y: 523,
     size: 42,
-    font: serifBold,
-    color: posterBandColor,
-  });
-  page1.drawText(safeText(result.scoreBand, posterBand.label), {
-    x: PAGE.marginX + 176,
-    y: y - 20,
-    size: 20,
     font: sansBold,
     color: posterBandColor,
   });
-  drawWrapped(
-    page1,
-    safeText(result.scoreModifier),
-    sans,
-    11.5,
-    PAGE.marginX + 176,
-    y - 42,
-    contentWidth - 200,
-    COLORS.soft,
-    15,
-  );
-  y -= 132;
+  page1.drawText("/ 100", {
+    x: centerX - sans.widthOfTextAtSize("/ 100", 10) / 2,
+    y: 498,
+    size: 10,
+    font: sans,
+    color: COLORS.soft,
+  });
+  page1.drawText(safeText(result.scoreBand, posterBand.label).toUpperCase(), {
+    x: centerX - sansBold.widthOfTextAtSize(safeText(result.scoreBand, posterBand.label).toUpperCase(), 11) / 2,
+    y: 468,
+    size: 11,
+    font: sansBold,
+    color: posterBandColor,
+  });
 
+  drawCenteredWrapped(
+    page1,
+    safeText(result.tagline),
+    serif,
+    16,
+    centerX,
+    426,
+    contentWidth - 80,
+    COLORS.text,
+    18,
+  );
+
+  drawLabel(page1, "Score breakdown", PAGE.marginX, 374);
   scoreRows(result).forEach(([label, value], index) => {
-    const rowY = y - index * 28;
+    const rowY = 340 - index * 46;
     const rowBand = bandFor(value);
     const rowBandColor = hexToRgbColor(rowBand.color);
     page1.drawText(label.toUpperCase(), {
       x: PAGE.marginX,
       y: rowY,
-      size: 10.5,
+      size: 10,
       font: sans,
       color: COLORS.faint,
     });
 
-    const lineLeft = PAGE.marginX + 230;
-    const lineRight = PAGE.width - PAGE.marginX - 70;
+    const lineLeft = PAGE.marginX + 120;
+    const lineRight = PAGE.width - PAGE.marginX - 120;
 
     page1.drawLine({
       start: { x: lineLeft, y: rowY + 6 },
@@ -426,29 +490,75 @@ async function renderBrandReadPdf(
     });
     const numeric = String(value);
     page1.drawText(numeric, {
-      x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(numeric, 12),
+      x: PAGE.width - PAGE.marginX - 74,
       y: rowY,
       size: 12,
       font: sansBold,
       color: rowBandColor,
     });
+    page1.drawText(bandFor(value).label, {
+      x: PAGE.width - PAGE.marginX - 4 - sans.widthOfTextAtSize(bandFor(value).label, 10),
+      y: rowY,
+      size: 10,
+      font: sans,
+      color: rowBandColor,
+    });
   });
-  y -= 166;
 
-  drawLabel(page1, "How to read the scan", PAGE.marginX, y);
-  y -= 24;
-  y = drawWrapped(
-    page1,
-    "Five indicator tiers. Five dimensions of the signal.",
-    serifBold,
-    18,
-    PAGE.marginX,
-    y,
-    contentWidth,
-    COLORS.text,
-    22,
-  );
-  const badgeY = y - 64;
+  page1.drawRectangle({
+    x: PAGE.marginX,
+    y: 102,
+    width: contentWidth,
+    height: 48,
+    color: COLORS.panel,
+    borderColor: COLORS.line,
+    borderWidth: 1,
+  });
+  page1.drawText("BRANDMIRROR TERMINAL", {
+    x: PAGE.marginX + 14,
+    y: 126,
+    size: 9,
+    font: sans,
+    color: COLORS.faint,
+  });
+  page1.drawText("LIVE", {
+    x: PAGE.marginX + 177,
+    y: 126,
+    size: 9,
+    font: sansBold,
+    color: rgb(1, 0.35, 0.35),
+  });
+  page1.drawText(safeBrandName.toLowerCase(), {
+    x: PAGE.marginX + 14,
+    y: 114,
+    size: 11,
+    font: sansBold,
+    color: COLORS.text,
+  });
+  page1.drawText(nowLabel, {
+    x: PAGE.width - PAGE.marginX - 100,
+    y: 126,
+    size: 9,
+    font: sans,
+    color: COLORS.faint,
+  });
+  page1.drawText("$INNO", {
+    x: PAGE.width - PAGE.marginX - 114,
+    y: 114,
+    size: 10,
+    font: sans,
+    color: COLORS.faint,
+  });
+  page1.drawText(`+${safeNumber(result.posterScore).toFixed(1)} RDY`, {
+    x: PAGE.width - PAGE.marginX - 54,
+    y: 112,
+    size: 11,
+    font: sansBold,
+    color: COLORS.accent,
+  });
+
+  drawLabel(page1, "Indicator scale", PAGE.marginX, 70);
+  const badgeY = 12;
   const badgeGap = 8;
   const badgeWidth = (contentWidth - badgeGap * 4) / 5;
   const activeBand = safeText(result.scoreBand, posterBand.label).toUpperCase();
@@ -527,7 +637,7 @@ async function renderBrandReadPdf(
   sectionBody("Current state", safeText(result.current), 120);
 
   const signalWidth = (contentWidth - 24) / 3;
-  const signalCardHeight = 134;
+  const signalCardHeight = 152;
   const signalY = Math.max(94, y2 - signalCardHeight - 14);
   [
     { label: "Strongest signal", body: safeText(result.strongestSignal), color: COLORS.accent },

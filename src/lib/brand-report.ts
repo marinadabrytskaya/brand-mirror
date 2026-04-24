@@ -4174,6 +4174,40 @@ export async function generateBrandReportPdf(
       doc.text("100", x + width - 14, y + 20);
     };
 
+    const drawGauge = (centerX: number, centerY: number, radius: number, score: number, color: string) => {
+      const drawArc = (start: number, end: number, strokeColor: string, thickness: number) => {
+        const steps = 32;
+        let prevX = centerX + Math.cos(start) * radius;
+        let prevY = centerY + Math.sin(start) * radius;
+        for (let i = 1; i <= steps; i += 1) {
+          const t = i / steps;
+          const angle = start + (end - start) * t;
+          const nextX = centerX + Math.cos(angle) * radius;
+          const nextY = centerY + Math.sin(angle) * radius;
+          doc.moveTo(prevX, prevY).lineTo(nextX, nextY).lineWidth(thickness).strokeColor(strokeColor).stroke();
+          prevX = nextX;
+          prevY = nextY;
+        }
+      };
+
+      drawArc(Math.PI, 0, colors.rule, 8);
+      drawArc(Math.PI, Math.PI * (1 - score / 100), color, 8);
+    };
+
+    const drawCenteredText = (
+      text: string,
+      font: "Helvetica" | "Times-Roman" | "Times-Bold",
+      size: number,
+      centerX: number,
+      y: number,
+      color = colors.textOnDark,
+    ) => {
+      doc.fillColor(color)
+        .font(font)
+        .fontSize(size)
+        .text(text, centerX - doc.widthOfString(text) / 2, y);
+    };
+
     const bandColor = (score: number) =>
       score >= 85
         ? colors.accent
@@ -4565,13 +4599,13 @@ export async function generateBrandReportPdf(
       align: "right",
     });
     const coverTitle = fitHeading(report.brandName, contentWidth - 92, 108, 36, 28, -2);
-    doc.fillColor(colors.textOnDark).font(coverTitle.font).fontSize(coverTitle.size).text(coverTitle.text, 86, 96, {
+    doc.fillColor(colors.textOnDark).font(coverTitle.font).fontSize(coverTitle.size).text(coverTitle.text, 86, 134, {
       width: contentWidth - 60,
       lineGap: coverTitle.lineGap,
       align: "center",
     });
     const coverTitleBottom = doc.y;
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.5).text(pdfCopy.coverSub, 96, coverTitleBottom + 12, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.5).text(pdfCopy.coverSub, 96, coverTitleBottom + 18, {
       width: contentWidth - 80,
       align: "center",
       characterSpacing: 1.9,
@@ -4585,18 +4619,18 @@ export async function generateBrandReportPdf(
       5,
       "Times-Roman",
     );
-    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 144, coverTitleBottom + 42, {
+    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 144, coverTitleBottom + 56, {
       width: contentWidth - 176,
       align: "center",
       lineGap: coverTagline.lineGap,
     });
-    drawPanel(76, 636, pageWidth - 152, 88, colors.panelSoft);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", 136, 696, {
+    drawPanel(96, 664, pageWidth - 192, 72, colors.panelSoft);
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", 146, 708, {
       characterSpacing: 1.5,
     });
-    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14.5).text(reportId, 136, 666);
-    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, 116, 648, {
-      width: pageWidth - 272,
+    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13.5).text(reportId, 146, 682);
+    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, 126, 672, {
+      width: pageWidth - 292,
       align: "left",
       characterSpacing: 0.4,
     });
@@ -4608,57 +4642,76 @@ export async function generateBrandReportPdf(
 
     // Page 2: Live Scan
     addBasePage();
-    const page2TitleBottom = drawPageLabel(pdfCopy.scoreDashboardLabel, "Live scan", {
-      width: 220,
-      maxFont: 28,
-      minFont: 24,
-      maxHeight: 72,
+    const centerX = pageWidth / 2;
+    drawSectionTag("LIVE SCAN", contentLeft, 74, colors.mutedOnDark);
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text(`${today}  GMT+2`, contentRight - 112, 74, {
+      width: 112,
+      align: "right",
+      characterSpacing: 2,
     });
-    const scoreStartY = Math.max(page2TitleBottom + 22, 182);
+    const scanTitle = fitHeading(bodyCopy(report.brandName).toLowerCase(), contentWidth - 100, 68, 29, 21, -1.4, "Helvetica");
+    doc.fillColor(colors.textOnDark).font(scanTitle.font).fontSize(scanTitle.size).text(scanTitle.text, contentLeft + 50, 102, {
+      width: contentWidth - 100,
+      align: "center",
+      lineGap: scanTitle.lineGap,
+    });
+    drawCenteredText(displayUrl.toUpperCase(), "Helvetica", 9, centerX, 168, colors.mutedOnDark);
+    drawGauge(centerX, 292, 68, overallScore, bandColor(overallScore));
+    drawCenteredText(String(overallScore), "Helvetica", 42, centerX, 286, bandColor(overallScore));
+    drawCenteredText("/ 100", "Helvetica", 10, centerX, 260, colors.mutedOnDark);
+    drawCenteredText(getBandForScore(overallScore), "Helvetica", 11, centerX, 226, bandColor(overallScore));
+    const liveTagline = fitTextToBox(truncate(report.tagline || "", 120), contentWidth - 160, 46, 16, 13.2, 4, "Times-Roman");
+    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 80, 194, {
+      width: contentWidth - 160,
+      align: "center",
+      lineGap: liveTagline.lineGap,
+    });
+    drawSectionTag("SCORE BREAKDOWN", contentLeft, 384, colors.mutedOnDark);
+    const scoreStartY = 418;
     scorePages.forEach((item, index) => {
-      const rowY = scoreStartY + index * 82;
+      const rowY = scoreStartY + index * 58;
       const scoreColor = bandColor(item.score.score);
-      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10).text(item.title.toUpperCase(), contentLeft, rowY, {
+      doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10).text(item.label.toUpperCase(), contentLeft, rowY, {
         characterSpacing: 2,
       });
-      doc.moveTo(contentLeft, rowY + 28).lineTo(contentLeft + 352, rowY + 28).lineWidth(6).strokeColor(colors.rule).stroke();
-      doc.moveTo(contentLeft, rowY + 28).lineTo(contentLeft + 352 * (item.score.score / 100), rowY + 28).lineWidth(6).strokeColor(scoreColor).stroke();
-      doc.fillColor(scoreColor).font("Helvetica").fontSize(22).text(String(item.score.score), contentLeft + 392, rowY + 6, {
+      doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390, rowY + 18).lineWidth(4).strokeColor(colors.rule).stroke();
+      doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390 * (item.score.score / 100), rowY + 18).lineWidth(4).strokeColor(scoreColor).stroke();
+      doc.fillColor(scoreColor).font("Helvetica").fontSize(22).text(String(item.score.score), contentLeft + 438, rowY + 2, {
         width: 42,
         align: "right",
       });
       doc.fillColor(scoreColor).font("Helvetica").fontSize(9.2).text(
         getBandForScore(item.score.score),
         contentRight - 92,
-        rowY + 31,
+        rowY + 4,
         {
           width: 92,
           align: "right",
           characterSpacing: 1.2,
         },
       );
-      doc.moveTo(contentLeft, rowY + 46).lineTo(contentRight, rowY + 46).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
+      doc.moveTo(contentLeft, rowY + 34).lineTo(contentRight, rowY + 34).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
     });
-    drawPanel(contentLeft, 604, contentWidth, 70, colors.panelSoft);
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text("BRANDMIRROR TERMINAL", contentLeft + 18, 626, {
+    drawPanel(contentLeft, 644, contentWidth, 48, colors.panelSoft);
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text("BRANDMIRROR TERMINAL", contentLeft + 18, 667, {
       characterSpacing: 2.2,
     });
-    doc.fillColor("#FF5A5A").font("Helvetica").fontSize(10).text("LIVE", contentLeft + 202, 626, {
+    doc.fillColor("#FF5A5A").font("Helvetica").fontSize(10).text("LIVE", contentLeft + 202, 667, {
       characterSpacing: 2.2,
     });
-    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13).text(bodyCopy(report.brandName).toLowerCase(), contentLeft + 18, 652, {
+    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(12).text(bodyCopy(report.brandName).toLowerCase(), contentLeft + 18, 651, {
       width: 320,
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text(`${today}  GMT+2`, contentRight - 122, 626, {
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text(`${today}  GMT+2`, contentRight - 122, 667, {
       width: 122,
       align: "right",
       characterSpacing: 2,
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text("$INNO", contentRight - 126, 652);
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(14).text(`+${overallScore.toFixed(1)} RDY`, contentRight - 88, 648, {
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text("$INNO", contentRight - 126, 651);
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(14).text(`+${overallScore.toFixed(1)} RDY`, contentRight - 88, 647, {
       characterSpacing: 1.2,
     });
-    drawSectionTag("INDICATOR SCALE", contentLeft, 706, colors.mutedOnDark);
+    drawSectionTag("INDICATOR SCALE", contentLeft, 712, colors.mutedOnDark);
     [
       { label: "0-30", name: "FLATLINING", color: "#B65C5C" },
       { label: "30-50", name: "FRAGILE", color: colors.terracotta },
@@ -4668,13 +4721,13 @@ export async function generateBrandReportPdf(
     ].forEach((item, index) => {
       const pillW = (contentWidth - 32) / 5;
       const x = contentLeft + index * (pillW + 8);
-      drawPanel(x, 720, pillW, 48, item.color === colors.amber ? colors.panelSoft : colors.panel);
+      drawPanel(x, 724, pillW, 36, item.color === colors.amber ? colors.panelSoft : colors.panel);
       doc.fillColor(item.color).font("Helvetica").fontSize(10).text(item.label, x, 740, {
         width: pillW,
         align: "center",
         characterSpacing: 1,
       });
-      doc.font("Helvetica").fontSize(9).text(item.name, x, 724, {
+      doc.font("Helvetica").fontSize(8.5).text(item.name, x, 732, {
         width: pillW,
         align: "center",
         characterSpacing: 1.4,
