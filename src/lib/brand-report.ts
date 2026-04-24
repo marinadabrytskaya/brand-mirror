@@ -4442,18 +4442,18 @@ export async function generateBrandReportPdf(
 
     const concretePlaybookNow = uniqueItems(
       [
+        `Do next: ${stripAiLayerSentences(report.whatToDoNext)}`,
+        `Drop: ${stripAiLayerSentences(report.whatToDrop)}`,
         `Positioning: ${concreteImplementationByAxis[0].body}`,
-        `Offer: ${concreteImplementationByAxis[2].body}`,
-        `Conversion: ${concreteImplementationByAxis[3].body}`,
       ],
       3,
     );
 
     const concretePlaybookNext = uniqueItems(
       [
+        `Amplify: ${stripAiLayerSentences(report.whatToAmplify)}`,
         `AI Visibility: ${concreteImplementationByAxis[1].body}`,
         `Visual: ${concreteImplementationByAxis[4].body}`,
-        `Proof: Move one credibility cue above the fold and one trust block beside the CTA.`,
       ],
       3,
     );
@@ -4965,7 +4965,7 @@ export async function generateBrandReportPdf(
 
     // Page 7: Signal Read Part 2
     addBasePage();
-    const page7TitleBottom = drawPageLabel("SIGNAL READ", "What to do next, what to amplify, and what to stop protecting", {
+    const page7TitleBottom = drawPageLabel("SIGNAL READ", "How the signal is landing before trust is fully earned", {
       width: 390,
       maxFont: 28,
       minFont: 22,
@@ -4976,11 +4976,11 @@ export async function generateBrandReportPdf(
       y: page7TitleBottom + 10,
       width: contentWidth,
       height: 154,
-      label: "WHAT TO DROP",
-      body: report.whatToDrop,
+      label: "CURRENT READ",
+      body: report.snapshot,
       bodySize: 11.2,
       bodyMin: 10,
-      labelColor: colors.terracotta,
+      labelColor: colors.accent,
       bodyTopOffset: 58,
       fill: colors.panelSoft,
     });
@@ -4989,8 +4989,8 @@ export async function generateBrandReportPdf(
       y: page7TitleBottom + 212,
       width: signalCardWidth,
       height: 204,
-      label: "WHAT TO DO NEXT",
-      body: report.whatToDoNext,
+      label: "WHAT THE PAGE SIGNALS",
+      body: stripAiLayerSentences(report.whatItSignals),
       bodySize: 11.2,
       bodyMin: 9.6,
       bodyTopOffset: 58,
@@ -5000,8 +5000,8 @@ export async function generateBrandReportPdf(
       y: page7TitleBottom + 212,
       width: signalCardWidth,
       height: 204,
-      label: "WHAT TO AMPLIFY",
-      body: report.whatToAmplify,
+      label: "FRICTION MAP",
+      body: uniqueItems(report.frictionMap, 3).join(" "),
       bodySize: 11.2,
       bodyMin: 9.6,
       bodyTopOffset: 58,
