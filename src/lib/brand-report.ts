@@ -3430,7 +3430,7 @@ export async function generateBrandReportPdf(
     websiteSurface?.imageUrl || report.beforeAfterHero?.currentFrame?.imageUrl,
   );
   if (!websiteImageSource && report.url) {
-    const capture = await captureWebsiteSurface(report.url).catch(() => null);
+    const capture = await captureWebsiteSurface(normalizeUrl(report.url)).catch(() => null);
     websiteImageSource = await loadPdfImageSource(capture?.dataUrl);
   }
   const archetypePosterSource = await loadPdfImageSource(resolveWorldPoster(report.visualWorld));
@@ -4255,6 +4255,21 @@ export async function generateBrandReportPdf(
       return clean.replace(brandPattern, "").replace(/^For\s+/i, "").trim();
     };
 
+    const stripAiLayerSentences = (text: string) => {
+      const clean = bodyCopy(text);
+      const sentences = clean
+        .split(/(?<=[.!?])\s+/)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean);
+      const filtered = sentences.filter((sentence) => {
+        const probe = sentence.toLowerCase();
+        return !/(ai visibility|ai discover|structured data|schema|metadata|crawler|robots\.txt|sitemap|llms\.txt|technical aeo|search engines?)/i.test(
+          probe,
+        );
+      });
+      return filtered.length ? filtered.join(" ") : clean;
+    };
+
     const scoreByLabel = (label: string) =>
       report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase());
 
@@ -4401,15 +4416,8 @@ export async function generateBrandReportPdf(
     const formatCountRange = (low: number, high: number) =>
       `${Math.max(0, Math.round(low)).toLocaleString()}-${Math.max(0, Math.round(high)).toLocaleString()}`;
 
-    const category = mapGenreToCategory(report.genre);
-    const benchmark = getIndustryBenchmarks(category);
-    const commercialInputs = getCommercialInputs(category);
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
-    const baselineTraffic = Math.max(
-      140,
-      Math.round(benchmark.avgTraffic * (0.14 + (scoreAverage / 100) * 0.08)),
-    );
     const visibilityConfidence = report.competitiveLandscape?.competitors?.length
       ? "Moderate"
       : websiteImageSource
@@ -4417,55 +4425,118 @@ export async function generateBrandReportPdf(
         : "Low";
     const recommendationReason =
       scoreAverage < 65
-        ? "Current visibility signals point to a low-confidence baseline. Treat the first scenario as the most believable planning range until the first clarity fixes land."
+        ? "Current external visibility signals still point to a low baseline. Treat the first scenario as the planning range until the first clarity and AEO fixes land."
         : scoreAverage < 78
-          ? "Current signals support a mid-range planning baseline if the top fixes are implemented cleanly and the offer becomes easier to repeat."
-          : "The stronger scenario becomes credible only if the page sharpens its highest-friction points and the commercial story starts landing faster.";
+          ? "Current signals support a low-thousands ceiling only if the top fixes are implemented cleanly and the offer becomes easier to repeat."
+          : "The stronger scenario only becomes believable if the page sharpens its highest-friction points and the commercial story starts landing faster.";
     const recommendedScenario = scoreAverage < 65 ? "Low visibility" : scoreAverage < 78 ? "Moderate visibility" : "Stronger visibility";
-    const roiScenarios = [
-      {
-        label: pdfCopy.roiConservative,
-        description: pdfCopy.roiScale1,
-        visitors: Math.round(baselineTraffic * 0.8),
-        qualifiedVisits: Math.round(baselineTraffic * 0.8 * 0.36),
-        inquiries: Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)),
-        demandLift: "+6% to +12%",
-        revenueRange: formatMoneyRange(
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)) * 0.55,
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(2, Math.round(baselineTraffic * 0.8 * commercialInputs.qualifiedRate * 0.72)) * 0.9,
-        ),
-        confidence: visibilityConfidence,
-        bestUse: "Planning baseline",
-      },
-      {
-        label: pdfCopy.roiRealistic,
-        description: pdfCopy.roiScale2,
-        visitors: baselineTraffic,
-        qualifiedVisits: Math.round(baselineTraffic * 0.42),
-        inquiries: Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)),
-        demandLift: "+12% to +20%",
-        revenueRange: formatMoneyRange(
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)) * 0.7,
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(3, Math.round(baselineTraffic * commercialInputs.qualifiedRate)) * 1.15,
-        ),
-        confidence: visibilityConfidence,
-        bestUse: "Working forecast",
-      },
-      {
-        label: pdfCopy.roiOptimistic,
-        description: pdfCopy.roiScale3,
-        visitors: Math.round(baselineTraffic * 1.28),
-        qualifiedVisits: Math.round(baselineTraffic * 1.28 * 0.48),
-        inquiries: Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)),
-        demandLift: "+20% to +32%",
-        revenueRange: formatMoneyRange(
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)) * 0.82,
-          benchmark.avgAov * commercialInputs.closeRate * Math.max(4, Math.round(baselineTraffic * 1.28 * commercialInputs.qualifiedRate * 1.22)) * 1.28,
-        ),
-        confidence: visibilityConfidence === "Low" ? "Low to moderate" : visibilityConfidence,
-        bestUse: "Upside case",
-      },
-    ];
+    const roiScenarios = scoreAverage < 65
+      ? [
+          {
+            label: pdfCopy.roiConservative,
+            description: pdfCopy.roiScale1,
+            visitors: "200-350",
+            qualifiedVisits: "18-32",
+            inquiries: "2-4",
+            demandLift: "+4% to +8%",
+            revenueRange: "$6,000-$12,000",
+            confidence: "Low",
+            bestUse: "Planning baseline",
+          },
+          {
+            label: pdfCopy.roiRealistic,
+            description: pdfCopy.roiScale2,
+            visitors: "350-700",
+            qualifiedVisits: "30-58",
+            inquiries: "4-7",
+            demandLift: "+8% to +14%",
+            revenueRange: "$12,000-$24,000",
+            confidence: visibilityConfidence,
+            bestUse: "Working forecast",
+          },
+          {
+            label: pdfCopy.roiOptimistic,
+            description: pdfCopy.roiScale3,
+            visitors: "700-1,200",
+            qualifiedVisits: "56-96",
+            inquiries: "7-11",
+            demandLift: "+14% to +22%",
+            revenueRange: "$24,000-$42,000",
+            confidence: "Low to moderate",
+            bestUse: "Upside case",
+          },
+        ]
+      : scoreAverage < 78
+        ? [
+            {
+              label: pdfCopy.roiConservative,
+              description: pdfCopy.roiScale1,
+              visitors: "300-600",
+              qualifiedVisits: "26-48",
+              inquiries: "3-5",
+              demandLift: "+6% to +10%",
+              revenueRange: "$8,000-$16,000",
+              confidence: visibilityConfidence,
+              bestUse: "Planning baseline",
+            },
+            {
+              label: pdfCopy.roiRealistic,
+              description: pdfCopy.roiScale2,
+              visitors: "600-1,100",
+              qualifiedVisits: "48-90",
+              inquiries: "5-9",
+              demandLift: "+10% to +18%",
+              revenueRange: "$16,000-$32,000",
+              confidence: visibilityConfidence,
+              bestUse: "Working forecast",
+            },
+            {
+              label: pdfCopy.roiOptimistic,
+              description: pdfCopy.roiScale3,
+              visitors: "1,100-1,800",
+              qualifiedVisits: "86-138",
+              inquiries: "9-14",
+              demandLift: "+18% to +26%",
+              revenueRange: "$32,000-$56,000",
+              confidence: "Low to moderate",
+              bestUse: "Upside case",
+            },
+          ]
+        : [
+            {
+              label: pdfCopy.roiConservative,
+              description: pdfCopy.roiScale1,
+              visitors: "400-800",
+              qualifiedVisits: "34-62",
+              inquiries: "4-6",
+              demandLift: "+8% to +12%",
+              revenueRange: "$10,000-$18,000",
+              confidence: visibilityConfidence,
+              bestUse: "Planning baseline",
+            },
+            {
+              label: pdfCopy.roiRealistic,
+              description: pdfCopy.roiScale2,
+              visitors: "800-1,400",
+              qualifiedVisits: "64-108",
+              inquiries: "6-10",
+              demandLift: "+12% to +20%",
+              revenueRange: "$18,000-$36,000",
+              confidence: visibilityConfidence,
+              bestUse: "Working forecast",
+            },
+            {
+              label: pdfCopy.roiOptimistic,
+              description: pdfCopy.roiScale3,
+              visitors: "1,400-2,200",
+              qualifiedVisits: "108-168",
+              inquiries: "10-16",
+              demandLift: "+20% to +30%",
+              revenueRange: "$36,000-$68,000",
+              confidence: "Moderate",
+              bestUse: "Upside case",
+            },
+          ];
 
     const displayUrl = report.url.replace(/^https?:\/\//, "");
 
@@ -4473,6 +4544,19 @@ export async function generateBrandReportPdf(
     pageNumber += 1;
     doc.addPage();
     doc.rect(0, 0, pageWidth, pageHeight).fill(colors.dark);
+    if (archetypePosterSource) {
+      doc.save();
+      doc.image(archetypePosterSource, 0, 0, {
+        cover: [pageWidth, pageHeight],
+        align: "center",
+        valign: "center",
+      });
+      doc.restore();
+      doc.save();
+      doc.fillOpacity(0.76);
+      doc.rect(0, 0, pageWidth, pageHeight).fill(colors.dark);
+      doc.restore();
+    }
     doc.fillColor(colors.accent).font("Helvetica").fontSize(9).text("BRANDMIRROR / FULL REPORT", contentLeft, 42, {
       characterSpacing: 2.3,
     });
@@ -4505,14 +4589,7 @@ export async function generateBrandReportPdf(
       align: "center",
       lineGap: coverTagline.lineGap,
     });
-    if (archetypePosterSource) {
-      drawRoundedImageFit(archetypePosterSource, 78, 314, contentWidth - 44, 276, 22);
-      doc.save();
-      doc.fillOpacity(0.38);
-      doc.roundedRect(78, 314, contentWidth - 44, 276, 22).fill(colors.dark);
-      doc.restore();
-    }
-    drawPanel(126, 612, pageWidth - 252, 76, colors.panelSoft);
+    drawPanel(120, 636, pageWidth - 240, 76, colors.panelSoft);
     doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", 148, 694, {
       characterSpacing: 1.5,
     });
@@ -4530,7 +4607,7 @@ export async function generateBrandReportPdf(
 
     // Page 2: What We Measure
     addBasePage();
-    const page2TitleBottom = drawPageLabel(pdfCopy.whatThisIsLabel, "What the report measures and how to use the read", {
+    const page2TitleBottom = drawPageLabel(pdfCopy.whatThisIsLabel, "What the report measures", {
       width: 292,
       maxFont: 24,
       minFont: 20,
@@ -4540,20 +4617,22 @@ export async function generateBrandReportPdf(
     for (const paragraph of pdfCopy.whatThisIsIntro) {
       page2Y = drawParagraph(paragraph, contentLeft, page2Y, 232, 11, 6) + 16;
     }
-    const page2CardY = 188;
-    drawPanel(314, page2CardY, 225, 236, colors.panelSoft);
+    const page2CardY = 184;
+    drawPanel(314, page2CardY, 225, 252, colors.panelSoft);
     drawSectionTag("FIVE AXES", 338, page2CardY + 22);
-    let metricY = page2CardY + 44;
+    let metricY = page2CardY + 48;
     metricCards.forEach((item, index) => {
       const color = [colors.terracotta, colors.amber, colors.mint, colors.accent, colors.textMuted][index] || colors.textMuted;
-      doc.roundedRect(338, metricY + 5, 16, 6, 3).fill(color);
-      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(9.4).text(item.title, 362, metricY, {
-        width: 148,
+      drawPanel(336, metricY, 181, 30, "rgba(255,255,255,0.03)");
+      doc.roundedRect(348, metricY + 12, 18, 6, 3).fill(color);
+      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(8.6).text(item.title, 378, metricY + 8, {
+        width: 128,
       });
-      metricY = drawParagraph(item.body, 362, metricY + 14, 148, 8.6, 3.6) + 9;
+      metricY += 42;
+      drawParagraph(item.body, 348, metricY - 8, 170, 8.2, 3.2);
+      metricY += 22;
     });
-    drawSectionTag(pdfCopy.readingScale, 338, page2CardY + 204, colors.textMuted);
-    const legendY = 446;
+    const legendY = 470;
     [
       { label: "0-30", name: "Flatlining", color: "#B65C5C" },
       { label: "30-50", name: "Fragile", color: colors.terracotta },
@@ -4583,49 +4662,36 @@ export async function generateBrandReportPdf(
       526,
       { width: contentWidth - 64, align: "center", lineGap: 5 },
     );
-    drawParagraph(
-      "Start with the First Read and Score Dashboard. Then move into the Signal Read, the deep-dive axes, and the Priority Fix Stack. The Implementation Playbook turns the diagnosis into an ordered sequence of action.",
-      88,
-      570,
-      contentWidth - 64,
-      10,
-      5,
-    );
 
     // Page 3: First Read
     addBasePage();
     const page3TitleBottom = drawPageLabel("FIRST READ", "What the company does, what it signals, and how the page lands before trust is earned", { width: 330, maxFont: 24, minFont: 20, maxHeight: 106 });
     const page3Top = Math.max(page3TitleBottom + 18, 176);
     drawSectionTag("WHAT IT DOES", contentLeft, page3Top);
-    const whatItDoesBox = fitTextToBox(report.whatItDoes, 256, 102, 11.2, 10, 6);
+    const whatItDoesBox = fitTextToBox(report.whatItDoes, 256, 110, 10.8, 10.2, 6);
     let firstReadY = drawParagraph(whatItDoesBox.text, contentLeft, page3Top + 24, 256, whatItDoesBox.size, 6) + 22;
     drawSectionTag("FIRST DIAGNOSIS", contentLeft, firstReadY);
-    const snapshotBox = fitTextToBox(report.snapshot, 256, 108, 11.8, 10.4, 6, "Times-Roman");
+    const snapshotBox = fitTextToBox(report.snapshot, 256, 118, 10.8, 10.2, 6);
     firstReadY = drawParagraph(snapshotBox.text, contentLeft, firstReadY + 24, 256, snapshotBox.size, 6) + 22;
     drawSectionTag("CURRENT STATE", contentLeft, firstReadY);
-    const currentBox = fitTextToBox(report.whatItSignals, 256, 150, 10.8, 9.8, 6);
+    const currentBox = fitTextToBox(report.whatItSignals, 256, 184, 10.8, 10.2, 6);
     drawParagraph(currentBox.text, contentLeft, firstReadY + 24, 256, currentBox.size, 6);
     const snapshotX = 336;
     const snapshotY = Math.max(page3Top + 6, 210);
     const snapshotW = 203;
     const snapshotH = 330;
     drawPanel(snapshotX, snapshotY, snapshotW, snapshotH, colors.panelSoft);
-    drawSectionTag(pdfCopy.reportSnapshot, snapshotX + 20, snapshotY + 18);
-    drawSectionTag("CURRENT READ", snapshotX + 20, snapshotY + 42, colors.mint);
-    const currentReadBox = fitTextToBox(firstSentence(report.snapshot), snapshotW - 40, 62, 9.4, 8.2, 4);
-    drawParagraph(currentReadBox.text, snapshotX + 20, snapshotY + 66, snapshotW - 40, currentReadBox.size, currentReadBox.lineGap);
-    doc.fillColor(bandColor(overallScore)).font("Helvetica").fontSize(14).text(report.scoreBand, snapshotX + 20, snapshotY + 156, {
+    const currentReadBox = fitTextToBox(firstSentence(report.snapshot), snapshotW - 40, 122, 11.2, 9.8, 5.2, "Times-Roman");
+    doc.fillColor(colors.textOnDark).font(currentReadBox.font).fontSize(currentReadBox.size).text(currentReadBox.text, snapshotX + 20, snapshotY + 36, {
       width: snapshotW - 40,
-      characterSpacing: 0.7,
+      lineGap: currentReadBox.lineGap,
     });
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(28).text(`${overallScore}/100`, snapshotX + 20, snapshotY + 182, {
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.6).text(pdfCopy.overallReadiness, snapshotX + 20, snapshotY + 216, {
       width: snapshotW - 40,
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.2).text(pdfCopy.overallReadiness, snapshotX + 20, snapshotY + 226, {
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(32).text(`${overallScore}/100`, snapshotX + 20, snapshotY + 240, {
       width: snapshotW - 40,
     });
-    const scoreModifierBox = fitTextToBox(bodyCopy(report.scoreModifier), snapshotW - 40, 64, 8.8, 8, 3.8);
-    drawParagraph(scoreModifierBox.text, snapshotX + 20, snapshotY + 246, snapshotW - 40, scoreModifierBox.size, scoreModifierBox.lineGap);
 
     // Page 4: Score Dashboard
     addBasePage();
@@ -4786,8 +4852,8 @@ export async function generateBrandReportPdf(
 
     // Page 6: Signal Read Part 1
     addBasePage();
-    const page6TitleBottom = drawPageLabel("SIGNAL READ", "What is missing, where the signal drifts, and what the AI layer can actually understand", {
-      width: 360,
+    const page6TitleBottom = drawPageLabel("SIGNAL READ", "What is missing and where the signal starts to drift", {
+      width: 344,
       maxFont: 28,
       minFont: 22,
       maxHeight: 118,
@@ -4795,42 +4861,24 @@ export async function generateBrandReportPdf(
     const signalCardWidth = (contentWidth - 18) / 2;
     drawTextCard({
       x: contentLeft,
-      y: page6TitleBottom + 10,
-      width: contentWidth,
-      height: 156,
-      label: `${pdfCopy.commercialCost} · ${scoreByLabel("AI visibility")?.score ?? overallScore}/100`,
-      title: scoreBandLabel(scoreByLabel("AI visibility")?.score ?? overallScore),
-      body: report.toneCheck,
-      titleFont: "Helvetica",
-      titleSize: 15,
-      titleMin: 13,
-      bodySize: 11.2,
-      bodyMin: 9.8,
-      labelColor: colors.mint,
-      titleTopOffset: 40,
-      bodyTopOffset: 72,
-      fill: colors.panelSoft,
-    });
-    drawTextCard({
-      x: contentLeft,
-      y: page6TitleBottom + 206,
+      y: page6TitleBottom + 18,
       width: signalCardWidth,
-      height: 184,
+      height: 324,
       label: pdfCopy.brandPromises,
-      body: report.whatIsMissing || report.whatsBroken.join(" "),
-      bodySize: 10.8,
-      bodyMin: 9.6,
+      body: stripAiLayerSentences(report.whatIsMissing || report.whatsBroken.join(" ")),
+      bodySize: 11,
+      bodyMin: 9.8,
       bodyTopOffset: 50,
     });
     drawTextCard({
       x: contentLeft + signalCardWidth + 18,
-      y: page6TitleBottom + 206,
+      y: page6TitleBottom + 18,
       width: signalCardWidth,
-      height: 184,
+      height: 324,
       label: pdfCopy.pageDelivers,
-      body: report.mixedSignals,
-      bodySize: 10.8,
-      bodyMin: 9.6,
+      body: stripAiLayerSentences(report.mixedSignals),
+      bodySize: 11,
+      bodyMin: 9.8,
       bodyTopOffset: 50,
     });
 
@@ -4917,12 +4965,12 @@ export async function generateBrandReportPdf(
         x,
         y: page8ImageY + 316,
         width: websiteCalloutWidth,
-        height: 132,
+        height: 138,
         label: item.label,
         title: item.title,
         body: item.body,
-        bodySize: 11,
-        bodyMin: 9.8,
+        bodySize: 11.6,
+        bodyMin: 10.4,
         titleSize: 18,
         titleMin: 14,
       });
@@ -5001,56 +5049,7 @@ export async function generateBrandReportPdf(
       }
     });
 
-    // Page 14: Brand Archetype + Poster
-    addBasePage();
-    const page14TitleBottom = drawPageLabel(pdfCopy.archetypeLabel, pdfCopy.archetypeTitle, {
-      width: 350,
-      maxFont: 24,
-      minFont: 20,
-      maxHeight: 92,
-    });
-    const page14Top = Math.max(page14TitleBottom + 18, 176);
-    drawSectionTag("ARCHETYPE READ", contentLeft, page14Top);
-    drawParagraph(report.archetypeRead.rationale, contentLeft, page14Top + 24, 242, 11, 6);
-    drawSectionTag(pdfCopy.archetypeExpect, contentLeft, page14Top + 178);
-    let expectY = page14Top + 204;
-    for (const item of uniqueItems([
-      report.industryFit.assessment,
-      report.industryFit.leverage,
-      ...report.expectationGap,
-    ], 3)) {
-      expectY = drawParagraph(`- ${item}`, contentLeft, expectY, 242, 10.6, 5) + 8;
-    }
-    drawPanel(324, page14Top, 215, 344);
-    if (archetypePosterSource) {
-      drawRoundedImageFit(archetypePosterSource, 344, page14Top + 18, 175, 176, 14);
-    }
-    const posterTitle = fitTextToBox(report.title, 151, 84, 14.5, 11.4, 2.4, "Times-Bold");
-    doc.fillColor(colors.textOnDark).font(posterTitle.font).fontSize(posterTitle.size).text(posterTitle.text, 356, page14Top + 218, {
-      width: 151,
-      align: "center",
-      lineGap: posterTitle.lineGap,
-    });
-    const posterTagline = fitTextToBox(firstSentence(report.tagline), 151, 46, 8.6, 7.8, 2.8);
-    drawParagraph(posterTagline.text, 356, page14Top + 304, 151, posterTagline.size, posterTagline.lineGap);
-    drawSectionTag(pdfCopy.archetypeSoWhat, contentLeft, 596);
-    const implicationWidth = (contentWidth - 24) / 3;
-    archetypeSoWhat.forEach((line, index) => {
-      const x = contentLeft + index * (implicationWidth + 12);
-      drawTextCard({
-        x,
-        y: 618,
-        width: implicationWidth,
-        height: 114,
-        body: line,
-        bodySize: 8.9,
-        bodyMin: 8.2,
-        bodyTopOffset: 22,
-        fill: colors.panelSoft,
-      });
-    });
-
-    // Page 15: Priority Fix Stack
+    // Page 14: Priority Fix Stack
     addBasePage();
     drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, {
       width: 360,
@@ -5076,18 +5075,8 @@ export async function generateBrandReportPdf(
       });
       bandTop += 124;
     });
-    drawPanel(contentLeft, 604, contentWidth, 96, colors.panelSoft);
-    drawSectionTag("WHY THIS ORDER", contentLeft + 18, 628, colors.mint);
-    drawParagraph(
-      "Fix Now is where the page is currently losing meaning or trust. Fix Next strengthens the offer once the first screen starts landing. Keep protects the signals that are already earning confidence and should not be diluted in the rewrite.",
-      contentLeft + 18,
-      650,
-      contentWidth - 36,
-      9.8,
-      4,
-    );
 
-    // Page 16: Implementation Playbook
+    // Page 15: Implementation Playbook I
     addBasePage();
     drawPageLabel(pdfCopy.playbookLabel, pdfCopy.playbookTitle, {
       width: 360,
@@ -5114,39 +5103,60 @@ export async function generateBrandReportPdf(
     const cardTop = 252;
     playbookColumns.forEach((column, index) => {
       const x = contentLeft + index * (columnWidth + 12);
-      drawPanel(x, cardTop, columnWidth, 272, colors.panelSoft);
+      drawPanel(x, cardTop, columnWidth, 448, colors.panelSoft);
       drawSectionTag(column.label, x + 18, cardTop + 18, column.color);
       let y = cardTop + 48;
       column.items.forEach((item) => {
         y = drawParagraph(`- ${item}`, x + 18, y, columnWidth - 36, 10, 5) + 8;
       });
     });
-    drawPanel(contentLeft, 560, contentWidth, 154, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 584, colors.mint);
+    drawPanel(contentLeft, 722, contentWidth, 70, colors.panelSoft);
+    drawSectionTag("WHAT THIS UNLOCKS", contentLeft + 18, 744, colors.mint);
+    drawParagraph(
+      "This is the order that turns the diagnosis into a cleaner homepage, a clearer offer, and a more recommendable brand system.",
+      contentLeft + 18,
+      764,
+      contentWidth - 36,
+      9.8,
+      4,
+    );
+
+    // Page 16: Implementation Playbook II
+    addBasePage();
+    drawPageLabel(pdfCopy.playbookLabel, "Work with SAHAR or implement the highest-leverage corrections in sequence", {
+      width: 380,
+      maxFont: 27,
+      minFont: 22,
+      maxHeight: 112,
+    });
+    drawPanel(contentLeft, 188, contentWidth, 176, colors.panelSoft);
+    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 212, colors.mint);
     drawParagraph(
       pdfCopy.playbookCtaBody,
       contentLeft + 18,
-      608,
-      330,
-      10.6,
-      5,
+      242,
+      contentWidth - 36,
+      11,
+      6,
     );
-    drawTextCard({
-      x: 392,
-      y: 578,
-      width: 147,
-      height: 118,
-      label: "NEXT STEP",
-      title: "WITH SAHAR",
-      body: "Translate the diagnosis into sharper positioning, cleaner page structure, stronger proof order, and a homepage that becomes easier to recommend and easier to buy from.",
-      bodySize: 8.5,
-      bodyMin: 8,
-      titleSize: 11,
-      titleMin: 11,
-      titleFont: "Helvetica",
-      titleTopOffset: 38,
-      bodyTopOffset: 68,
-      fill: colors.panel,
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.5).text("brandmirror.app", contentLeft + 18, 326, {
+      link: "https://brandmirror.app",
+      underline: true,
+    });
+    const implementationMap = [
+      { label: pdfCopy.playbookNow, items: uniqueItems([...report.priorityFixes.fixNow, ...report.actionPlan.next7Days], 4), color: colors.terracotta },
+      { label: pdfCopy.playbookNext, items: uniqueItems([...report.priorityFixes.fixNext, ...report.actionPlan.next30Days], 4), color: colors.amber },
+      { label: pdfCopy.playbookThen, items: uniqueItems(report.priorityFixes.keep.map((item) => `Preserve and sharpen: ${item}`), 4), color: colors.mint },
+    ];
+    let mapTop = 402;
+    implementationMap.forEach((block) => {
+      drawPanel(contentLeft, mapTop, contentWidth, 104, colors.panelSoft);
+      drawSectionTag(block.label, contentLeft + 18, mapTop + 18, block.color);
+      let itemY = mapTop + 42;
+      block.items.forEach((item) => {
+        itemY = drawParagraph(`- ${item}`, contentLeft + 18, itemY, contentWidth - 36, 9.8, 4) + 5;
+      });
+      mapTop += 118;
     });
 
     renderCommercialImpactPage();

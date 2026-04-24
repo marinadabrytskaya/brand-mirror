@@ -691,73 +691,92 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
 
         {/* =================== Locked teasers =================== */}
         <section className="mt-12 grid gap-6 sm:grid-cols-2">
-          {/* Headline rewrite teaser */}
+          {/* Unlock full report */}
           <div
-            className="relative overflow-hidden rounded-2xl border p-6 sm:p-8"
+            className="rounded-2xl border p-6 sm:p-8"
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
-            <p style={{ ...metaLabel, color: COLOR.accent }}>HEADLINE&nbsp;REWRITE</p>
-            <div className="mt-5 min-h-[15.5rem] space-y-4 pb-16">
+            <p style={{ ...metaLabel, color: COLOR.accent }}>UNLOCK&nbsp;FULL&nbsp;REPORT</p>
+            <div className="mt-5 flex min-h-[15.5rem] flex-col justify-between">
               <div>
-                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>AFTER</p>
                 <div
-                  className="mt-2 rounded-lg px-4 py-3"
-                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
-                >
-                  <p style={{ color: COLOR.text, fontSize: "18px", fontFamily: "var(--font-cormorant), Georgia, serif", fontWeight: 500 }}>
-                    A sharper headline that earns the click faster
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>SUPPORTING&nbsp;LINE</p>
-                <div
-                  className="mt-2 rounded-lg px-4 py-3"
-                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
-                >
-                  <p style={{ color: COLOR.textSoft, fontSize: "14px" }}>
-                    The subheadline that makes the promise concrete
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>CTA</p>
-                <div
-                  className="mt-2 rounded-lg px-4 py-3"
-                  style={{ background: "rgba(255,255,255,0.04)", filter: "blur(6px)", userSelect: "none" as const }}
-                >
-                  <p style={{ color: "#6FE0C2", fontSize: "13px" }}>
-                    A call to action that matches the intent
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div
-              className="absolute inset-x-0 bottom-0 border-t px-6 py-5 sm:px-8"
-              style={{
-                borderColor: COLOR.lineSoft,
-                background: "linear-gradient(to bottom, rgba(7,7,10,0.2), rgba(7,7,10,0.96) 42%)",
-              }}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
-                  <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    $197 at brandmirror.app — signal read, commercial impact, competitor comparison, and the full PDF.
-                  </p>
-                </div>
-                <Link
-                  href={reportHref}
-                  className="shrink-0 rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                  className="inline-flex items-center rounded-full border px-4 py-2"
                   style={{
-                    ...metaLabel,
-                    fontSize: "10px",
-                    borderColor: "rgba(255,255,255,0.16)",
-                    color: COLOR.text,
+                    borderColor: "rgba(111,224,194,0.24)",
+                    background: "rgba(111,224,194,0.06)",
+                    color: "#6FE0C2",
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontSize: "11px",
+                    letterSpacing: "0.16em",
                   }}
                 >
-                  UNLOCK&nbsp;&mdash;&nbsp;$197
-                </Link>
+                  $197 FULL REPORT
+                </div>
+                <p
+                  className="mt-5 max-w-md leading-[1.18]"
+                  style={{
+                    color: COLOR.text,
+                    fontFamily: "var(--font-cormorant), Georgia, serif",
+                    fontSize: "2rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  Unlock the full diagnosis, competitor position, and implementation playbook.
+                </p>
+                <p
+                  className="mt-5 max-w-lg leading-7"
+                  style={{ color: COLOR.textSoft, fontSize: "14px" }}
+                >
+                  Includes signal read, commercial impact scenarios, competitor comparison, implementation playbook, and the downloadable PDF.
+                </p>
+              </div>
+              <div className="mt-8 flex flex-col gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <a
+                    href="https://brandmirror.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 underline-offset-4 hover:underline"
+                    style={{
+                      color: "#6FE0C2",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "12px",
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    brandmirror.app
+                  </a>
+                  <Link
+                    href={reportHref}
+                    className="inline-flex items-center justify-center rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                    style={{
+                      ...metaLabel,
+                      fontSize: "10px",
+                      borderColor: "rgba(255,255,255,0.16)",
+                      color: COLOR.text,
+                    }}
+                  >
+                    UNLOCK&nbsp;&mdash;&nbsp;$197
+                  </Link>
+                </div>
+                {currentUrl ? (
+                  <button
+                    type="button"
+                    onClick={handleTestFullPdf}
+                    disabled={isTestingFullPdf}
+                    className="inline-flex items-center justify-center rounded-full border px-4 py-2 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{
+                      ...metaLabel,
+                      fontSize: "10px",
+                      borderColor: "rgba(255,255,255,0.16)",
+                      color: COLOR.textSoft,
+                    }}
+                  >
+                    {isTestingFullPdf
+                      ? copy.testFullPdfBusy.toUpperCase()
+                      : copy.testFullPdfIdle.toUpperCase()}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -783,7 +802,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       {band.label}
                     </span>
                   </div>
-                  <div className="flex flex-1 gap-2">
+                  <div className="flex max-w-[17rem] flex-1 gap-2 pr-2">
                     {Array.from({ length: band.count }).map((_, i) => (
                       <div
                         key={i}
@@ -792,9 +811,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       />
                     ))}
                   </div>
-                  <span style={{ ...metaLabel, fontSize: "9px", color: COLOR.textFaint }}>
-                    {band.count}&nbsp;items
-                  </span>
                 </div>
               ))}
             </div>
@@ -867,136 +883,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </section>
         ) : null}
 
-        <hr
-          className="mt-12"
-          style={{ border: 0, height: "0.5px", background: COLOR.line }}
-        />
-
-        {/* =================== Unlock bar =================== */}
-        <section
-          className="mt-12 grid gap-10 rounded-2xl border p-8 sm:grid-cols-2 sm:p-10"
-          style={{ borderColor: COLOR.line }}
-        >
-          <div>
-            <p style={metaLabel}>{copy.unlockLabel}</p>
-            <div
-              className="mt-4 leading-none tracking-[-0.04em]"
-              style={{
-                fontFamily: "var(--font-cormorant), Georgia, serif",
-                fontSize: "3.25rem",
-                fontWeight: 500,
-                color: COLOR.text,
-              }}
-            >
-              $197
-            </div>
-            <p
-              className="mt-5 max-w-md leading-7"
-              style={{ color: COLOR.textSoft, fontSize: "14.5px" }}
-            >
-              {copy.unlockBody}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={reportHref}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 transition hover:-translate-y-px"
-                style={{
-                  background: "#6FE0C2",
-                  color: "#07070A",
-                  fontSize: "12.5px",
-                  letterSpacing: "0.18em",
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontWeight: 500,
-                }}
-              >
-                &#9654;&nbsp;&nbsp;{copy.unlockCta.toUpperCase()}
-              </Link>
-              <Link
-                href={siteI18n.withLang("/sample-report", locale)}
-                className="inline-flex items-center justify-center rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
-                style={{
-                  borderColor: "rgba(255,255,255,0.2)",
-                  color: COLOR.text,
-                  fontSize: "12.5px",
-                  letterSpacing: "0.18em",
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontWeight: 500,
-                }}
-              >
-                {copy.unlockSecondary.toUpperCase()}
-              </Link>
-            </div>
-            {currentUrl ? (
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={handleTestFullPdf}
-                  disabled={isTestingFullPdf}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.2)",
-                    color: COLOR.text,
-                    fontSize: "12.5px",
-                    letterSpacing: "0.18em",
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontWeight: 500,
-                  }}
-                >
-                  {isTestingFullPdf
-                    ? copy.testFullPdfBusy.toUpperCase()
-                    : copy.testFullPdfIdle.toUpperCase()}
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          <div>
-            <p style={metaLabel}>{copy.included}</p>
-            <ul className="mt-4 grid gap-0">
-              {copy.unlockItems.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-baseline gap-3 border-b py-2.5"
-                  style={{
-                    borderColor: COLOR.lineSoft,
-                    color: "rgba(237,237,242,0.88)",
-                    fontSize: "14px",
-                  }}
-                >
-                  <span
-                    aria-hidden
-                    style={{
-                      color: "#6FE0C2",
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "10px",
-                      letterSpacing: "0.18em",
-                      lineHeight: 1,
-                      marginTop: "2px",
-                    }}
-                  >
-                    &#x2713;
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 space-y-2">
-              {copy.unlockNotes.map((note) => (
-                <p
-                  key={note}
-                  className="leading-6"
-                  style={{ color: "rgba(237,237,242,0.55)", fontSize: "12.5px" }}
-                >
-                  {note}
-                </p>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* =================== Footer bar =================== */}
         <div
-          className="mt-16 flex items-center justify-between border-t pt-6"
+          className="mt-12 flex items-center justify-between border-t pt-6"
           style={{
             borderColor: COLOR.lineSoft,
             ...terminalText,
