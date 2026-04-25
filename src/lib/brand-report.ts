@@ -5016,8 +5016,8 @@ export async function generateBrandReportPdf(
           { x: report.beforeAfterHero.currentFrame.focusX, y: report.beforeAfterHero.currentFrame.focusY },
         );
         drawSectionTag(pdfCopy.revealingLine, 346, 232);
-        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 62, 10.8, 9.2, 4, "Helvetica-Bold");
-        doc.fillColor(colors.textOnDark).font("Helvetica-Bold").fontSize(revealVisual.size).text(revealVisual.text, 346, 252, {
+        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 62, 10.8, 9.2, 4, "Helvetica");
+        doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(revealVisual.size).text(revealVisual.text, 346, 252, {
           width: 167,
           lineGap: revealVisual.lineGap,
         });
@@ -5026,8 +5026,8 @@ export async function generateBrandReportPdf(
         drawParagraph(implicationVisual.text, 346, 404, 177, implicationVisual.size, implicationVisual.lineGap);
       } else {
         drawSectionTag(pdfCopy.revealingLine, 346, 232);
-        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 84, 10.8, 9.0, 4, "Helvetica-Bold");
-        doc.fillColor(colors.textOnDark).font("Helvetica-Bold").fontSize(revealText.size).text(revealText.text, 346, 252, {
+        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 84, 10.8, 9.0, 4, "Helvetica");
+        doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(revealText.size).text(revealText.text, 346, 252, {
           width: 177,
           lineGap: revealText.lineGap,
         });
