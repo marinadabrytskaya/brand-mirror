@@ -4658,20 +4658,20 @@ export async function generateBrandReportPdf(
       align: "center",
       lineGap: coverTagline.lineGap,
     });
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", contentLeft, 722, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", contentLeft, 706, {
       characterSpacing: 1.5,
     });
-    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13.5).text(reportId, contentLeft, 698);
-    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, contentLeft, 680, {
+    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13.5).text(reportId, contentLeft, 724);
+    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, contentLeft, 742, {
       width: 240,
       align: "left",
       characterSpacing: 0.4,
     });
-    doc.moveTo(contentLeft, 744).lineTo(contentRight, 744).strokeColor(colors.rule).stroke();
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.5).text(pdfCopy.powered, contentLeft, 758, {
+    doc.moveTo(contentLeft, 776).lineTo(contentRight, 776).strokeColor(colors.rule).stroke();
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.5).text(pdfCopy.powered, contentLeft, 790, {
       width: 220,
     });
-    doc.text(today, contentRight - 120, 758, { width: 120, align: "right" });
+    doc.text(today, contentRight - 120, 790, { width: 120, align: "right" });
 
     // Page 2: Live Scan
     addBasePage();
@@ -4845,21 +4845,23 @@ export async function generateBrandReportPdf(
       });
 
       const confidenceY = scenarioTop + scenarioHeight + 18;
-      drawPanel(contentLeft, confidenceY, contentWidth, 42, colors.panelSoft);
-      drawSectionTag("HOW TO READ THIS", contentLeft + 18, confidenceY + 13, colors.textMuted);
+      drawPanel(contentLeft, confidenceY, contentWidth, 54, colors.panelSoft);
+      drawSectionTag("WHAT THIS MEANS", contentLeft + 18, confidenceY + 20, colors.textMuted);
       drawParagraph(
         `Current signal means where the homepage is likely landing today. The stronger bands show what changes if the top fixes in this report are implemented cleanly and repeated across the brand.`,
         contentLeft + 156,
-        confidenceY + 13,
+        confidenceY + 16,
         contentWidth - 174,
         8.8,
         4,
       );
 
-      const competitiveY = confidenceY + 58;
+      const competitiveY = confidenceY + 70;
       const competitiveH = 60;
-      drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
-      drawSectionTag(pdfCopy.competitiveLabel, contentLeft + 18, competitiveY + 14, colors.textMuted);
+      if (report.competitiveLandscape?.competitors?.length) {
+        drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
+        drawSectionTag(pdfCopy.competitiveLabel, contentLeft + 18, competitiveY + 14, colors.textMuted);
+      }
       if (report.competitiveLandscape?.competitors?.length) {
         const rankingText = `#${report.competitiveLandscape.analysis.ranking} of ${report.competitiveLandscape.competitors.length + 1}`;
         const leadLine =
@@ -4893,17 +4895,15 @@ export async function generateBrandReportPdf(
           8.6,
           4,
         );
-      } else {
-        drawParagraph(
-          pdfCopy.competitiveNoData,
-          contentLeft + 18,
-          competitiveY + 28,
-          contentWidth - 36,
-          8.8,
-          4,
-        );
       }
-      drawParagraph(pdfCopy.roiFootnote, contentLeft, competitiveY + competitiveH + 8, contentWidth, 8.2, 4);
+      drawParagraph(
+        pdfCopy.roiFootnote,
+        contentLeft,
+        competitiveY + (report.competitiveLandscape?.competitors?.length ? competitiveH + 8 : 0),
+        contentWidth,
+        8.2,
+        4,
+      );
     };
 
     // Page 6: Signal Read Part 1
@@ -4919,24 +4919,24 @@ export async function generateBrandReportPdf(
         x: contentLeft,
         y: page6TitleBottom + 18,
         width: signalCardWidth,
-      height: 420,
-      label: pdfCopy.brandPromises,
-      body: stripAiLayerSentences(report.whatIsMissing || report.whatsBroken.join(" ")),
-      bodySize: 11,
-      bodyMin: 8.6,
-      bodyTopOffset: 50,
-    });
-    drawTextCard({
-      x: contentLeft + signalCardWidth + 18,
-      y: page6TitleBottom + 18,
-      width: signalCardWidth,
-      height: 420,
-      label: pdfCopy.pageDelivers,
-      body: stripAiLayerSentences(report.mixedSignals),
-      bodySize: 11,
-      bodyMin: 8.6,
-      bodyTopOffset: 50,
-    });
+        height: 470,
+        label: pdfCopy.brandPromises,
+        body: stripAiLayerSentences(report.whatIsMissing || report.whatsBroken.join(" ")),
+        bodySize: 10.6,
+        bodyMin: 8.2,
+        bodyTopOffset: 50,
+      });
+      drawTextCard({
+        x: contentLeft + signalCardWidth + 18,
+        y: page6TitleBottom + 18,
+        width: signalCardWidth,
+        height: 470,
+        label: pdfCopy.pageDelivers,
+        body: stripAiLayerSentences(report.mixedSignals),
+        bodySize: 10.6,
+        bodyMin: 8.2,
+        bodyTopOffset: 50,
+      });
 
     // Page 6: Website Surface
     addBasePage();
@@ -4977,12 +4977,12 @@ export async function generateBrandReportPdf(
         x,
         y: page8ImageY + 316,
         width: websiteCalloutWidth,
-        height: 156,
+        height: 172,
         label: item.label,
         title: item.title,
         body: item.body,
-        bodySize: 11,
-        bodyMin: 9.2,
+        bodySize: 10.6,
+        bodyMin: 8.8,
         titleSize: 18,
         titleMin: 14,
       });
@@ -5001,58 +5001,39 @@ export async function generateBrandReportPdf(
         width: 64,
         align: "right",
       });
-      drawTextCard({
-        x: contentLeft,
-        y: 156,
-        width: contentWidth,
-        height: 108,
-        label: item.score.score < 60 ? "PRACTICAL FIX" : "NEXT LEVEL MOVE",
-        body:
-          (item.score.score < 60
-            ? practicalMoves[item.title as keyof typeof practicalMoves]?.low
-            : practicalMoves[item.title as keyof typeof practicalMoves]?.mid) ||
-          (item.score.score >= 70
-            ? "This axis is already helping the brand. The next move is to make it do even more commercial work."
-            : "This axis needs a more explicit correction if the page is going to convert with less resistance."),
-        bodySize: 10.8,
-        bodyMin: 9.6,
-        labelColor: item.score.score < 60 ? colors.terracotta : colors.mint,
-        bodyTopOffset: 50,
-        fill: colors.panelSoft,
-      });
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.whatScoreTells, contentLeft, 292);
+      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.whatScoreTells, contentLeft, 180);
       const diagnosisText = fitTextToBox(bodyCopy(item.diagnosis), 248, 188, 10.2, 9.4, 5);
-      drawParagraph(diagnosisText.text, contentLeft, 320, 248, diagnosisText.size, diagnosisText.lineGap);
-      drawPanel(326, 320, 213, 236);
+      drawParagraph(diagnosisText.text, contentLeft, 208, 248, diagnosisText.size, diagnosisText.lineGap);
+      drawPanel(326, 208, 213, 236);
       if (item.title === "Visual Credibility" && websiteImageSource) {
         drawRoundedImage(
           websiteImageSource,
           346,
-          392,
+          280,
           167,
           88,
           12,
           { x: report.beforeAfterHero.currentFrame.focusX, y: report.beforeAfterHero.currentFrame.focusY },
         );
-        drawSectionTag(pdfCopy.revealingLine, 346, 344);
-        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 62, 11.6, 9.6, 4, "Times-Roman");
-        doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealVisual.size).text(revealVisual.text, 346, 364, {
+        drawSectionTag(pdfCopy.revealingLine, 346, 232);
+        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 62, 10.8, 9.2, 4, "Helvetica-Bold");
+        doc.fillColor(colors.textOnDark).font("Helvetica-Bold").fontSize(revealVisual.size).text(revealVisual.text, 346, 252, {
           width: 167,
           lineGap: revealVisual.lineGap,
         });
-        drawSectionTag(pdfCopy.forBrand, 346, 492, colors.textMuted);
-        const implicationVisual = fitTextToBox(stripBrandLead(item.implication), 177, 56, 9.4, 8.6, 4);
-        drawParagraph(implicationVisual.text, 346, 512, 177, implicationVisual.size, implicationVisual.lineGap);
+        drawSectionTag("WHAT THIS MEANS", 346, 384, colors.textMuted);
+        const implicationVisual = fitTextToBox(stripBrandLead(item.implication), 177, 56, 9.2, 8.4, 4);
+        drawParagraph(implicationVisual.text, 346, 404, 177, implicationVisual.size, implicationVisual.lineGap);
       } else {
-        drawSectionTag(pdfCopy.revealingLine, 346, 344);
-        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 84, 11.4, 9.4, 4, "Times-Roman");
-        doc.fillColor(colors.textOnDark).font("Times-Roman").fontSize(revealText.size).text(revealText.text, 346, 364, {
+        drawSectionTag(pdfCopy.revealingLine, 346, 232);
+        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), 177, 84, 10.8, 9.0, 4, "Helvetica-Bold");
+        doc.fillColor(colors.textOnDark).font("Helvetica-Bold").fontSize(revealText.size).text(revealText.text, 346, 252, {
           width: 177,
           lineGap: revealText.lineGap,
         });
-        drawSectionTag(pdfCopy.forBrand, 346, 470, colors.textMuted);
+        drawSectionTag("WHAT THIS MEANS", 346, 384, colors.textMuted);
         const implicationText = fitTextToBox(stripBrandLead(item.implication), 177, 88, 9.2, 8.4, 4);
-        drawParagraph(implicationText.text, 346, 490, 177, implicationText.size, implicationText.lineGap);
+        drawParagraph(implicationText.text, 346, 404, 177, implicationText.size, implicationText.lineGap);
       }
       drawScoreMeter(contentLeft, 598, contentWidth, item.score.score);
       doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(16).text(pdfCopy.benchmark, contentLeft, 566);
@@ -5060,6 +5041,8 @@ export async function generateBrandReportPdf(
         // no-op, keeps page count readable
       }
     });
+
+    renderCommercialImpactPage();
 
     // Page 12: Brand Archetype
     addBasePage();
@@ -5104,8 +5087,6 @@ export async function generateBrandReportPdf(
       const soWhatFit = fitTextToBox(item, soWhatWidth - 28, 62, 9.8, 8.6, 4);
       drawParagraph(soWhatFit.text, x + 14, 610, soWhatWidth - 28, soWhatFit.size, soWhatFit.lineGap);
     });
-
-    renderCommercialImpactPage();
 
     // Page 14: Priority Fix Stack
     addBasePage();

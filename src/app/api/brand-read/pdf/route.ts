@@ -637,7 +637,7 @@ async function renderBrandReadPdf(
   sectionBody("Current state", safeText(result.current), 120);
 
   const signalWidth = (contentWidth - 24) / 3;
-  const signalCardHeight = 152;
+  const signalCardHeight = 166;
   const signalY = Math.max(94, y2 - signalCardHeight - 14);
   [
     { label: "Strongest signal", body: safeText(result.strongestSignal), color: COLORS.accent },
@@ -647,7 +647,7 @@ async function renderBrandReadPdf(
     const x = PAGE.marginX + index * (signalWidth + 12);
     page2.drawRectangle({ x, y: signalY, width: signalWidth, height: signalCardHeight, color: COLORS.panel });
     drawLabel(page2, card.label, x + 16, signalY + signalCardHeight - 26, card.color);
-    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 74, 11.2, 8.8, 1.42);
+    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 92, 10.8, 8.6, 1.42);
     let cardY = signalY + signalCardHeight - 56;
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
