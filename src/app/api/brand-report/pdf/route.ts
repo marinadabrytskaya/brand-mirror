@@ -10,14 +10,55 @@ import { getSiteLocale } from "@/lib/site-i18n";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json().catch(() => ({}))) as {
+async function parseRequestBody(request: Request): Promise<{
+  url?: string;
+  language?: string;
+  report?: BrandReport;
+  readResult?: BrandReadResult;
+}> {
+  const contentType = request.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return (await request.json().catch(() => ({}))) as {
       url?: string;
       language?: string;
       report?: BrandReport;
       readResult?: BrandReadResult;
     };
+  }
+
+  if (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  ) {
+    const form = await request.formData().catch(() => null);
+    if (!form) return {};
+
+    const rawUrl = form.get("url");
+    const rawLanguage = form.get("language");
+    const rawReport = form.get("report");
+    const rawReadResult = form.get("readResult");
+
+    return {
+      url: typeof rawUrl === "string" ? rawUrl : undefined,
+      language: typeof rawLanguage === "string" ? rawLanguage : undefined,
+      report:
+        typeof rawReport === "string" && rawReport.trim()
+          ? (JSON.parse(rawReport) as BrandReport)
+          : undefined,
+      readResult:
+        typeof rawReadResult === "string" && rawReadResult.trim()
+          ? (JSON.parse(rawReadResult) as BrandReadResult)
+          : undefined,
+    };
+  }
+
+  return {};
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await parseRequestBody(request);
     const language = getSiteLocale(body.language);
     const report =
       body.report && body.report.url
