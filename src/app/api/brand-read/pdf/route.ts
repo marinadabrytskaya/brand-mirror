@@ -46,6 +46,41 @@ function scoreRows(result: BrandReadResult) {
   ] as const);
 }
 
+function buildDiagnosticTagline(result: BrandReadResult) {
+  const ranked = [...DIMENSIONS]
+    .map((dimension) => ({
+      key: dimension.key,
+      value: safeNumber(result[dimension.key]),
+    }))
+    .sort((a, b) => a.value - b.value);
+
+  const weakest = ranked.slice(0, 2).map((item) => item.key);
+  const hasAI = weakest.includes("toneCoherence");
+  const hasOffer = weakest.includes("offerSpecificity");
+  const hasPositioning = weakest.includes("positioningClarity");
+  const hasConversion = weakest.includes("conversionReadiness");
+
+  if (hasAI && hasOffer) {
+    return "The offer still lands too late. AI visibility is too thin to carry the story cleanly.";
+  }
+  if (hasOffer && hasPositioning) {
+    return "The positioning is there, but the offer still arrives too broad and too late.";
+  }
+  if (hasAI && hasPositioning) {
+    return "The brand has substance, but AI visibility and clarity are still too soft to repeat.";
+  }
+  if (hasOffer && hasConversion) {
+    return "The offer needs sharper edges before the next step can feel earned.";
+  }
+  if (hasAI) {
+    return "The brand has quality, but AI visibility is still too thin to repeat the promise clearly.";
+  }
+  if (hasOffer) {
+    return "The brand has value, but the offer still lands too vaguely and too late.";
+  }
+  return "The signal is there. The page still needs a sharper commercial read.";
+}
+
 function safeText(value: unknown, fallback = "") {
   if (typeof value === "string") return value;
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
@@ -450,7 +485,7 @@ async function renderBrandReadPdf(
 
   drawCenteredWrapped(
     page1,
-    safeText(result.tagline),
+    buildDiagnosticTagline(result),
     serif,
     16,
     centerX,
@@ -489,76 +524,27 @@ async function renderBrandReadPdf(
       color: rowBandColor,
     });
     const numeric = String(value);
+    const scoreRight = PAGE.width - PAGE.marginX;
+    const scoreX = scoreRight - 160;
+    const labelX = scoreRight - 92;
     page1.drawText(numeric, {
-      x: PAGE.width - PAGE.marginX - 74,
+      x: scoreX,
       y: rowY,
       size: 12,
       font: sansBold,
       color: rowBandColor,
     });
     page1.drawText(bandFor(value).label, {
-      x: PAGE.width - PAGE.marginX - 4 - sans.widthOfTextAtSize(bandFor(value).label, 10),
-      y: rowY,
-      size: 10,
+      x: labelX,
+      y: rowY + 1,
+      size: 9,
       font: sans,
       color: rowBandColor,
     });
   });
 
-  page1.drawRectangle({
-    x: PAGE.marginX,
-    y: 102,
-    width: contentWidth,
-    height: 48,
-    color: COLORS.panel,
-    borderColor: COLORS.line,
-    borderWidth: 1,
-  });
-  page1.drawText("BRANDMIRROR TERMINAL", {
-    x: PAGE.marginX + 14,
-    y: 126,
-    size: 9,
-    font: sans,
-    color: COLORS.faint,
-  });
-  page1.drawText("LIVE", {
-    x: PAGE.marginX + 177,
-    y: 126,
-    size: 9,
-    font: sansBold,
-    color: rgb(1, 0.35, 0.35),
-  });
-  page1.drawText(safeBrandName.toLowerCase(), {
-    x: PAGE.marginX + 14,
-    y: 114,
-    size: 11,
-    font: sansBold,
-    color: COLORS.text,
-  });
-  page1.drawText(nowLabel, {
-    x: PAGE.width - PAGE.marginX - 100,
-    y: 126,
-    size: 9,
-    font: sans,
-    color: COLORS.faint,
-  });
-  page1.drawText("$INNO", {
-    x: PAGE.width - PAGE.marginX - 114,
-    y: 114,
-    size: 10,
-    font: sans,
-    color: COLORS.faint,
-  });
-  page1.drawText(`+${safeNumber(result.posterScore).toFixed(1)} RDY`, {
-    x: PAGE.width - PAGE.marginX - 54,
-    y: 112,
-    size: 11,
-    font: sansBold,
-    color: COLORS.accent,
-  });
-
-  drawLabel(page1, "Indicator scale", PAGE.marginX, 70);
-  const badgeY = 12;
+  drawLabel(page1, "Indicator scale", PAGE.marginX, 112);
+  const badgeY = 54;
   const badgeGap = 8;
   const badgeWidth = (contentWidth - badgeGap * 4) / 5;
   const activeBand = safeText(result.scoreBand, posterBand.label).toUpperCase();
