@@ -1,6 +1,6 @@
 import {
   PDFDocument,
-  PDFHexString,
+  PDFString,
   StandardFonts,
   rgb,
   type PDFFont,
@@ -222,6 +222,7 @@ function addExternalLink(
   height: number,
   url: string,
 ) {
+  const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
   const link = page.doc.context.obj({
     Type: "Annot",
     Subtype: "Link",
@@ -230,7 +231,7 @@ function addExternalLink(
     A: {
       Type: "Action",
       S: "URI",
-      URI: PDFHexString.fromText(url),
+      URI: PDFString.of(normalizedUrl),
     },
   });
 
