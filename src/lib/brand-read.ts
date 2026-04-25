@@ -816,110 +816,76 @@ function determineTensionType(result: Pick<BrandReadResult, "positioningClarity"
   return "clarity gap";
 }
 
-function buildTagline(world: VisualWorld, tension: TensionType, result: Pick<BrandReadResult, "brandName" | "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness" | "strongestSignal" | "mainFriction" | "direction" | "summary">) {
-  // Kept for side-effect parity with the old buildTagline — variable unused in
-  // the lookup table below but retained so future line variants can branch on
-  // which axis is weakest.
-  void result;
+function buildTagline(
+  world: VisualWorld,
+  tension: TensionType,
+  result: Pick<
+    BrandReadResult,
+    | "brandName"
+    | "positioningClarity"
+    | "toneCoherence"
+    | "visualCredibility"
+    | "offerSpecificity"
+    | "conversionReadiness"
+    | "strongestSignal"
+    | "mainFriction"
+    | "direction"
+    | "summary"
+  >,
+) {
+  void world;
+  void tension;
 
-  const lines: Record<VisualWorld, Record<TensionType, string>> = {
-    hero: {
-      "visibility gap": "They have been moving for years. The signal still arrives late.",
-      "clarity gap": "The pressure is visible. The next victory still needs a name.",
-      "credibility gap": "The standard is felt first. The evidence still enters second.",
-      "courage gap": "They know how to move. The language still flinches.",
-    },
-    explorer: {
-      "visibility gap": "The horizon is calling. The route still hides in mist.",
-      "clarity gap": "The destination is felt. The map still stays folded.",
-      "credibility gap": "The journey feels real. The proof still travels light.",
-      "courage gap": "The freedom is there. The claim still walks softly.",
-    },
-    ruler: {
-      "visibility gap": "The standard is set. The room still has not named it.",
-      "clarity gap": "The room already persuades. The invitation still does not.",
-      "credibility gap": "The power is established. The proof still stays offstage.",
-      "courage gap": "The authority is real. The wording still bows too early.",
-    },
-    rebel: {
-      "visibility gap": "The break is visible. The new order still lacks a name.",
-      "clarity gap": "The refusal is sharp. The proposition still hides in smoke.",
-      "credibility gap": "The challenge lands. The evidence still arrives late.",
-      "courage gap": "The instinct is right. The copy still obeys old rules.",
-    },
-    innocent: {
-      "visibility gap": "The light is there. The value still waits offstage.",
-      "clarity gap": "The feeling stays pure. The message drifts too softly.",
-      "credibility gap": "The promise feels true. The reasons remain faint.",
-      "courage gap": "The trust is offered. The claim still whispers.",
-    },
-    lover: {
-      "visibility gap": "The pull is immediate. The value follows too quietly.",
-      "clarity gap": "The attraction is instant. The meaning still arrives late.",
-      "credibility gap": "The seduction works. The proof stays one step behind.",
-      "courage gap": "The intimacy is there. The message still hesitates.",
-    },
-    sage: {
-      "visibility gap": "The answer is there. The signal still hides in shadow.",
-      "clarity gap": "The intelligence is obvious. The offer still goes unnamed.",
-      "credibility gap": "The thinking is real. The evidence remains implied.",
-      "courage gap": "The knowledge is there. The language still softens the point.",
-    },
-    magician: {
-      "visibility gap": "The transformation is felt. The mechanism stays hidden.",
-      "clarity gap": "The shift is visible. The meaning still slips away.",
-      "credibility gap": "The spell works. The proof remains offstage.",
-      "courage gap": "The change is real. The wording still hides the reveal.",
-    },
-    jester: {
-      "visibility gap": "The spark is instant. The premise still dodges the spotlight.",
-      "clarity gap": "The wit lands. The point still arrives late.",
-      "credibility gap": "The angle is clever. The case still stays underbuilt.",
-      "courage gap": "The brand sees it. The copy still refuses to say it cleanly.",
-    },
-    caregiver: {
-      "visibility gap": "The care is evident. The offer still waits in the background.",
-      "clarity gap": "The warmth is there. The promise needs firmer shape.",
-      "credibility gap": "The reassurance lands. The proof still needs daylight.",
-      "courage gap": "The devotion is clear. The message still overprotects itself.",
-    },
-    creator: {
-      "visibility gap": "The craft is visible. The reason to choose it is not.",
-      "clarity gap": "The world is authored. The through-line still takes too long.",
-      "credibility gap": "The authorship is clear. The proof stays too quiet.",
-      "courage gap": "The vision is strong. The claim still edits itself down.",
-    },
-    everyman: {
-      "visibility gap": "The trust feels earned. The value still hides in plain sight.",
-      "clarity gap": "The offer feels familiar. The reason to choose it does not.",
-      "credibility gap": "The honesty lands. The proof still needs more weight.",
-      "courage gap": "The brand feels real. The message still plays too safe.",
-    },
-  };
+  const ranked = [
+    { key: "positioning" as const, score: result.positioningClarity },
+    { key: "aiVisibility" as const, score: result.toneCoherence },
+    { key: "visual" as const, score: result.visualCredibility },
+    { key: "offer" as const, score: result.offerSpecificity },
+    { key: "conversion" as const, score: result.conversionReadiness },
+  ].sort((a, b) => a.score - b.score);
 
-  const candidate = lines[world][tension];
-  const trimmed = candidate.split(/\s+/).slice(0, 12).join(" ");
-  if (trimmed.split(/\s+/).length >= 6) {
-    return trimmed;
+  const weakest = ranked.slice(0, 2).map((item) => item.key);
+  const hasAI = weakest.includes("aiVisibility");
+  const hasOffer = weakest.includes("offer");
+  const hasPositioning = weakest.includes("positioning");
+  const hasConversion = weakest.includes("conversion");
+  const hasVisual = weakest.includes("visual");
+
+  if (hasAI && hasOffer) {
+    return "The offer still lands too late. AI visibility is too thin to repeat it cleanly.";
+  }
+  if (hasOffer && hasPositioning) {
+    return "The offer is still too broad. The page explains capability before it names the promise.";
+  }
+  if (hasAI && hasPositioning) {
+    return "The brand has substance, but AI visibility and positioning are still too soft to repeat cleanly.";
+  }
+  if (hasAI && hasConversion) {
+    return "AI visibility is too thin, and the next step still is not earned clearly enough.";
+  }
+  if (hasOffer && hasConversion) {
+    return "The offer still lands too vaguely, so the next step feels less earned than it should.";
+  }
+  if (hasVisual && hasOffer) {
+    return "The visual standard is there. The offer still arrives too late and too vaguely.";
+  }
+  if (hasAI) {
+    return "The brand exists. AI visibility is still too thin to describe and repeat the offer clearly.";
+  }
+  if (hasOffer) {
+    return "The value is there. The offer still needs firmer edges and a cleaner landing.";
+  }
+  if (hasPositioning) {
+    return "The capability is real. The positioning still takes too long to name the offer.";
+  }
+  if (hasConversion) {
+    return "The interest is there. The page still has not earned the next step cleanly.";
+  }
+  if (hasVisual) {
+    return "The standard is visible. The proof and specificity still need to catch up.";
   }
 
-  // Compact fallback lines keyed by which of three *broad* buckets is weakest:
-  //   clarity       = positioning or offer
-  //   credibility   = visual
-  //   cohesion      = tone or conversion
-  const broadLows = {
-    clarity: Math.min(result.positioningClarity, result.offerSpecificity),
-    credibility: result.visualCredibility,
-    cohesion: Math.min(result.toneCoherence, result.conversionReadiness),
-  };
-  const lowMetric = (Object.entries(broadLows).sort((a, b) => a[1] - b[1])[0]?.[0] ??
-    "clarity") as "clarity" | "credibility" | "cohesion";
-
-  return lowMetric === "clarity"
-    ? "The quality is visible. The offer still needs a sharper line."
-    : lowMetric === "credibility"
-      ? "The promise is here. The proof has not fully arrived."
-      : "The impression is strong. The through-line still drifts.";
+  return "The signal is there. The page still needs a sharper commercial read.";
 }
 
 function computePosterScore(result: Pick<BrandReadResult, "positioningClarity" | "toneCoherence" | "visualCredibility" | "offerSpecificity" | "conversionReadiness">) {

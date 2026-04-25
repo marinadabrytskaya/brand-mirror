@@ -385,24 +385,40 @@ function buildSignalTaglineFromScores(
   const hasOffer = weakest.includes("offer specificity");
   const hasPositioning = weakest.includes("positioning clarity");
   const hasConversion = weakest.includes("conversion readiness");
+  const hasVisual = weakest.includes("visual credibility");
 
   if (hasAI && hasOffer) {
-    return "The offer still lands too late. AI visibility is too thin to carry the story cleanly.";
+    return "The offer still lands too late. AI visibility is too thin to repeat it cleanly.";
   }
   if (hasOffer && hasPositioning) {
-    return "The positioning is there, but the offer still arrives too broad and too late.";
+    return "The offer is still too broad. The page explains capability before it names the promise.";
   }
   if (hasAI && hasPositioning) {
-    return "The brand has substance, but AI visibility and clarity are still too soft to repeat.";
+    return "The brand has substance, but AI visibility and positioning are still too soft to repeat cleanly.";
+  }
+  if (hasAI && hasConversion) {
+    return "AI visibility is too thin, and the next step still is not earned clearly enough.";
   }
   if (hasOffer && hasConversion) {
-    return "The offer needs sharper edges before the next step can feel earned.";
+    return "The offer still lands too vaguely, so the next step feels less earned than it should.";
+  }
+  if (hasVisual && hasOffer) {
+    return "The visual standard is there. The offer still arrives too late and too vaguely.";
   }
   if (hasAI) {
-    return "The brand has quality, but AI visibility is still too thin to repeat the promise clearly.";
+    return "The brand exists. AI visibility is still too thin to describe and repeat the offer clearly.";
   }
   if (hasOffer) {
-    return "The brand has value, but the offer still lands too vaguely and too late.";
+    return "The value is there. The offer still needs firmer edges and a cleaner landing.";
+  }
+  if (hasPositioning) {
+    return "The capability is real. The positioning still takes too long to name the offer.";
+  }
+  if (hasConversion) {
+    return "The interest is there. The page still has not earned the next step cleanly.";
+  }
+  if (hasVisual) {
+    return "The standard is visible. The proof and specificity still need to catch up.";
   }
 
   return fallback;
