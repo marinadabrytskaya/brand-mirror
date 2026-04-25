@@ -1135,7 +1135,7 @@ function ScannerReadout({
                 key={row.label}
                 className="grid items-center gap-4 py-3"
                 style={{
-                  gridTemplateColumns: "minmax(128px, 160px) minmax(0, 1fr) 168px",
+                  gridTemplateColumns: "minmax(128px, 156px) minmax(0, 1fr) 196px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
@@ -1169,18 +1169,19 @@ function ScannerReadout({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "48px minmax(92px, 1fr)",
-                    alignItems: "baseline",
-                    columnGap: 12,
+                    gridTemplateColumns: "56px minmax(116px, 1fr)",
+                    alignItems: "center",
+                    columnGap: 16,
                     justifyContent: "end",
                   }}
                 >
                     <span
                       style={{
-                        fontSize: "20px",
+                        fontSize: "18px",
                         fontWeight: 500,
                         color: rowBand.color,
                         textAlign: "right",
+                        lineHeight: 1,
                       }}
                     >
                       {row.value}
@@ -1188,11 +1189,12 @@ function ScannerReadout({
                     <span
                       style={{
                         fontFamily: "var(--font-mono), ui-monospace, monospace",
-                        fontSize: "8.5px",
-                        letterSpacing: "0.18em",
+                        fontSize: "8px",
+                        letterSpacing: "0.22em",
                         color: rowBand.color,
-                        textAlign: "right",
+                        textAlign: "left",
                         whiteSpace: "nowrap",
+                        lineHeight: 1.1,
                       }}
                     >
                       {rowBand.label}
