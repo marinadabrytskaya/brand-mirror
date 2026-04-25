@@ -44,15 +44,39 @@ function productionCode(brandName: string, score: number): string {
   return `BM-${abbr}-${year}-${serial}`;
 }
 
-// Stock-ticker-style abbreviation — "$NKE", "$NOTION" clipped to 4 chars.
-function tickerSymbol(brandName: string): string {
-  const first = (brandName || "BRAND").trim().split(/\s+/)[0] ?? "BRD";
-  const abbr = first
-    .toUpperCase()
-    .replace(/[^A-Z]/g, "")
-    .padEnd(4, "X")
-    .slice(0, 4);
-  return `$${abbr}`;
+function buildDiagnosticTagline(result: BrandReadResult): string {
+  const ranked = [...DIMENSIONS]
+    .map((dimension) => ({
+      key: dimension.key,
+      value: Number(result[dimension.key] ?? 0),
+    }))
+    .sort((a, b) => a.value - b.value);
+
+  const weakest = ranked.slice(0, 2).map((item) => item.key);
+  const hasAI = weakest.includes("toneCoherence");
+  const hasOffer = weakest.includes("offerSpecificity");
+  const hasPositioning = weakest.includes("positioningClarity");
+  const hasConversion = weakest.includes("conversionReadiness");
+
+  if (hasAI && hasOffer) {
+    return "The offer still lands too late. AI visibility is too thin to carry the story cleanly.";
+  }
+  if (hasOffer && hasPositioning) {
+    return "The positioning is there, but the offer still arrives too broad and too late.";
+  }
+  if (hasAI && hasPositioning) {
+    return "The brand has substance, but AI visibility and clarity are still too soft to repeat.";
+  }
+  if (hasOffer && hasConversion) {
+    return "The offer needs sharper edges before the next step can feel earned.";
+  }
+  if (hasAI) {
+    return "The brand has quality, but AI visibility is still too thin to repeat the promise clearly.";
+  }
+  if (hasOffer) {
+    return "The brand has value, but the offer still lands too vaguely and too late.";
+  }
+  return result.tagline || "The signal is there. The page still needs a sharper commercial read.";
 }
 
 // ---------------------------------------------------------------------------
@@ -216,7 +240,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   }
 
   const prodCode = productionCode(result.brandName, result.posterScore);
-  const ticker = tickerSymbol(result.brandName);
   const displayHost = (() => {
     try {
       if (currentUrl) return new URL(currentUrl).hostname.replace(/^www\./, "");
@@ -536,8 +559,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             host={displayHost}
             posterScore={result.posterScore}
             band={posterBand}
-            tagline={result.tagline}
-            ticker={ticker}
+            tagline={buildDiagnosticTagline(result)}
             clock={clock}
             scoreRows={scoreRows}
             isPending={isPending}
@@ -944,7 +966,6 @@ function ScannerReadout({
   posterScore,
   band,
   tagline,
-  ticker,
   clock,
   scoreRows,
   isPending,
@@ -955,7 +976,6 @@ function ScannerReadout({
   posterScore: number;
   band: Band;
   tagline: string;
-  ticker: string;
   clock: string;
   scoreRows: Array<{ label: string; value: number }>;
   isPending: boolean;
@@ -1115,118 +1135,72 @@ function ScannerReadout({
                 key={row.label}
                 className="grid items-center gap-4 py-3"
                 style={{
-                  gridTemplateColumns: "1fr auto",
+                  gridTemplateColumns: "minmax(128px, 160px) minmax(0, 1fr) 168px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
                       : `0.5px solid ${COLOR.lineSoft}`,
                 }}
               >
-                <div className="min-w-0">
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "10px",
-                      letterSpacing: "0.24em",
-                      color: "rgba(237,237,242,0.55)",
-                    }}
-                  >
-                    {row.label}
-                  </div>
-                  <div
-                    className="mt-2 overflow-hidden rounded-full"
-                    style={{ height: 3, background: "rgba(255,255,255,0.07)" }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${Math.max(0, Math.min(100, row.value))}%`,
-                        background: rowBand.color,
-                        borderRadius: 999,
-                        transition: "width 700ms ease, background 700ms ease",
-                      }}
-                    />
-                  </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontSize: "10px",
+                    letterSpacing: "0.24em",
+                    color: "rgba(237,237,242,0.55)",
+                  }}
+                >
+                  {row.label}
                 </div>
                 <div
-                  className="flex items-baseline gap-3"
-                  style={{ minWidth: 130, justifyContent: "flex-end" }}
+                  className="overflow-hidden rounded-full"
+                  style={{ height: 3, background: "rgba(255,255,255,0.07)" }}
                 >
-                  <span
+                  <div
                     style={{
-                      fontSize: "22px",
-                      fontWeight: 500,
-                      color: rowBand.color,
+                      height: "100%",
+                      width: `${Math.max(0, Math.min(100, row.value))}%`,
+                      background: rowBand.color,
+                      borderRadius: 999,
+                      transition: "width 700ms ease, background 700ms ease",
                     }}
-                  >
-                    {row.value}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "9.5px",
-                      letterSpacing: "0.22em",
-                      color: rowBand.color,
-                      minWidth: 80,
-                      textAlign: "right",
-                    }}
-                  >
-                    {rowBand.label}
-                  </span>
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "48px minmax(92px, 1fr)",
+                    alignItems: "baseline",
+                    columnGap: 12,
+                    justifyContent: "end",
+                  }}
+                >
+                    <span
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: 500,
+                        color: rowBand.color,
+                        textAlign: "right",
+                      }}
+                    >
+                      {row.value}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        fontSize: "8.5px",
+                        letterSpacing: "0.18em",
+                        color: rowBand.color,
+                        textAlign: "right",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {rowBand.label}
+                    </span>
                 </div>
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* Ticker card */}
-      <div
-        className="mt-6 rounded-lg border p-3"
-        style={{ borderColor: COLOR.line }}
-      >
-        <div
-          className="flex items-center justify-between gap-3"
-          style={{
-            fontFamily: "var(--font-mono), ui-monospace, monospace",
-            fontSize: "10.5px",
-            letterSpacing: "0.2em",
-            color: "rgba(237,237,242,0.6)",
-            textTransform: "uppercase",
-          }}
-        >
-          <span className="flex flex-wrap items-center gap-2">
-            BRANDMIRROR&nbsp;TERMINAL
-            <LiveDot />
-            LIVE
-          </span>
-          <span suppressHydrationWarning style={{ whiteSpace: "nowrap" }}>
-            {clock}
-          </span>
-        </div>
-        <div className="mt-2 flex items-baseline justify-between gap-3">
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
-              color: COLOR.text,
-            }}
-          >
-            {(brandName || "brand").toLowerCase()}
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--font-mono), ui-monospace, monospace",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            <span style={{ color: "rgba(237,237,242,0.55)" }}>
-              {ticker}&nbsp;
-            </span>
-            <span style={{ color: band.color }}>+{pct}.0 RDY</span>
-          </span>
         </div>
       </div>
 

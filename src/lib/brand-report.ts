@@ -375,6 +375,39 @@ function truncate(value = "", maxLength = 300) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
 }
 
+function buildSignalTaglineFromScores(
+  scores: Array<{ label: string; score: number }>,
+  fallback: string,
+) {
+  const ranked = [...scores].sort((a, b) => a.score - b.score);
+  const weakest = ranked.slice(0, 2).map((item) => item.label.toLowerCase());
+  const hasAI = weakest.includes("ai visibility");
+  const hasOffer = weakest.includes("offer specificity");
+  const hasPositioning = weakest.includes("positioning clarity");
+  const hasConversion = weakest.includes("conversion readiness");
+
+  if (hasAI && hasOffer) {
+    return "The offer still lands too late. AI visibility is too thin to carry the story cleanly.";
+  }
+  if (hasOffer && hasPositioning) {
+    return "The positioning is there, but the offer still arrives too broad and too late.";
+  }
+  if (hasAI && hasPositioning) {
+    return "The brand has substance, but AI visibility and clarity are still too soft to repeat.";
+  }
+  if (hasOffer && hasConversion) {
+    return "The offer needs sharper edges before the next step can feel earned.";
+  }
+  if (hasAI) {
+    return "The brand has quality, but AI visibility is still too thin to repeat the promise clearly.";
+  }
+  if (hasOffer) {
+    return "The brand has value, but the offer still lands too vaguely and too late.";
+  }
+
+  return fallback;
+}
+
 function average(values: number[]) {
   return values.length
     ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
@@ -4693,7 +4726,11 @@ export async function generateBrandReportPdf(
     drawCenteredText(String(overallScore), "Helvetica", 42, centerX, 286, bandColor(overallScore));
     drawCenteredText("/ 100", "Helvetica", 10, centerX, 260, colors.mutedOnDark);
     drawCenteredText(getBandForScore(overallScore), "Helvetica", 11, centerX, 226, bandColor(overallScore));
-    const liveTagline = fitTextToBox(truncate(report.tagline || "", 120), contentWidth - 160, 46, 16, 13.2, 4, "Times-Roman");
+    const liveScanTagline = buildSignalTaglineFromScores(
+      scorePages.map((item) => ({ label: item.label, score: item.score.score })),
+      truncate(report.tagline || "", 120),
+    );
+    const liveTagline = fitTextToBox(liveScanTagline, contentWidth - 160, 46, 16, 13.2, 4, "Times-Roman");
     doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 80, 194, {
       width: contentWidth - 160,
       align: "center",
@@ -4709,42 +4746,23 @@ export async function generateBrandReportPdf(
       });
       doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390, rowY + 18).lineWidth(4).strokeColor(colors.rule).stroke();
       doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390 * (item.score.score / 100), rowY + 18).lineWidth(4).strokeColor(scoreColor).stroke();
-      doc.fillColor(scoreColor).font("Helvetica").fontSize(22).text(String(item.score.score), contentLeft + 438, rowY + 2, {
-        width: 42,
+      doc.fillColor(scoreColor).font("Helvetica").fontSize(19.5).text(String(item.score.score), contentRight - 148, rowY + 2, {
+        width: 40,
         align: "right",
       });
-      doc.fillColor(scoreColor).font("Helvetica").fontSize(9.2).text(
+      doc.fillColor(scoreColor).font("Helvetica").fontSize(8.4).text(
         getBandForScore(item.score.score),
-        contentRight - 92,
+        contentRight - 98,
         rowY + 4,
         {
-          width: 92,
+          width: 98,
           align: "right",
-          characterSpacing: 1.2,
+          characterSpacing: 1,
         },
       );
       doc.moveTo(contentLeft, rowY + 34).lineTo(contentRight, rowY + 34).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
     });
-    drawPanel(contentLeft, 644, contentWidth, 48, colors.panelSoft);
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text("BRANDMIRROR TERMINAL", contentLeft + 18, 667, {
-      characterSpacing: 2.2,
-    });
-    doc.fillColor("#FF5A5A").font("Helvetica").fontSize(10).text("LIVE", contentLeft + 202, 667, {
-      characterSpacing: 2.2,
-    });
-    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(12).text(bodyCopy(report.brandName).toLowerCase(), contentLeft + 18, 651, {
-      width: 320,
-    });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.5).text(`${today}  GMT+2`, contentRight - 122, 667, {
-      width: 122,
-      align: "right",
-      characterSpacing: 2,
-    });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(11).text("$INNO", contentRight - 126, 651);
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(14).text(`+${overallScore.toFixed(1)} RDY`, contentRight - 88, 647, {
-      characterSpacing: 1.2,
-    });
-    drawSectionTag("INDICATOR SCALE", contentLeft, 712, colors.mutedOnDark);
+    drawSectionTag("INDICATOR SCALE", contentLeft, 666, colors.mutedOnDark);
     [
       { label: "0-30", name: "FLATLINING", color: "#B65C5C" },
       { label: "30-50", name: "FRAGILE", color: colors.terracotta },
@@ -4754,13 +4772,13 @@ export async function generateBrandReportPdf(
     ].forEach((item, index) => {
       const pillW = (contentWidth - 32) / 5;
       const x = contentLeft + index * (pillW + 8);
-      drawPanel(x, 724, pillW, 36, item.color === colors.amber ? colors.panelSoft : colors.panel);
-      doc.fillColor(item.color).font("Helvetica").fontSize(10).text(item.label, x, 740, {
+      drawPanel(x, 678, pillW, 36, item.color === colors.amber ? colors.panelSoft : colors.panel);
+      doc.fillColor(item.color).font("Helvetica").fontSize(10).text(item.label, x, 694, {
         width: pillW,
         align: "center",
         characterSpacing: 1,
       });
-      doc.font("Helvetica").fontSize(8.5).text(item.name, x, 732, {
+      doc.font("Helvetica").fontSize(8.5).text(item.name, x, 686, {
         width: pillW,
         align: "center",
         characterSpacing: 1.4,
