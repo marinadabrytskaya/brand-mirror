@@ -3587,10 +3587,10 @@ export async function generateBrandReportPdf(
         methodologyLabel: "HOW BRANDMIRROR SCORES YOUR BRAND",
         methodologyTitle: "What each score is measuring and why the numbers are there",
         roiLabel: "COMMERCIAL IMPACT",
-        roiTitle: "What current visibility can realistically unlock across three commercial scenarios",
+        roiTitle: "What the current signal likely supports today — and what changes after the fixes land",
         roiIntro:
-          "Based on current brand scores, category context, and external visibility signals, these scenarios show a directional view of what clearer positioning, stronger proof, and cleaner conversion could unlock.",
-        roiRecommended: "BEST-FIT BASELINE",
+          "Based on external visibility signals and the current BrandMirror scores, this page shows where the brand likely stands now, what demand the site can probably support today, and what becomes more realistic after the highest-leverage fixes are implemented.",
+        roiRecommended: "CURRENT EXTERNAL SIGNAL",
         roiConservative: "LOW VISIBILITY",
         roiRealistic: "MODERATE VISIBILITY",
         roiOptimistic: "STRONGER VISIBILITY",
@@ -3711,10 +3711,10 @@ export async function generateBrandReportPdf(
         methodologyLabel: "CÓMO BRANDMIRROR PUNTÚA TU MARCA",
         methodologyTitle: "Qué mide cada score y por qué esos números importan",
         roiLabel: "IMPACTO COMERCIAL",
-        roiTitle: "Qué puede desbloquear la visibilidad actual en tres escenarios de demanda",
+        roiTitle: "Qué sostiene probablemente la señal actual hoy y qué cambia si los fixes aterrizan",
         roiIntro:
-          "Basado en los scores actuales, el contexto de la categoría y señales externas de visibilidad, estos escenarios muestran una lectura direccional de lo que podrían desbloquear una mejor claridad, más prueba y una conversión más limpia.",
-        roiRecommended: "BASE MÁS CREÍBLE",
+          "Basado en señales externas de visibilidad y en los scores actuales de BrandMirror, esta página muestra dónde probablemente está la marca hoy, qué demanda puede sostener el sitio ahora y qué se vuelve más realista después de aplicar los fixes de mayor palanca.",
+        roiRecommended: "SEÑAL EXTERNA ACTUAL",
         roiConservative: "VISIBILIDAD BAJA",
         roiRealistic: "VISIBILIDAD MEDIA",
         roiOptimistic: "VISIBILIDAD MÁS FUERTE",
@@ -3835,10 +3835,10 @@ export async function generateBrandReportPdf(
         methodologyLabel: "КАК BRANDMIRROR ОЦЕНИВАЕТ БРЕНД",
         methodologyTitle: "Что измеряет каждый score и почему этим цифрам можно доверять",
         roiLabel: "КОММЕРЧЕСКИЙ ЭФФЕКТ",
-        roiTitle: "Что текущая видимость может realistically unlock в трёх сценариях спроса",
+        roiTitle: "Что текущий сигнал, скорее всего, поддерживает сейчас — и что меняется после фиксов",
         roiIntro:
-          "На основе текущих scores бренда, контекста категории и внешних сигналов видимости эти сценарии дают направленную оценку того, что могут открыть более ясный positioning, stronger proof и cleaner conversion flow.",
-        roiRecommended: "САМЫЙ ПРАВДОПОДОБНЫЙ БАЗОВЫЙ СЦЕНАРИЙ",
+          "На основе внешних сигналов видимости и текущих BrandMirror scores эта страница показывает, где бренд, скорее всего, находится сейчас, какой спрос сайт способен удерживать сегодня и что становится реалистичнее после внедрения самых сильных фиксов.",
+        roiRecommended: "ТЕКУЩИЙ ВНЕШНИЙ СИГНАЛ",
         roiConservative: "НИЗКАЯ ВИДИМОСТЬ",
         roiRealistic: "СРЕДНЯЯ ВИДИМОСТЬ",
         roiOptimistic: "БОЛЕЕ СИЛЬНАЯ ВИДИМОСТЬ",
@@ -4535,126 +4535,42 @@ export async function generateBrandReportPdf(
 
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
+    const currentSignalSummary =
+      scoreAverage < 65
+        ? "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand."
+        : scoreAverage < 78
+          ? "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough."
+          : "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.";
+    const currentTrafficBand =
+      scoreAverage < 65
+        ? "Low hundreds / month"
+        : scoreAverage < 78
+          ? "Low-to-mid hundreds / month"
+          : "Mid hundreds / month";
+    const currentInquiryBand =
+      scoreAverage < 65 ? "1-3 serious inquiries" : scoreAverage < 78 ? "2-4 serious inquiries" : "3-5 serious inquiries";
+    const afterFixTrafficBand =
+      scoreAverage < 65
+        ? "Mid hundreds / month"
+        : scoreAverage < 78
+          ? "Mid hundreds to low thousands / month"
+          : "High hundreds to low thousands / month";
+    const afterFixInquiryBand =
+      scoreAverage < 65 ? "2-5 serious inquiries" : scoreAverage < 78 ? "4-7 serious inquiries" : "5-9 serious inquiries";
+    const afterFixImpactBand =
+      scoreAverage < 65
+        ? "+8% to +14% more qualified demand"
+        : scoreAverage < 78
+          ? "+12% to +20% more qualified demand"
+          : "+16% to +24% more qualified demand";
+    const impactReason =
+      report.priorityFixes.fixNow[0] ||
+      "Sharper positioning, a named offer, stronger proof placement, and cleaner AI visibility make the homepage easier to understand and easier to choose.";
     const visibilityConfidence = report.competitiveLandscape?.competitors?.length
       ? "Moderate"
       : websiteImageSource
         ? "Low to moderate"
         : "Low";
-    const recommendationReason =
-      scoreAverage < 65
-        ? "Right now the brand likely leaks too much clarity to convert weak demand into steady qualified conversations."
-        : scoreAverage < 78
-          ? "The current signal is credible, but the upside only becomes real if the offer, proof, and CTA start working together."
-          : "The strongest upside becomes believable only if the sharpened message gets repeated beyond the homepage and the AI layer stops guessing.";
-    const recommendedScenario =
-      scoreAverage < 65 ? "Current signal" : scoreAverage < 78 ? "After core fixes" : "Stronger upside";
-    const roiScenarios = scoreAverage < 65
-      ? [
-          {
-            label: "CURRENT SIGNAL",
-            description: "What the site likely supports today",
-            visitors: "Low hundreds / month",
-            qualifiedVisits: "Small flow of qualified visits",
-            inquiries: "1-3 serious inquiries",
-            demandLift: "Baseline demand is still fragile",
-            revenueRange: "Fix clarity before modeling revenue",
-            confidence: visibilityConfidence,
-            bestUse: "Current state",
-          },
-          {
-            label: "AFTER CORE FIXES",
-            description: "If the homepage becomes easier to understand",
-            visitors: "Mid hundreds / month",
-            qualifiedVisits: "Cleaner qualified demand",
-            inquiries: "2-5 serious inquiries",
-            demandLift: "+8% to +14% more serious demand",
-            revenueRange: "Translate with actual close-rate data",
-            confidence: visibilityConfidence,
-            bestUse: "Likely improvement",
-          },
-          {
-            label: "STRONGER UPSIDE",
-            description: "If the sharpened message scales beyond the homepage",
-            visitors: "High hundreds / month",
-            qualifiedVisits: "Stronger demand capture",
-            inquiries: "4-7 serious inquiries",
-            demandLift: "+14% to +22% more serious demand",
-            revenueRange: "Read as upside, not a guarantee",
-            confidence: "Low to moderate",
-            bestUse: "Upside case",
-          },
-        ]
-      : scoreAverage < 78
-        ? [
-            {
-              label: "CURRENT SIGNAL",
-              description: "What the site likely supports today",
-              visitors: "Low hundreds / month",
-              qualifiedVisits: "A few qualified visits",
-              inquiries: "2-4 serious inquiries",
-              demandLift: "Demand still leaks before trust fully forms",
-              revenueRange: "Use as current-state baseline",
-              confidence: visibilityConfidence,
-              bestUse: "Current state",
-            },
-            {
-              label: "AFTER CORE FIXES",
-              description: "If offer, proof, and CTA get clearer",
-              visitors: "Mid hundreds / month",
-              qualifiedVisits: "A modest qualified flow",
-              inquiries: "3-6 serious inquiries",
-              demandLift: "+10% to +18% more serious demand",
-              revenueRange: "Translate with actual close-rate data",
-              confidence: visibilityConfidence,
-              bestUse: "Likely improvement",
-            },
-            {
-              label: "STRONGER UPSIDE",
-              description: "If the sharpened signal repeats beyond the homepage",
-              visitors: "Up to low thousands / month",
-              qualifiedVisits: "A stronger qualified flow",
-              inquiries: "5-8 serious inquiries",
-              demandLift: "+18% to +26% more serious demand",
-              revenueRange: "Read as upside, not a guarantee",
-              confidence: "Low to moderate",
-              bestUse: "Upside case",
-            },
-          ]
-        : [
-            {
-              label: "CURRENT SIGNAL",
-              description: "What the site likely supports today",
-              visitors: "Mid hundreds / month",
-              qualifiedVisits: "A modest qualified flow",
-              inquiries: "3-5 serious inquiries",
-              demandLift: "The page already holds some demand",
-              revenueRange: "Use as current-state baseline",
-              confidence: visibilityConfidence,
-              bestUse: "Current state",
-            },
-            {
-              label: "AFTER CORE FIXES",
-              description: "If the strongest friction points are corrected",
-              visitors: "High hundreds / month",
-              qualifiedVisits: "A stronger qualified flow",
-              inquiries: "4-7 serious inquiries",
-              demandLift: "+12% to +20% more serious demand",
-              revenueRange: "Translate with actual close-rate data",
-              confidence: visibilityConfidence,
-              bestUse: "Likely improvement",
-            },
-            {
-              label: "STRONGER UPSIDE",
-              description: "If the message and proof system scale cleanly",
-              visitors: "Low thousands / month",
-              qualifiedVisits: "A strong qualified flow",
-              inquiries: "6-10 serious inquiries",
-              demandLift: "+20% to +30% more serious demand",
-              revenueRange: "Read as upside, not a guarantee",
-              confidence: "Moderate",
-              bestUse: "Upside case",
-            },
-          ];
 
     const displayUrl = report.url.replace(/^https?:\/\//, "");
 
@@ -4852,45 +4768,63 @@ export async function generateBrandReportPdf(
       });
       drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 18, 178), contentWidth - 20, 10.8, 6);
       drawPanel(contentLeft, 214, contentWidth, 78, colors.panelSoft);
-      drawSectionTag("BEST-FIT BASELINE", contentLeft + 18, 236, colors.textMuted);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(`${recommendedScenario}`, contentLeft + 18, 252);
-      drawParagraph(recommendationReason, contentLeft + 210, 236, contentWidth - 228, 9.4, 4);
+      drawSectionTag(pdfCopy.roiRecommended, contentLeft + 18, 236, colors.textMuted);
+      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text("Where the brand likely stands today", contentLeft + 18, 252);
+      drawParagraph(currentSignalSummary, contentLeft + 214, 236, contentWidth - 232, 9.4, 4);
 
-      const scenarioWidth = (contentWidth - 24) / 3;
-      const scenarioTop = 314;
-      const scenarioHeight = 176;
-      roiScenarios.forEach((scenario, idx) => {
-        const x = contentLeft + idx * (scenarioWidth + 12);
-        drawPanel(x, scenarioTop, scenarioWidth, scenarioHeight, colors.panelSoft);
-        drawSectionTag(scenario.label, x + 16, scenarioTop + 18, idx === 0 ? colors.terracotta : idx === 1 ? colors.amber : colors.mint);
-        doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8).text(scenario.description, x + 16, scenarioTop + 36, {
-          characterSpacing: 0.8,
-        });
-        const items = [
-          { label: pdfCopy.roiVisitors, value: scenario.visitors },
-          { label: pdfCopy.roiCurrentRevenue, value: scenario.inquiries },
-          { label: "WHAT CHANGES IF THE FIXES LAND", value: scenario.demandLift },
-        ];
-        let itemY = scenarioTop + 62;
-        items.forEach((item) => {
-          drawSectionTag(item.label, x + 16, itemY, colors.textMuted);
-          itemY = drawParagraph(item.value, x + 16, itemY + 15, scenarioWidth - 32, 8.8, 4) + 8;
+      const blockTop = 314;
+      const blockWidth = (contentWidth - 24) / 3;
+      const blockHeight = 164;
+      const impactBlocks = [
+        {
+          label: "CURRENT VISIBILITY",
+          accent: colors.terracotta,
+          body: [
+            { label: "What external signals suggest today", value: currentTrafficBand },
+            { label: "Likely serious demand today", value: currentInquiryBand },
+          ],
+        },
+        {
+          label: "AFTER THE CORE FIXES",
+          accent: colors.amber,
+          body: [
+            { label: "Likely traffic once the message gets clearer", value: afterFixTrafficBand },
+            { label: "Likely serious demand after the fixes", value: afterFixInquiryBand },
+          ],
+        },
+        {
+          label: "COMMERCIAL IMPACT",
+          accent: colors.mint,
+          body: [
+            { label: "What changes if the fixes land", value: afterFixImpactBand },
+            { label: "Why that shift becomes more realistic", value: impactReason },
+          ],
+        },
+      ];
+      impactBlocks.forEach((block, idx) => {
+        const x = contentLeft + idx * (blockWidth + 12);
+        drawPanel(x, blockTop, blockWidth, blockHeight, colors.panelSoft);
+        drawSectionTag(block.label, x + 16, blockTop + 18, block.accent);
+        let y = blockTop + 44;
+        block.body.forEach((item, itemIndex) => {
+          drawSectionTag(item.label, x + 16, y, colors.textMuted);
+          y = drawParagraph(item.value, x + 16, y + 15, blockWidth - 32, itemIndex === 1 ? 8.6 : 9.2, 4) + 10;
         });
       });
 
-      const confidenceY = scenarioTop + scenarioHeight + 18;
-      drawPanel(contentLeft, confidenceY, contentWidth, 54, colors.panelSoft);
-      drawSectionTag("WHAT THIS MEANS", contentLeft + 18, confidenceY + 20, colors.textMuted);
+      const baselineY = blockTop + blockHeight + 18;
+      drawPanel(contentLeft, baselineY, contentWidth, 58, colors.panelSoft);
+      drawSectionTag("HOW TO READ THIS", contentLeft + 18, baselineY + 18, colors.textMuted);
       drawParagraph(
-        `Current signal means where the homepage is likely landing today. The stronger bands show what changes if the top fixes in this report are implemented cleanly and repeated across the brand.`,
-        contentLeft + 156,
-        confidenceY + 16,
-        contentWidth - 174,
-        8.8,
+        `This is not first-party analytics. It is a directional baseline built from external visibility signals and the current BrandMirror diagnosis. Read it as: where the brand likely is now, and what becomes more realistic once the priority fixes are in place.`,
+        contentLeft + 154,
+        baselineY + 14,
+        contentWidth - 172,
+        8.7,
         4,
       );
 
-      const competitiveY = confidenceY + 70;
+      const competitiveY = baselineY + 74;
       const competitiveH = 60;
       if (report.competitiveLandscape?.competitors?.length) {
         drawPanel(contentLeft, competitiveY, contentWidth, competitiveH, colors.panelSoft);
