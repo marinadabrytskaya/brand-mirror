@@ -1806,7 +1806,24 @@ export async function generateBrandReportPreviewFromRead(
   read: BrandReadResult,
 ) {
   const normalized = normalizeUrl(url) || url;
-  return buildFallbackReport(normalized, read);
+  const fallback = buildFallbackReport(normalized, read);
+  const websiteCapture = await captureWebsiteSurface(normalized).catch(() => null);
+
+  if (websiteCapture) {
+    fallback.surfaceCaptures = [
+      {
+        label: "Live website capture",
+        kind: "website",
+        imageUrl: websiteCapture.dataUrl,
+        href: normalized,
+        captureMethod: "browser",
+        note: `Above-the-fold browser capture of the homepage at ${websiteCapture.viewport.width}px, used as the primary visual evidence layer in the report.`,
+      },
+      ...fallback.surfaceCaptures.slice(1),
+    ];
+  }
+
+  return fallback;
 }
 
 async function identifyCompetitors(
@@ -4467,47 +4484,6 @@ export async function generateBrandReportPdf(
       3,
     );
 
-    const mapGenreToCategory = (genre: string) => {
-      const lower = bodyCopy(genre).toLowerCase();
-      if (lower.includes("saas") || lower.includes("software")) return "B2B SaaS";
-      if (lower.includes("e-commerce") || lower.includes("retail") || lower.includes("shop")) return "E-commerce";
-      if (lower.includes("agency") || lower.includes("studio")) return "Agency";
-      return "B2B Services";
-    };
-
-    const getIndustryBenchmarks = (category: string) => {
-      const map: Record<string, { avgTraffic: number; avgBounce: number; avgConversion: number; avgAov: number }> = {
-        "B2B Services": { avgTraffic: 3200, avgBounce: 58, avgConversion: 1.2, avgAov: 2400 },
-        "B2B SaaS": { avgTraffic: 5200, avgBounce: 54, avgConversion: 1.4, avgAov: 1200 },
-        "E-commerce": { avgTraffic: 14000, avgBounce: 52, avgConversion: 1.6, avgAov: 70 },
-        Agency: { avgTraffic: 2400, avgBounce: 60, avgConversion: 1.1, avgAov: 3200 },
-      };
-      return map[category] || map["B2B Services"];
-    };
-
-    const getCommercialInputs = (category: string) => {
-      const map: Record<
-        string,
-        {
-          qualifiedRate: number;
-          closeRate: number;
-          implementationCost: number;
-        }
-      > = {
-        "B2B Services": { qualifiedRate: 0.012, closeRate: 0.18, implementationCost: 3200 },
-        "B2B SaaS": { qualifiedRate: 0.014, closeRate: 0.12, implementationCost: 3600 },
-        "E-commerce": { qualifiedRate: 0.024, closeRate: 0.025, implementationCost: 2800 },
-        Agency: { qualifiedRate: 0.01, closeRate: 0.2, implementationCost: 3400 },
-      };
-      return map[category] || map["B2B Services"];
-    };
-
-    const formatMoney = (value: number) => `$${Math.max(0, Math.round(value)).toLocaleString()}`;
-    const formatMoneyRange = (low: number, high: number) =>
-      `${formatMoney(low)}-${formatMoney(high)}`;
-    const formatCountRange = (low: number, high: number) =>
-      `${Math.max(0, Math.round(low)).toLocaleString()}-${Math.max(0, Math.round(high)).toLocaleString()}`;
-
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
     const visibilityConfidence = report.competitiveLandscape?.competitors?.length
@@ -4517,44 +4493,44 @@ export async function generateBrandReportPdf(
         : "Low";
     const recommendationReason =
       scoreAverage < 65
-        ? "External visibility signals still point to a low-hundreds baseline. Use this as a cautious planning range until the first clarity and AI visibility fixes are live."
+        ? "Right now the brand likely leaks too much clarity to convert weak demand into steady qualified conversations."
         : scoreAverage < 78
-          ? "Current signals support a low-hundreds to low-thousands ceiling only if the top fixes land cleanly and the offer becomes easier to repeat."
-          : "The stronger scenario only becomes believable if the page sharpens its highest-friction points and the commercial story lands faster than it does now.";
+          ? "The current signal is credible, but the upside only becomes real if the offer, proof, and CTA start working together."
+          : "The strongest upside becomes believable only if the sharpened message gets repeated beyond the homepage and the AI layer stops guessing.";
     const recommendedScenario =
-      scoreAverage < 65 ? "Low visibility" : scoreAverage < 78 ? "Moderate visibility" : "Stronger visibility";
+      scoreAverage < 65 ? "Current signal" : scoreAverage < 78 ? "After core fixes" : "Stronger upside";
     const roiScenarios = scoreAverage < 65
       ? [
           {
-            label: pdfCopy.roiConservative,
-            description: pdfCopy.roiScale1,
+            label: "CURRENT SIGNAL",
+            description: "What the site likely supports today",
             visitors: "Low hundreds / month",
-            qualifiedVisits: "A few qualified visits",
+            qualifiedVisits: "Small flow of qualified visits",
             inquiries: "1-3 serious inquiries",
-            demandLift: "+4% to +8% demand lift",
-            revenueRange: "Directional only",
-            confidence: "Low",
-            bestUse: "Planning baseline",
-          },
-          {
-            label: pdfCopy.roiRealistic,
-            description: pdfCopy.roiScale2,
-            visitors: "Mid hundreds / month",
-            qualifiedVisits: "A small flow of qualified visits",
-            inquiries: "2-5 serious inquiries",
-            demandLift: "+8% to +14% demand lift",
-            revenueRange: "Use real close-rate data",
+            demandLift: "Baseline demand is still fragile",
+            revenueRange: "Fix clarity before modeling revenue",
             confidence: visibilityConfidence,
-            bestUse: "Working forecast",
+            bestUse: "Current state",
           },
           {
-            label: pdfCopy.roiOptimistic,
-            description: pdfCopy.roiScale3,
+            label: "AFTER CORE FIXES",
+            description: "If the homepage becomes easier to understand",
+            visitors: "Mid hundreds / month",
+            qualifiedVisits: "Cleaner qualified demand",
+            inquiries: "2-5 serious inquiries",
+            demandLift: "+8% to +14% more serious demand",
+            revenueRange: "Translate with actual close-rate data",
+            confidence: visibilityConfidence,
+            bestUse: "Likely improvement",
+          },
+          {
+            label: "STRONGER UPSIDE",
+            description: "If the sharpened message scales beyond the homepage",
             visitors: "High hundreds / month",
-            qualifiedVisits: "A healthier qualified flow",
+            qualifiedVisits: "Stronger demand capture",
             inquiries: "4-7 serious inquiries",
-            demandLift: "+14% to +22% demand lift",
-            revenueRange: "Best read as upside",
+            demandLift: "+14% to +22% more serious demand",
+            revenueRange: "Read as upside, not a guarantee",
             confidence: "Low to moderate",
             bestUse: "Upside case",
           },
@@ -4562,70 +4538,70 @@ export async function generateBrandReportPdf(
       : scoreAverage < 78
         ? [
             {
-              label: pdfCopy.roiConservative,
-              description: pdfCopy.roiScale1,
+              label: "CURRENT SIGNAL",
+              description: "What the site likely supports today",
               visitors: "Low hundreds / month",
               qualifiedVisits: "A few qualified visits",
               inquiries: "2-4 serious inquiries",
-              demandLift: "+6% to +10% demand lift",
-              revenueRange: "Directional only",
+              demandLift: "Demand still leaks before trust fully forms",
+              revenueRange: "Use as current-state baseline",
               confidence: visibilityConfidence,
-              bestUse: "Planning baseline",
+              bestUse: "Current state",
             },
             {
-              label: pdfCopy.roiRealistic,
-              description: pdfCopy.roiScale2,
+              label: "AFTER CORE FIXES",
+              description: "If offer, proof, and CTA get clearer",
               visitors: "Mid hundreds / month",
               qualifiedVisits: "A modest qualified flow",
               inquiries: "3-6 serious inquiries",
-              demandLift: "+10% to +18% demand lift",
-              revenueRange: "Translate with your own close rates",
+              demandLift: "+10% to +18% more serious demand",
+              revenueRange: "Translate with actual close-rate data",
               confidence: visibilityConfidence,
-              bestUse: "Working forecast",
+              bestUse: "Likely improvement",
             },
             {
-              label: pdfCopy.roiOptimistic,
-              description: pdfCopy.roiScale3,
+              label: "STRONGER UPSIDE",
+              description: "If the sharpened signal repeats beyond the homepage",
               visitors: "Up to low thousands / month",
               qualifiedVisits: "A stronger qualified flow",
               inquiries: "5-8 serious inquiries",
-              demandLift: "+18% to +26% demand lift",
-              revenueRange: "Best read as upside",
+              demandLift: "+18% to +26% more serious demand",
+              revenueRange: "Read as upside, not a guarantee",
               confidence: "Low to moderate",
               bestUse: "Upside case",
             },
           ]
         : [
             {
-              label: pdfCopy.roiConservative,
-              description: pdfCopy.roiScale1,
+              label: "CURRENT SIGNAL",
+              description: "What the site likely supports today",
               visitors: "Mid hundreds / month",
               qualifiedVisits: "A modest qualified flow",
               inquiries: "3-5 serious inquiries",
-              demandLift: "+8% to +12% demand lift",
-              revenueRange: "Directional only",
+              demandLift: "The page already holds some demand",
+              revenueRange: "Use as current-state baseline",
               confidence: visibilityConfidence,
-              bestUse: "Planning baseline",
+              bestUse: "Current state",
             },
             {
-              label: pdfCopy.roiRealistic,
-              description: pdfCopy.roiScale2,
+              label: "AFTER CORE FIXES",
+              description: "If the strongest friction points are corrected",
               visitors: "High hundreds / month",
               qualifiedVisits: "A stronger qualified flow",
               inquiries: "4-7 serious inquiries",
-              demandLift: "+12% to +20% demand lift",
-              revenueRange: "Translate with your own close rates",
+              demandLift: "+12% to +20% more serious demand",
+              revenueRange: "Translate with actual close-rate data",
               confidence: visibilityConfidence,
-              bestUse: "Working forecast",
+              bestUse: "Likely improvement",
             },
             {
-              label: pdfCopy.roiOptimistic,
-              description: pdfCopy.roiScale3,
+              label: "STRONGER UPSIDE",
+              description: "If the message and proof system scale cleanly",
               visitors: "Low thousands / month",
               qualifiedVisits: "A strong qualified flow",
               inquiries: "6-10 serious inquiries",
-              demandLift: "+20% to +30% demand lift",
-              revenueRange: "Best read as upside",
+              demandLift: "+20% to +30% more serious demand",
+              revenueRange: "Read as upside, not a guarantee",
               confidence: "Moderate",
               bestUse: "Upside case",
             },
@@ -4657,13 +4633,13 @@ export async function generateBrandReportPdf(
       align: "right",
     });
     const coverTitle = fitHeading(report.brandName, contentWidth - 92, 108, 36, 28, -2);
-    doc.fillColor(colors.textOnDark).font(coverTitle.font).fontSize(coverTitle.size).text(coverTitle.text, 86, 134, {
+    doc.fillColor(colors.textOnDark).font(coverTitle.font).fontSize(coverTitle.size).text(coverTitle.text, 86, 168, {
       width: contentWidth - 60,
       lineGap: coverTitle.lineGap,
       align: "center",
     });
     const coverTitleBottom = doc.y;
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.5).text(pdfCopy.coverSub, 96, coverTitleBottom + 18, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.5).text(pdfCopy.coverSub, 96, coverTitleBottom + 20, {
       width: contentWidth - 80,
       align: "center",
       characterSpacing: 1.9,
@@ -4677,18 +4653,17 @@ export async function generateBrandReportPdf(
       5,
       "Times-Roman",
     );
-    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 144, coverTitleBottom + 56, {
+    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 144, coverTitleBottom + 62, {
       width: contentWidth - 176,
       align: "center",
       lineGap: coverTagline.lineGap,
     });
-    drawPanel(96, 664, pageWidth - 192, 72, colors.panelSoft);
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", 146, 708, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(8.5).text("REPORT ID", contentLeft, 722, {
       characterSpacing: 1.5,
     });
-    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13.5).text(reportId, 146, 682);
-    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, 126, 672, {
-      width: pageWidth - 292,
+    doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(13.5).text(reportId, contentLeft, 698);
+    doc.text(`${report.posterScore}/100  ${report.scoreBand}`, contentLeft, 680, {
+      width: 240,
       align: "left",
       characterSpacing: 0.4,
     });
@@ -4816,8 +4791,8 @@ export async function generateBrandReportPdf(
       maxHeight: 92,
     });
     const page4Y = Math.max(page4TitleBottom + 18, 174);
-    drawParagraph(pdfCopy.whatThisIsIntro[0], contentLeft, page4Y, 246, 10.4, 6);
-    drawParagraph(pdfCopy.whatThisIsIntro[1], contentLeft, page4Y + 88, 246, 10.4, 6);
+    drawParagraph(pdfCopy.whatThisIsIntro[0], contentLeft, page4Y, contentWidth, 10.8, 6);
+    drawParagraph(pdfCopy.whatThisIsIntro[1], contentLeft, page4Y + 92, contentWidth, 10.8, 6);
     const axisCardWidth = (contentWidth - 18) / 2;
     const axisCardHeight = 88;
     metricCards.forEach((item, index) => {
@@ -4826,7 +4801,7 @@ export async function generateBrandReportPdf(
       const isLast = index === metricCards.length - 1;
       const cardWidth = isLast ? contentWidth : axisCardWidth;
       const cardX = isLast ? contentLeft : contentLeft + column * (axisCardWidth + 18);
-      const cardY = page4Y + 184 + row * 104;
+      const cardY = page4Y + 208 + row * 104;
       drawPanel(cardX, cardY, cardWidth, axisCardHeight, index % 2 === 0 ? colors.panelSoft : colors.panel);
       drawSectionTag(item.title.toUpperCase(), cardX + 16, cardY + 16, colors.accent);
       const fitMetric = fitTextToBox(item.body, cardWidth - 32, 38, 10.2, 9.2, 4);
@@ -4843,8 +4818,8 @@ export async function generateBrandReportPdf(
       });
       drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 18, 178), contentWidth - 20, 10.8, 6);
       drawPanel(contentLeft, 214, contentWidth, 78, colors.panelSoft);
-      drawSectionTag(pdfCopy.roiRecommended, contentLeft + 18, 236, colors.textMuted);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(`${recommendedScenario} scenario`, contentLeft + 18, 252);
+      drawSectionTag("BEST-FIT BASELINE", contentLeft + 18, 236, colors.textMuted);
+      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text(`${recommendedScenario}`, contentLeft + 18, 252);
       drawParagraph(recommendationReason, contentLeft + 210, 236, contentWidth - 228, 9.4, 4);
 
       const scenarioWidth = (contentWidth - 24) / 3;
@@ -4860,7 +4835,7 @@ export async function generateBrandReportPdf(
         const items = [
           { label: pdfCopy.roiVisitors, value: scenario.visitors },
           { label: pdfCopy.roiCurrentRevenue, value: scenario.inquiries },
-          { label: pdfCopy.roiMonthlyLift, value: scenario.demandLift },
+          { label: "WHAT CHANGES IF THE FIXES LAND", value: scenario.demandLift },
         ];
         let itemY = scenarioTop + 62;
         items.forEach((item) => {
@@ -4871,9 +4846,9 @@ export async function generateBrandReportPdf(
 
       const confidenceY = scenarioTop + scenarioHeight + 18;
       drawPanel(contentLeft, confidenceY, contentWidth, 42, colors.panelSoft);
-      drawSectionTag(pdfCopy.roiImplementation, contentLeft + 18, confidenceY + 13, colors.textMuted);
+      drawSectionTag("HOW TO READ THIS", contentLeft + 18, confidenceY + 13, colors.textMuted);
       drawParagraph(
-        `Confidence level: ${visibilityConfidence}. Use these scenarios as directional planning ranges, not guaranteed outcomes.`,
+        `Current signal means where the homepage is likely landing today. The stronger bands show what changes if the top fixes in this report are implemented cleanly and repeated across the brand.`,
         contentLeft + 156,
         confidenceY + 13,
         contentWidth - 174,
@@ -4963,51 +4938,7 @@ export async function generateBrandReportPdf(
       bodyTopOffset: 50,
     });
 
-    // Page 7: Signal Read Part 2
-    addBasePage();
-    const page7TitleBottom = drawPageLabel("SIGNAL READ", "How the signal is landing before trust is fully earned", {
-      width: 390,
-      maxFont: 28,
-      minFont: 22,
-      maxHeight: 114,
-    });
-    drawTextCard({
-      x: contentLeft,
-      y: page7TitleBottom + 10,
-      width: contentWidth,
-      height: 154,
-      label: "CURRENT READ",
-      body: report.snapshot,
-      bodySize: 11.2,
-      bodyMin: 10,
-      labelColor: colors.accent,
-      bodyTopOffset: 58,
-      fill: colors.panelSoft,
-    });
-    drawTextCard({
-      x: contentLeft,
-      y: page7TitleBottom + 212,
-      width: signalCardWidth,
-      height: 204,
-      label: "WHAT THE PAGE SIGNALS",
-      body: stripAiLayerSentences(report.whatItSignals),
-      bodySize: 11.2,
-      bodyMin: 9.6,
-      bodyTopOffset: 58,
-    });
-    drawTextCard({
-      x: contentLeft + signalCardWidth + 18,
-      y: page7TitleBottom + 212,
-      width: signalCardWidth,
-      height: 204,
-      label: "FRICTION MAP",
-      body: uniqueItems(report.frictionMap, 3).join(" "),
-      bodySize: 11.2,
-      bodyMin: 9.6,
-      bodyTopOffset: 58,
-    });
-
-    // Page 8: Website Surface
+    // Page 6: Website Surface
     addBasePage();
     const page8TitleBottom = drawPageLabel(pdfCopy.websiteEvidenceLabel, pdfCopy.websiteEvidenceTitle, {
       width: 320,
@@ -5046,19 +4977,19 @@ export async function generateBrandReportPdf(
         x,
         y: page8ImageY + 316,
         width: websiteCalloutWidth,
-        height: 138,
+        height: 156,
         label: item.label,
         title: item.title,
         body: item.body,
-        bodySize: 11.6,
-        bodyMin: 10.4,
+        bodySize: 11,
+        bodyMin: 9.2,
         titleSize: 18,
         titleMin: 14,
       });
     });
     drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 470, contentWidth, 10.8, 5);
 
-    // Pages 9-13: axis deep dives
+    // Pages 7-11: axis deep dives
     scorePages.forEach((item, index) => {
       addBasePage();
       doc.fillColor(colors.accent).font("Helvetica").fontSize(10).text(item.title.toUpperCase(), contentLeft, 72, {
@@ -5129,6 +5060,52 @@ export async function generateBrandReportPdf(
         // no-op, keeps page count readable
       }
     });
+
+    // Page 12: Brand Archetype
+    addBasePage();
+    drawPageLabel(pdfCopy.archetypeLabel, pdfCopy.archetypeTitle, {
+      width: 360,
+      maxFont: 25,
+      minFont: 20,
+      maxHeight: 106,
+    });
+    drawSectionTag("ARCHETYPE READ", contentLeft, 170, colors.accent);
+    const archetypeFit = fitTextToBox(report.archetypeRead.rationale, 236, 112, 10.8, 9.4, 5);
+    drawParagraph(archetypeFit.text, contentLeft, 194, 236, archetypeFit.size, archetypeFit.lineGap);
+    drawSectionTag(pdfCopy.archetypeExpect.toUpperCase(), contentLeft, 346, colors.textMuted);
+    const expectFit = fitTextToBox(
+      report.expectationGap.slice(0, 3).map((item) => `- ${item}`).join("\n"),
+      246,
+      148,
+      10,
+      8.8,
+      4,
+    );
+    drawParagraph(expectFit.text, contentLeft, 370, 246, expectFit.size, expectFit.lineGap);
+    drawPanel(330, 190, 208, 356, colors.panelSoft);
+    drawRoundedImageFit(archetypePosterSource, 348, 214, 172, 188, 16);
+    const posterTitleFit = fitHeading(report.title || report.brandName, 156, 74, 22, 16, -0.6);
+    doc.fillColor(colors.textOnDark).font(posterTitleFit.font).fontSize(posterTitleFit.size).text(posterTitleFit.text, 356, 426, {
+      width: 156,
+      align: "center",
+      lineGap: posterTitleFit.lineGap,
+    });
+    const posterTagFit = fitTextToBox(truncate(report.tagline, 96), 156, 36, 10.2, 8.8, 4, "Times-Roman");
+    doc.fillColor(colors.mutedOnDark).font(posterTagFit.font).fontSize(posterTagFit.size).text(posterTagFit.text, 356, 492, {
+      width: 156,
+      align: "center",
+      lineGap: posterTagFit.lineGap,
+    });
+    drawSectionTag(pdfCopy.archetypeSoWhat, contentLeft, 564, colors.mutedOnDark);
+    const soWhatWidth = (contentWidth - 24) / 3;
+    archetypeSoWhat.forEach((item, index) => {
+      const x = contentLeft + index * (soWhatWidth + 12);
+      drawPanel(x, 586, soWhatWidth, 98, colors.panelSoft);
+      const soWhatFit = fitTextToBox(item, soWhatWidth - 28, 62, 9.8, 8.6, 4);
+      drawParagraph(soWhatFit.text, x + 14, 610, soWhatWidth - 28, soWhatFit.size, soWhatFit.lineGap);
+    });
+
+    renderCommercialImpactPage();
 
     // Page 14: Priority Fix Stack
     addBasePage();
@@ -5240,8 +5217,6 @@ export async function generateBrandReportPdf(
       link: "https://saharstudio.com",
       underline: true,
     });
-
-    renderCommercialImpactPage();
 
     doc.end();
   });
