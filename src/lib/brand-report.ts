@@ -4678,18 +4678,18 @@ export async function generateBrandReportPdf(
       });
       doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390, rowY + 18).lineWidth(4).strokeColor(colors.rule).stroke();
       doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390 * (item.score.score / 100), rowY + 18).lineWidth(4).strokeColor(scoreColor).stroke();
-      doc.fillColor(scoreColor).font("Helvetica").fontSize(17.5).text(String(item.score.score), contentRight - 170, rowY + 4, {
-        width: 50,
+      doc.fillColor(scoreColor).font("Helvetica").fontSize(16.5).text(String(item.score.score), contentRight - 186, rowY + 4, {
+        width: 56,
         align: "right",
       });
       doc.fillColor(scoreColor).font("Helvetica").fontSize(8.4).text(
         getBandForScore(item.score.score),
-        contentRight - 106,
-        rowY + 7,
+        contentRight - 112,
+        rowY + 8,
         {
-          width: 92,
+          width: 98,
           align: "left",
-          characterSpacing: 1.2,
+          characterSpacing: 1.0,
         },
       );
       doc.moveTo(contentLeft, rowY + 34).lineTo(contentRight, rowY + 34).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
