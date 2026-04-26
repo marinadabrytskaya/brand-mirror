@@ -480,6 +480,15 @@ async function loadPdfImageSource(imageUrl?: string) {
   return imageUrl;
 }
 
+async function loadRemoteScreenshotSource(url?: string) {
+  if (!url) {
+    return undefined;
+  }
+
+  const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+  return loadPdfImageSource(screenshotUrl);
+}
+
 function clampPercent(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.round(value)));
 }
@@ -3499,6 +3508,9 @@ export async function generateBrandReportPdf(
     const capture = await captureWebsiteSurface(normalizeUrl(report.url)).catch(() => null);
     websiteImageSource = await loadPdfImageSource(capture?.dataUrl);
   }
+  if (!websiteImageSource && report.url) {
+    websiteImageSource = await loadRemoteScreenshotSource(normalizeUrl(report.url));
+  }
   const archetypePosterSource = await loadPdfImageSource(resolveWorldPoster(report.visualWorld));
   const heroCallout = report.screenshotCallouts.find((item) => item.zone === "hero-promise");
   const ctaCallout = report.screenshotCallouts.find((item) => item.zone === "proof-cta");
@@ -3558,7 +3570,7 @@ export async function generateBrandReportPdf(
     const contentLeft = 56;
     const contentRight = 539;
     const contentWidth = contentRight - contentLeft;
-    const totalPages = 16;
+    const totalPages = 15;
     let pageNumber = 0;
     const overallScore = Math.round(
       report.scorecard.reduce((sum, item) => sum + item.score, 0) / Math.max(report.scorecard.length, 1),
@@ -4676,25 +4688,27 @@ export async function generateBrandReportPdf(
       doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(10).text(item.label.toUpperCase(), contentLeft, rowY, {
         characterSpacing: 2,
       });
-      doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390, rowY + 18).lineWidth(4).strokeColor(colors.rule).stroke();
-      doc.moveTo(contentLeft, rowY + 18).lineTo(contentLeft + 390 * (item.score.score / 100), rowY + 18).lineWidth(4).strokeColor(scoreColor).stroke();
-      doc.fillColor(scoreColor).font("Helvetica").fontSize(16.5).text(String(item.score.score), contentRight - 186, rowY + 4, {
-        width: 56,
+      const barX = contentLeft + 132;
+      const barW = contentWidth - 304;
+      doc.moveTo(barX, rowY + 18).lineTo(barX + barW, rowY + 18).lineWidth(4).strokeColor(colors.rule).stroke();
+      doc.moveTo(barX, rowY + 18).lineTo(barX + barW * (item.score.score / 100), rowY + 18).lineWidth(4).strokeColor(scoreColor).stroke();
+      doc.fillColor(scoreColor).font("Helvetica").fontSize(16.5).text(String(item.score.score), contentRight - 150, rowY + 4, {
+        width: 44,
         align: "right",
       });
       doc.fillColor(scoreColor).font("Helvetica").fontSize(8.4).text(
         getBandForScore(item.score.score),
-        contentRight - 112,
+        contentRight - 86,
         rowY + 8,
         {
-          width: 98,
+          width: 86,
           align: "left",
           characterSpacing: 1.0,
         },
       );
       doc.moveTo(contentLeft, rowY + 34).lineTo(contentRight, rowY + 34).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
     });
-    drawSectionTag("INDICATOR SCALE", contentLeft, 666, colors.mutedOnDark);
+    drawSectionTag("INDICATOR SCALE", contentLeft, 694, colors.mutedOnDark);
     [
       { label: "0-30", name: "FLATLINING", color: "#B65C5C" },
       { label: "30-50", name: "FRAGILE", color: colors.terracotta },
@@ -4702,15 +4716,16 @@ export async function generateBrandReportPdf(
       { label: "70-85", name: "STABLE", color: colors.mint },
       { label: "85-100", name: "LEADING", color: colors.accent },
     ].forEach((item, index) => {
-      const pillW = (contentWidth - 32) / 5;
-      const x = contentLeft + index * (pillW + 8);
-      drawPanel(x, 678, pillW, 36, item.color === colors.amber ? colors.panelSoft : colors.panel);
-      doc.fillColor(item.color).font("Helvetica").fontSize(10).text(item.label, x, 694, {
+      const pillW = 82;
+      const pillGap = 8;
+      const x = contentLeft + (contentWidth - pillW * 5 - pillGap * 4) / 2 + index * (pillW + pillGap);
+      drawPanel(x, 706, pillW, 36, item.color === colors.amber ? colors.panelSoft : colors.panel);
+      doc.fillColor(item.color).font("Helvetica").fontSize(10).text(item.label, x, 722, {
         width: pillW,
         align: "center",
         characterSpacing: 1,
       });
-      doc.font("Helvetica").fontSize(8.5).text(item.name, x, 686, {
+      doc.font("Helvetica").fontSize(8.5).text(item.name, x, 714, {
         width: pillW,
         align: "center",
         characterSpacing: 1.4,
@@ -4767,10 +4782,10 @@ export async function generateBrandReportPdf(
         maxHeight: 96,
       });
       drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 18, 178), contentWidth - 20, 10.8, 6);
-      drawPanel(contentLeft, 214, contentWidth, 78, colors.panelSoft);
-      drawSectionTag(pdfCopy.roiRecommended, contentLeft + 18, 236, colors.textMuted);
-      doc.fillColor(colors.accent).font("Helvetica").fontSize(16).text("Where the brand likely stands today", contentLeft + 18, 252);
-      drawParagraph(currentSignalSummary, contentLeft + 214, 236, contentWidth - 232, 9.4, 4);
+      drawPanel(contentLeft, 214, contentWidth, 88, colors.panelSoft);
+      drawSectionTag(pdfCopy.roiRecommended, contentLeft + 18, 232, colors.accent);
+      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(16).text("Where the brand likely stands today", contentLeft + 18, 250, { width: 200 });
+      drawParagraph(currentSignalSummary, contentLeft + 230, 232, contentWidth - 248, 9.4, 4);
 
       const blockTop = 314;
       const blockWidth = (contentWidth - 24) / 3;
@@ -4921,11 +4936,17 @@ export async function generateBrandReportPdf(
         y: heroCallout?.y,
       });
     } else {
-      drawPanel(contentLeft, page8ImageY, contentWidth, 294);
-      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(13).text("Website capture unavailable for this run.", contentLeft, page8ImageY + 136, {
-        width: contentWidth,
-        align: "center",
+      drawPanel(contentLeft, page8ImageY, contentWidth, 294, colors.panelSoft);
+      drawSectionTag("ANALYZED URL", contentLeft + 18, page8ImageY + 22, colors.textMuted);
+      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14).text(displayUrl, contentLeft + 18, page8ImageY + 42, {
+        width: contentWidth - 36,
       });
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(10).text(
+        "Live screenshot was not captured for this run. The diagnostic below is based on content and signal analysis of the page.",
+        contentLeft + 18,
+        page8ImageY + 74,
+        { width: contentWidth - 36, lineGap: 4 },
+      );
     }
     const websiteCalloutWidth = (contentWidth - 18) / 2;
     [
@@ -4955,7 +4976,7 @@ export async function generateBrandReportPdf(
         titleMin: 14,
       });
     });
-    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 470, contentWidth, 10.8, 5);
+    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + 500, contentWidth, 10.8, 5);
 
     // Pages 7-11: axis deep dives
     scorePages.forEach((item, index) => {
@@ -5012,51 +5033,7 @@ export async function generateBrandReportPdf(
 
     renderCommercialImpactPage();
 
-    // Page 12: Brand Archetype
-    addBasePage();
-    drawPageLabel(pdfCopy.archetypeLabel, pdfCopy.archetypeTitle, {
-      width: 360,
-      maxFont: 25,
-      minFont: 20,
-      maxHeight: 106,
-    });
-    drawSectionTag("ARCHETYPE READ", contentLeft, 170, colors.accent);
-    const archetypeFit = fitTextToBox(report.archetypeRead.rationale, 236, 112, 10.8, 9.4, 5);
-    drawParagraph(archetypeFit.text, contentLeft, 194, 236, archetypeFit.size, archetypeFit.lineGap);
-    drawSectionTag(pdfCopy.archetypeExpect.toUpperCase(), contentLeft, 346, colors.textMuted);
-    const expectFit = fitTextToBox(
-      report.expectationGap.slice(0, 3).map((item) => `- ${item}`).join("\n"),
-      246,
-      148,
-      10,
-      8.8,
-      4,
-    );
-    drawParagraph(expectFit.text, contentLeft, 370, 246, expectFit.size, expectFit.lineGap);
-    drawPanel(330, 190, 208, 356, colors.panelSoft);
-    drawRoundedImageFit(archetypePosterSource, 348, 214, 172, 188, 16);
-    const posterTitleFit = fitHeading(report.title || report.brandName, 156, 74, 22, 16, -0.6);
-    doc.fillColor(colors.textOnDark).font(posterTitleFit.font).fontSize(posterTitleFit.size).text(posterTitleFit.text, 356, 426, {
-      width: 156,
-      align: "center",
-      lineGap: posterTitleFit.lineGap,
-    });
-    const posterTagFit = fitTextToBox(truncate(report.tagline, 96), 156, 36, 10.2, 8.8, 4, "Times-Roman");
-    doc.fillColor(colors.mutedOnDark).font(posterTagFit.font).fontSize(posterTagFit.size).text(posterTagFit.text, 356, 492, {
-      width: 156,
-      align: "center",
-      lineGap: posterTagFit.lineGap,
-    });
-    drawSectionTag(pdfCopy.archetypeSoWhat, contentLeft, 564, colors.mutedOnDark);
-    const soWhatWidth = (contentWidth - 24) / 3;
-    archetypeSoWhat.forEach((item, index) => {
-      const x = contentLeft + index * (soWhatWidth + 12);
-      drawPanel(x, 586, soWhatWidth, 98, colors.panelSoft);
-      const soWhatFit = fitTextToBox(item, soWhatWidth - 28, 62, 9.8, 8.6, 4);
-      drawParagraph(soWhatFit.text, x + 14, 610, soWhatWidth - 28, soWhatFit.size, soWhatFit.lineGap);
-    });
-
-    // Page 14: Priority Fix Stack
+    // Page 13: Priority Fix Stack
     addBasePage();
     drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, {
       width: 360,
@@ -5108,15 +5085,14 @@ export async function generateBrandReportPdf(
       const x = contentLeft + index * (columnWidth + 12);
       drawPanel(x, cardTop, columnWidth, 426, colors.panelSoft);
       drawSectionTag(column.label, x + 18, cardTop + 18, column.color);
-      const blockFit = fitTextToBox(
-        column.items.map((item) => `- ${item}`).join("\n"),
-        columnWidth - 36,
-        338,
-        9.6,
-        8.2,
-        4,
-      );
-      drawParagraph(blockFit.text, x + 18, cardTop + 48, columnWidth - 36, blockFit.size, blockFit.lineGap);
+      let itemY = cardTop + 46;
+      const maxItemY = cardTop + 408;
+      for (const item of column.items) {
+        if (itemY >= maxItemY) break;
+        const avail = Math.max(40, maxItemY - itemY);
+        const itemFit = fitTextToBox(`— ${item}`, columnWidth - 36, Math.min(avail, 116), 9.6, 8.2, 5);
+        itemY = drawParagraph(itemFit.text, x + 18, itemY, columnWidth - 36, itemFit.size, 5) + 12;
+      }
     });
 
     // Page 16: Implementation Playbook II
