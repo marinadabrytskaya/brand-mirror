@@ -57,26 +57,45 @@ function buildDiagnosticTagline(result: BrandReadResult): string {
   const hasOffer = weakest.includes("offerSpecificity");
   const hasPositioning = weakest.includes("positioningClarity");
   const hasConversion = weakest.includes("conversionReadiness");
+  const hasVisual = weakest.includes("visualCredibility");
 
   if (hasAI && hasOffer) {
-    return "The offer still lands too late. AI visibility is too thin to carry the story cleanly.";
+    return "The offer is under-named. AI visibility is too weak to sell it.";
   }
   if (hasOffer && hasPositioning) {
-    return "The positioning is there, but the offer still arrives too broad and too late.";
+    return "The page shows capability before it names what buyers can buy.";
   }
   if (hasAI && hasPositioning) {
-    return "The brand has substance, but AI visibility and clarity are still too soft to repeat.";
+    return "AI sees fragments. Buyers still have to name the offer themselves.";
+  }
+  if (hasAI && hasConversion) {
+    return "AI cannot repeat the promise, and the CTA asks too early.";
   }
   if (hasOffer && hasConversion) {
-    return "The offer needs sharper edges before the next step can feel earned.";
+    return "The offer is vague, so the click asks for trust it has not earned.";
+  }
+  if (hasVisual && hasOffer) {
+    return "The page looks better than it sells. The offer is still missing.";
+  }
+  if (hasVisual && hasConversion) {
+    return "The page does not earn enough trust before it asks for action.";
   }
   if (hasAI) {
-    return "The brand has quality, but AI visibility is still too thin to repeat the promise clearly.";
+    return "AI visibility is thin enough to flatten the brand into generic noise.";
   }
   if (hasOffer) {
-    return "The brand has value, but the offer still lands too vaguely and too late.";
+    return "The offer is still under-named; buyers cannot repeat it fast enough.";
   }
-  return result.tagline || "The signal is there. The page still needs a sharper commercial read.";
+  if (hasPositioning) {
+    return "Capability is visible, but the category promise is still buried.";
+  }
+  if (hasConversion) {
+    return "Interest is present, but the page still makes action feel risky.";
+  }
+  if (hasVisual) {
+    return "The visual layer is not earning trust fast enough.";
+  }
+  return result.tagline || "The signal is present. The page is still making buyers work.";
 }
 
 // ---------------------------------------------------------------------------
