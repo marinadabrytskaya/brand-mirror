@@ -4652,57 +4652,99 @@ export async function generateBrandReportPdf(
     const concreteImplementationByAxis = [
       {
         title: "Positioning",
+        axis: "Positioning Clarity",
         body:
           report.priorityFixes.fixNow[0] ||
           "Rewrite the first screen so it states what the company does, for whom, and what changes in one read.",
       },
       {
         title: "AI Visibility",
+        axis: "AI Visibility",
         body:
           "Add exact category nouns to the H1, title tag, meta description, and schema. Keep naming identical across the homepage, metadata, and directory profiles.",
       },
       {
         title: "Offer",
+        axis: "Offer Specificity",
         body:
           report.priorityFixes.fixNow[1] ||
           "Replace broad sector language with 2-3 named offers or use cases, each with a buyer, an outcome, and one proof cue.",
       },
       {
         title: "Conversion",
+        axis: "Conversion Readiness",
         body:
           report.priorityFixes.fixNow[2] ||
           "Make the CTA a specific next step. Put proof next to it and make the visitor understand what happens after the click.",
       },
       {
         title: "Visual",
+        axis: "Visual Credibility",
         body:
           "Keep the premium restraint, but make it earn trust: tighten spacing, strengthen section hierarchy, and move authority cues higher in the page.",
       },
     ];
 
-    const concretePlaybookNow = uniqueItems(
+    const practicalImpactByAxis: Record<string, string> = {
+      "Positioning Clarity":
+        "The buyer can explain the brand faster, so fewer good visitors leave before the offer lands.",
+      "AI Visibility":
+        "External systems can describe the brand more accurately, so category discovery becomes less generic.",
+      "Visual Credibility":
+        "The page earns more trust before the copy has to defend the offer.",
+      "Offer Specificity":
+        "More buyers can repeat what is sold, who it is for, and why it matters now.",
+      "Conversion Readiness":
+        "The next step feels safer and more obvious, so qualified interest has less friction.",
+    };
+
+    const practicalFixForAxis = (axisLabel: string, score: number) => {
+      const mapped = concreteImplementationByAxis.find((item) => item.axis === axisLabel);
+      if (mapped?.body) return mapped.body;
+      const moves = practicalMoves[axisLabel as keyof typeof practicalMoves];
+      return score < 70 ? moves?.low || "" : moves?.mid || "";
+    };
+
+    const implementationRows = scorePages
+      .map((item) => {
+        const issue =
+          firstSentence(stripBrandLead(item.score.note || item.diagnosis), item.score.note) ||
+          firstSentence(stripBrandLead(item.diagnosis), "This axis is slowing the page down.");
+        return {
+          axis: item.title,
+          score: item.score.score,
+          color: bandColor(item.score.score),
+          issue,
+          fix: practicalFixForAxis(item.title, item.score.score),
+          impact: practicalImpactByAxis[item.title] || "The page becomes easier to understand, trust, and act on.",
+        };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 4);
+
+    const sprintNow = uniqueItems(
       [
-        `Do next: ${stripAiLayerSentences(report.whatToDoNext)}`,
-        `Drop: ${stripAiLayerSentences(report.whatToDrop)}`,
-        `Positioning: ${concreteImplementationByAxis[0].body}`,
+        "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
+        "Move one proof cue next to the CTA so the next step feels earned.",
+        "Remove vague mood copy that does not explain what is being sold.",
       ],
       3,
     );
 
-    const concretePlaybookNext = uniqueItems(
+    const sprintNext = uniqueItems(
       [
-        `Amplify: ${stripAiLayerSentences(report.whatToAmplify)}`,
-        `AI Visibility: ${concreteImplementationByAxis[1].body}`,
-        `Visual: ${concreteImplementationByAxis[4].body}`,
+        "Add exact category nouns to the H1, title tag, meta description, and schema.",
+        "Tighten section hierarchy so each block earns trust before asking for action.",
+        "Turn broad service language into 2-3 concrete use cases or deliverables.",
       ],
       3,
     );
 
-    const concretePlaybookThen = uniqueItems(
+    const sprintThen = uniqueItems(
       [
-        "AI Visibility: Publish stronger schema, FAQ support, and consistent entity naming so external systems can read the brand without guessing.",
-        "Offer: Turn the sharpened homepage message into service pages, case studies, and repeatable sales assets.",
-        "Conversion: Keep testing the CTA, proof order, and response path until the homepage feels easier to choose from.",
+        "Turn the sharpened message into service pages, proof blocks, and sales assets.",
+        "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+        "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
       ],
       3,
     );
@@ -5232,99 +5274,145 @@ export async function generateBrandReportPdf(
 
     // Page 14: Implementation Playbook I
     addBasePage();
-    drawPageLabel(pdfCopy.playbookLabel, pdfCopy.playbookTitle, {
-      width: 360,
+    const playbookTitleBottom = drawPageLabel(pdfCopy.playbookLabel, "From diagnosis to practical fixes", {
+      width: 390,
       maxFont: 27,
-      minFont: 22,
+      minFont: 21,
       maxHeight: 112,
     });
-    drawParagraph(pdfCopy.playbookIntro, contentLeft, 176, 372, 10.8, 5);
-    const playbookColumns = [
-      { label: pdfCopy.playbookNow, items: concretePlaybookNow, color: colors.terracotta },
-      { label: pdfCopy.playbookNext, items: concretePlaybookNext, color: colors.amber },
-      { label: pdfCopy.playbookThen, items: concretePlaybookThen, color: colors.mint },
-    ];
-    const cardTop = 252;
-    playbookColumns.forEach((column, index) => {
-      const y = cardTop + index * 142;
-      drawPanel(contentLeft, y, contentWidth, 122, colors.panelSoft);
-      doc.roundedRect(contentLeft, y, 112, 122, 16).fill(column.color);
-      doc.fillColor(column.color === colors.mint ? colors.dark : colors.textOnDark)
+    drawParagraph(
+      "This page translates the read into applied work: what is slowing trust, what to change, and what can improve when that change lands.",
+      contentLeft,
+      Math.max(playbookTitleBottom + 16, 174),
+      contentWidth,
+      10.2,
+      5,
+    );
+
+    const tableTop = 238;
+    const playbookGap = 18;
+    const playbookCardW = (contentWidth - playbookGap) / 2;
+    const playbookCardH = 200;
+    implementationRows.forEach((row, index) => {
+      const col = index % 2;
+      const rowIndex = Math.floor(index / 2);
+      const x = contentLeft + col * (playbookCardW + playbookGap);
+      const y = tableTop + rowIndex * (playbookCardH + 20);
+      drawPanel(x, y, playbookCardW, playbookCardH, colors.panelSoft);
+      doc.roundedRect(x, y, playbookCardW, 54, 16).fill(row.color);
+      doc.fillColor(row.color === colors.mint ? colors.dark : colors.textOnDark)
         .font("Helvetica")
-        .fontSize(13)
-        .text(column.label, contentLeft + 24, y + 48, { characterSpacing: 2.2 });
-      drawBulletItems(column.items, contentLeft + 138, y + 20, contentWidth - 164, {
-        maxItems: 3,
-        fontSize: 9.4,
-        minSize: 8.1,
-        maxHeight: 88,
-        itemGap: 5,
+        .fontSize(9.6)
+        .text(row.axis.toUpperCase(), x + 16, y + 18, {
+          width: playbookCardW - 78,
+          characterSpacing: 1.3,
+          lineGap: 2,
+        });
+      doc.font("Helvetica").fontSize(20).text(String(row.score), x + playbookCardW - 56, y + 16, {
+        width: 38,
+        align: "right",
       });
+      const textX = x + 16;
+      const textW = playbookCardW - 32;
+      drawSectionTag("ISSUE FOUND", textX, y + 74, colors.textMuted);
+      const issueFit = fitTextToBox(row.issue, textW, 30, 8.3, 7.3, 2.5);
+      drawParagraph(issueFit.text, textX, y + 90, textW, issueFit.size, issueFit.lineGap);
+      drawSectionTag("PRACTICAL FIX", textX, y + 122, colors.accent);
+      const fixFit = fitTextToBox(row.fix, textW, 34, 8.1, 7.2, 2.5);
+      drawParagraph(fixFit.text, textX, y + 138, textW, fixFit.size, fixFit.lineGap);
+      drawSectionTag("WHAT CAN CHANGE", textX, y + 170, row.color);
+      const impactFit = fitTextToBox(row.impact, textW, 22, 7.7, 6.9, 2.2);
+      drawParagraph(impactFit.text, textX, y + 184, textW, impactFit.size, impactFit.lineGap);
     });
+
+    drawPanel(contentLeft, 672, contentWidth, 54, colors.panel);
+    drawSectionTag("IMPLEMENTATION LOGIC", contentLeft + 18, 690, colors.accent);
+    drawParagraph(
+      "Fix the weakest drag first. Then turn the improved message into proof, AI-readable structure, and a cleaner path to enquiry.",
+      contentLeft + 190,
+      686,
+      contentWidth - 210,
+      8.8,
+      4,
+    );
 
     // Page 15: Work with SAHAR
     addBasePage();
-    drawPageLabel(pdfCopy.playbookLabel, "Work with SAHAR to turn the diagnosis into a sharper homepage", {
-      width: 430,
-      maxFont: 25,
-      minFont: 20,
+    drawPageLabel(pdfCopy.playbookLabel, "30-day implementation sprint", {
+      width: 390,
+      maxFont: 27,
+      minFont: 21,
       maxHeight: 112,
     });
-    drawParagraph(
-      "The report shows what is slowing the sale. The next step is implementation: clearer positioning, tighter copy, stronger proof, and an AI-visible page structure.",
-      contentLeft,
-      176,
+    const sprintIntro = fitTextToBox(
+      "Use this as a self-guided sprint, or bring it into a working session with SAHAR. The goal is simple: make the page clearer, easier to trust, easier for AI to read, and easier to act on.",
       contentWidth,
-      10.4,
-      5,
+      46,
+      10.2,
+      9,
+      4,
     );
-    const implementationOffers = [
+    drawParagraph(sprintIntro.text, contentLeft, 176, contentWidth, sprintIntro.size, sprintIntro.lineGap);
+    const sprintBands = [
       {
-        title: "POSITIONING + OFFER",
-        body: "Rewrite the first screen so the category, buyer, offer, and outcome are obvious in one read.",
+        label: pdfCopy.playbookNow,
+        subtitle: "Days 1-7",
+        items: sprintNow,
+        color: colors.terracotta,
       },
       {
-        title: "AI VISIBILITY CLEANUP",
-        body: "Tighten naming, metadata, page structure, schema, FAQ support, and repeatable language so external systems can describe the brand correctly.",
+        label: pdfCopy.playbookNext,
+        subtitle: "Days 8-21",
+        items: sprintNext,
+        color: colors.amber,
       },
       {
-        title: "PROOF + CTA PASS",
-        body: "Move proof earlier, clarify the next step, and make the CTA feel earned rather than decorative.",
-      },
-      {
-        title: "IMPLEMENTATION HANDOFF",
-        body: "Turn the diagnosis into a concrete homepage brief, copy direction, and execution checklist for your team or ours.",
+        label: pdfCopy.playbookThen,
+        subtitle: "Days 22-30",
+        items: sprintThen,
+        color: colors.mint,
       },
     ];
-    const implCardWidth = (contentWidth - 16) / 2;
-    const implCardHeight = 126;
-    implementationOffers.forEach((card, index) => {
-      const col = index % 2;
-      const row = Math.floor(index / 2);
-      const x = contentLeft + col * (implCardWidth + 16);
-      const y = 246 + row * (implCardHeight + 16);
-      drawPanel(x, y, implCardWidth, implCardHeight, colors.panelSoft);
-      drawSectionTag(card.title, x + 18, y + 18, index === 1 ? colors.amber : colors.accent);
-      const fit = fitTextToBox(card.body, implCardWidth - 36, 70, 9.6, 8.4, 4);
-      drawParagraph(fit.text, x + 18, y + 42, implCardWidth - 36, fit.size, fit.lineGap);
+    sprintBands.forEach((band, index) => {
+      const y = 238 + index * 112;
+      drawPanel(contentLeft, y, contentWidth, 94, colors.panelSoft);
+      doc.roundedRect(contentLeft, y, 108, 94, 16).fill(band.color);
+      doc.fillColor(band.color === colors.mint ? colors.dark : colors.textOnDark)
+        .font("Helvetica")
+        .fontSize(13)
+        .text(band.label, contentLeft + 20, y + 30, { characterSpacing: 2.2 });
+      doc.font("Helvetica").fontSize(8.2).text(band.subtitle.toUpperCase(), contentLeft + 20, y + 52, {
+        width: 74,
+        characterSpacing: 1.4,
+      });
+      drawBulletItems(band.items, contentLeft + 130, y + 16, contentWidth - 154, {
+        maxItems: 3,
+        fontSize: 8.2,
+        minSize: 7.1,
+        lineGap: 2.5,
+        itemGap: 4,
+        maxHeight: 62,
+      });
     });
 
-    drawPanel(contentLeft, 570, contentWidth, 134, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 594, colors.mint);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text("Want SAHAR to build the sharper version with you?", contentLeft + 18, 616, {
-      width: contentWidth - 36,
+    drawPanel(contentLeft, 588, contentWidth, 134, colors.panelSoft);
+    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 610, colors.mint);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(15.5).text("Want the sharper version built with you?", contentLeft + 18, 632, {
+      width: contentWidth - 210,
+      lineGap: 2,
     });
     drawParagraph(
-      "Bring this report into a discovery call. We will map the highest-leverage fixes into a practical implementation sprint.",
+      "Bring this report into a working session. SAHAR can turn the highest-leverage fixes into a focused homepage sprint: sharper positioning, clearer proof, cleaner AI visibility, and a next step people understand.",
       contentLeft + 18,
-      652,
-      contentWidth - 180,
-      10,
-      5,
+      676,
+      contentWidth - 212,
+      8.2,
+      3,
     );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(12).text("Book the next step", contentRight - 160, 642, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.5).text("BOOK THE NEXT STEP", contentRight - 160, 638, {
       width: 142,
       align: "right",
+      characterSpacing: 1.2,
     });
     doc.fillColor(colors.mint).font("Helvetica").fontSize(12).text("saharstudio.com", contentRight - 160, 664, {
       width: 142,
