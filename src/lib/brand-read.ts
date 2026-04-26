@@ -40,6 +40,7 @@ export type WebsiteContext = {
   visibleText: string;
   ogImage: string;
   icon: string;
+  rawHtmlSignals?: string;
 };
 
 export type BrandReadResult = {
@@ -1390,6 +1391,15 @@ export async function fetchWebsiteContext(url: string): Promise<WebsiteContext> 
     }
 
     const html = await response.text();
+    const rawHtmlSignals = truncate(
+      [
+        html.match(/wp-content|wp-includes|wordpress|woocommerce|elementor|divi|et_pb_|elegant themes|wpbakery|visual composer|beaver-builder/gi)?.join(" ") || "",
+        html.match(/xmlrpc\.php|generator|theme|plugins/gi)?.join(" ") || "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      600,
+    );
     const $ = cheerio.load(html);
 
     $("script, style, noscript, svg").remove();
@@ -1434,6 +1444,7 @@ export async function fetchWebsiteContext(url: string): Promise<WebsiteContext> 
           $('link[rel="apple-touch-icon"]').attr("href") ||
           "",
       ),
+      rawHtmlSignals,
     };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
@@ -1483,6 +1494,10 @@ type PlatformSignals = {
   platformName: string | null;
   hasPhpExtension: boolean;          // *.php in URL — strong no-code signal
   looksGenericB2B: boolean;          // generic stock-photo B2B corporate feel
+  basicTemplateTheme: boolean;       // Divi / Elementor / Beaver style builders
+  soloWellnessPractice: boolean;     // small healing/therapy/coaching practice
+  weakConversionPath: boolean;       // no earned next step / only generic CTAs
+  weakProofLayer: boolean;           // little visible proof near the decision
 };
 
 function detectPlatformSignals(
@@ -1495,6 +1510,7 @@ function detectPlatformSignals(
     websiteContext.visibleText,
     websiteContext.icon,
     websiteContext.ogImage,
+    websiteContext.rawHtmlSignals,
   ]
     .filter(Boolean)
     .join(" ")
@@ -1508,6 +1524,10 @@ function detectPlatformSignals(
   else if (/\bshopify\b/.test(hay)) platformName = "Shopify";
 
   const hasPhpExtension = /\.php($|[?#])/i.test(sourceUrl || "");
+  const basicTemplateTheme =
+    /\bdivi\b|\bet_pb_\b|\belegant themes\b|\belementor\b|\bbeaver-builder\b|\bwpbakery\b|\bvisual composer\b/.test(
+      hay,
+    );
 
   // Rough B2B-generic sniffer — lots of "solution / leverage / enterprise /
   // transformation / synergy" without a clear product noun. Weak signal on its
@@ -1529,12 +1549,53 @@ function detectPlatformSignals(
     0,
   );
   const looksGenericB2B = genericHits >= 2;
+  const industryHint = inferIndustryArchetype(websiteContext);
+  const soloWellnessPractice =
+    industryHint.world === "caregiver" &&
+    /\bhealing\b|\btherapy\b|\btherapist\b|\bcounselling\b|\bcounseling\b|\bwellness\b|\breiki\b|\bsoul\b|\bcoach\b|\bholistic\b/.test(
+      hay,
+    ) &&
+    !/\bteam\b|\bclinic\b|\bclinics\b|\bcentres?\b|\bbranches\b|\blocations\b|\bfranchise\b|\benterprise\b/.test(
+      hay,
+    );
+  const meaningfulCtas = (websiteContext.callsToAction || []).filter(
+    (cta) =>
+      !/^(home|about|services|read more|learn more|more|blog|gallery)$/i.test(
+        normalizeWhitespace(cta),
+      ),
+  );
+  const weakConversionPath =
+    meaningfulCtas.length === 0 ||
+    meaningfulCtas.every((cta) =>
+      /\b(contact|enquire|inquire|get in touch|learn more|read more)\b/i.test(cta),
+    );
+  const proofHits = [
+    "testimonial",
+    "testimonials",
+    "reviews",
+    "case study",
+    "case studies",
+    "results",
+    "before and after",
+    "certified",
+    "accredited",
+    "licensed",
+    "clients",
+    "success stories",
+    "pricing",
+    "packages",
+  ].reduce((acc, phrase) => acc + (hay.includes(phrase) ? 1 : 0), 0);
+  const weakProofLayer = proofHits === 0;
 
   return {
     isTemplatePlatform: platformName !== null,
     platformName,
     hasPhpExtension,
     looksGenericB2B,
+    basicTemplateTheme,
+    soloWellnessPractice,
+    weakConversionPath,
+    weakProofLayer,
   };
 }
 
@@ -1624,11 +1685,44 @@ function applyCalibrationCaps(
     visualCredibility = Math.min(visualCredibility, 75);
   }
 
+  // Obvious page-builder themes should not be called STABLE unless there is
+  // strong art direction. Divi/Elementor style builds often look clean, but
+  // they rarely create category-level trust on their own.
+  if (signals.basicTemplateTheme) {
+    visualCredibility = Math.min(visualCredibility, 72);
+  }
+
+  if (signals.isTemplatePlatform && signals.weakProofLayer) {
+    visualCredibility = Math.min(visualCredibility, 68);
+  }
+
   // Generic B2B phrasing cap — when the copy is a pile of corporate cliches,
   // positioning and offer cannot be LEADING either.
   if (signals.looksGenericB2B) {
     positioningClarity = Math.min(positioningClarity, 75);
     offerSpecificity = Math.min(offerSpecificity, 72);
+  }
+
+  // Personal wellness / healing / therapy sites are often emotionally clear
+  // but commercially under-built. Unless there is exceptional custom design
+  // and proof, do not let them inherit premium wellness-brand scores.
+  if (signals.soloWellnessPractice) {
+    visualCredibility = Math.min(visualCredibility, signals.basicTemplateTheme ? 62 : 65);
+    positioningClarity = Math.min(positioningClarity, 70);
+    offerSpecificity = Math.min(offerSpecificity, 66);
+    conversionReadiness = Math.min(conversionReadiness, signals.basicTemplateTheme ? 62 : 66);
+  }
+
+  if (signals.weakConversionPath) {
+    conversionReadiness = Math.min(conversionReadiness, 64);
+  }
+
+  if (signals.weakProofLayer) {
+    conversionReadiness = Math.min(conversionReadiness, 66);
+  }
+
+  if (signals.soloWellnessPractice && (signals.weakConversionPath || signals.weakProofLayer)) {
+    conversionReadiness = Math.min(conversionReadiness, 58);
   }
 
   // No-more-than-one-LEADING rule (from the rubric but never followed by
@@ -1791,13 +1885,27 @@ async function requestGeminiBrandRead(
 
   if (!apiKey) {
     const heuristic = buildHeuristicRead(url, websiteContext, hints);
+    const calibratedScores = applyCalibrationCaps(
+      {
+        positioningClarity: heuristic.positioningClarity,
+        toneCoherence: heuristic.toneCoherence,
+        visualCredibility: heuristic.visualCredibility,
+        offerSpecificity: heuristic.offerSpecificity,
+        conversionReadiness: heuristic.conversionReadiness,
+      },
+      detectPlatformSignals(websiteContext, url),
+    );
     const adjustedAiVisibility = mergeAeoVisibilityScore(
-      heuristic.toneCoherence,
+      calibratedScores.toneCoherence,
       aeoAudit,
     );
-    return {
+    return enrichPosterSystem({
       ...heuristic,
+      positioningClarity: calibratedScores.positioningClarity,
       toneCoherence: adjustedAiVisibility,
+      visualCredibility: calibratedScores.visualCredibility,
+      offerSpecificity: calibratedScores.offerSpecificity,
+      conversionReadiness: calibratedScores.conversionReadiness,
       voice: truncate(
         normalizeWhitespace(
           [heuristic.voice, buildAiVisibilityTechnicalNote(aeoAudit)]
@@ -1806,7 +1914,7 @@ async function requestGeminiBrandRead(
         ),
         900,
       ),
-    };
+    }, inferCategoryLens(websiteContext));
   }
 
   // Pre-compute the industry lens so we can tell the model explicitly which
