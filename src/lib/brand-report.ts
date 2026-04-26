@@ -150,6 +150,12 @@ type CompetitiveLandscape = {
   };
 };
 
+type CompetitorCandidate = {
+  name: string;
+  url: string;
+  reason: string;
+};
+
 export type BrandReport = {
   url: string;
   brandName: string;
@@ -440,6 +446,48 @@ function hostnameOf(url: string) {
       .split("/")[0]
       .toLowerCase();
   }
+}
+
+function titleToCompanyName(title = "", url = "") {
+  const cleaned = normalizeWhitespace(title)
+    .replace(/\s*[\-|:|–|—]\s*(Official Site|Home|Homepage|Company|Website).*$/i, "")
+    .split(/\s[-|:|–|—]\s/)[0]
+    .trim();
+
+  if (cleaned) {
+    return truncate(cleaned, 54);
+  }
+
+  const host = hostnameOf(url).split(".")[0] || "Competitor";
+  return host.charAt(0).toUpperCase() + host.slice(1);
+}
+
+function isUsefulCompetitorUrl(candidateUrl: string, currentUrl: string) {
+  const host = hostnameOf(candidateUrl);
+  const currentHost = hostnameOf(currentUrl);
+  if (!host || host === currentHost) return false;
+
+  const blockedHosts = [
+    "linkedin.com",
+    "facebook.com",
+    "instagram.com",
+    "x.com",
+    "twitter.com",
+    "youtube.com",
+    "tiktok.com",
+    "crunchbase.com",
+    "wikipedia.org",
+    "semrush.com",
+    "ahrefs.com",
+    "similarweb.com",
+    "zoominfo.com",
+    "apollo.io",
+    "clutch.co",
+    "g2.com",
+    "capterra.com",
+  ];
+
+  return !blockedHosts.some((blocked) => host === blocked || host.endsWith(`.${blocked}`));
 }
 
 function escapeRegExp(value: string) {
@@ -1884,10 +1932,80 @@ export async function generateBrandReportPreviewFromRead(
   return fallback;
 }
 
+async function identifyCompetitorsWithExa(
+  url: string,
+  report: Pick<BrandReport, "brandName" | "genre" | "whatItDoes">,
+): Promise<CompetitorCandidate[]> {
+  const apiKey = process.env.EXA_API_KEY;
+  if (!apiKey) return [];
+
+  const query = [
+    `Direct competitors and category alternatives for ${report.brandName}.`,
+    `Brand category: ${report.genre}.`,
+    `Brand description: ${report.whatItDoes}.`,
+    "Return company websites, not directories or social profiles.",
+  ].join(" ");
+
+  const response = await fetch("https://api.exa.ai/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      query,
+      type: "auto",
+      numResults: 8,
+      contents: {
+        highlights: {
+          query: `${report.brandName} competitors alternatives ${report.genre}`,
+          maxCharacters: 600,
+        },
+      },
+    }),
+  }).catch(() => null);
+
+  if (!response?.ok) return [];
+
+  const payload = await response.json().catch(() => null);
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const seenHosts = new Set<string>();
+
+  return results
+    .map((item: any): CompetitorCandidate | null => {
+      const candidateUrl = normalizeUrl(item?.url || "");
+      if (!candidateUrl || !isUsefulCompetitorUrl(candidateUrl, url)) return null;
+
+      const host = hostnameOf(candidateUrl);
+      if (seenHosts.has(host)) return null;
+      seenHosts.add(host);
+
+      const highlight = Array.isArray(item?.highlights)
+        ? item.highlights.filter(Boolean).join(" ")
+        : "";
+
+      return {
+        name: titleToCompanyName(item?.title || "", candidateUrl),
+        url: candidateUrl,
+        reason: truncate(
+          normalizeWhitespace(highlight || item?.text || item?.summary || "Externally surfaced as a relevant category competitor."),
+          180,
+        ),
+      };
+    })
+    .filter((item): item is CompetitorCandidate => Boolean(item))
+    .slice(0, 3);
+}
+
 async function identifyCompetitors(
   url: string,
   report: Pick<BrandReport, "brandName" | "genre" | "whatItDoes">,
 ) {
+  const exaCompetitors = await identifyCompetitorsWithExa(url, report);
+  if (exaCompetitors.length > 0) {
+    return exaCompetitors;
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return [];
 
@@ -3599,9 +3717,9 @@ export async function generateBrandReportPdf(
         methodologyLabel: "HOW BRANDMIRROR SCORES YOUR BRAND",
         methodologyTitle: "What each score is measuring and why the numbers are there",
         roiLabel: "COMMERCIAL IMPACT",
-        roiTitle: "What the current signal likely supports today — and what changes after the fixes land",
+        roiTitle: "What can change commercially if the priority fixes land",
         roiIntro:
-          "Based on external visibility signals and the current BrandMirror scores, this page shows where the brand likely stands now, what demand the site can probably support today, and what becomes more realistic after the highest-leverage fixes are implemented.",
+          "This is a directional impact read: what the brand is likely losing now, what changes after the core fixes, and the percentage lift that becomes more realistic when the page is easier to understand, trust, and act on.",
         roiRecommended: "CURRENT EXTERNAL SIGNAL",
         roiConservative: "LOW VISIBILITY",
         roiRealistic: "MODERATE VISIBILITY",
@@ -3620,7 +3738,7 @@ export async function generateBrandReportPdf(
         roiPayback: "Best use of this model",
         roiAnnualRoi: "Illustrative annual range",
         roiFootnote:
-          "Directional estimate based on third-party visibility signals, category benchmarks, and the priority fixes in this report. This is not first-party analytics and not guaranteed revenue.",
+          "Directional percentage ranges based on BrandMirror scores, external visibility signals, and category benchmarks. This is not first-party analytics and not guaranteed revenue.",
         competitiveLabel: "COMPETITIVE POSITION",
         competitiveTitle: "Where you stand in the category right now",
         competitiveAverage: "Competitive avg",
@@ -4619,6 +4737,22 @@ export async function generateBrandReportPdf(
         : scoreAverage < 78
           ? "+12% to +20% more qualified demand"
           : "+16% to +24% more qualified demand";
+    const clarityLiftBand =
+      scoreAverage < 65
+        ? "+10% to +16% clarity lift"
+        : scoreAverage < 78
+          ? "+8% to +14% clarity lift"
+          : "+6% to +10% clarity lift";
+    const aiVisibilityLiftBand =
+      (scoreByLabel("AI visibility")?.score ?? scoreAverage) < 60
+        ? "+15% to +25% AI visibility lift"
+        : (scoreByLabel("AI visibility")?.score ?? scoreAverage) < 75
+          ? "+10% to +18% AI visibility lift"
+          : "+6% to +12% AI visibility lift";
+    const conversionLiftBand =
+      (scoreByLabel("Conversion readiness")?.score ?? scoreAverage) < 70
+        ? "+8% to +15% conversion readiness lift"
+        : "+5% to +10% conversion readiness lift";
     const impactReason =
       report.priorityFixes.fixNow[0] ||
       "Sharper positioning, a named offer, stronger proof placement, and cleaner AI visibility make the homepage easier to understand and easier to choose.";
@@ -4627,6 +4761,22 @@ export async function generateBrandReportPdf(
       : websiteImageSource
         ? "Low to moderate"
         : "Low";
+    const competitiveContext = report.competitiveLandscape
+      ? {
+          label: `COMPETITIVE CONTEXT / ${report.competitiveLandscape.competitors.length} PEERS`,
+          body: [
+            `Current rank estimate: ${report.competitiveLandscape.analysis.ranking}/${report.competitiveLandscape.competitors.length + 1}.`,
+            `Industry benchmark: ${report.competitiveLandscape.industryBenchmark.overall}/100 overall.`,
+            report.competitiveLandscape.analysis.quickestWin
+              ? `Fastest visible gap: ${report.competitiveLandscape.analysis.quickestWin.axis}.`
+              : `Closest peers: ${report.competitiveLandscape.competitors.map((item) => item.name).slice(0, 2).join(", ")}.`,
+          ].join(" "),
+        }
+      : {
+          label: "EXTERNAL CONTEXT",
+          body:
+            "Use this as a directional commercial read. When Exa competitor research is available, this layer adds peer comparison, category language, and industry benchmark signals.",
+        };
 
     const displayUrl = report.url.replace(/^https?:\/\//, "");
 
@@ -4828,65 +4978,69 @@ export async function generateBrandReportPdf(
       });
       drawParagraph(pdfCopy.roiIntro, contentLeft, Math.max(page5TitleBottom + 14, 166), contentWidth, 10.2, 5);
 
-      drawPanel(contentLeft, 220, contentWidth, 86, colors.panelSoft);
-      drawSectionTag(pdfCopy.roiRecommended, contentLeft + 18, 238, colors.accent);
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(15.5).text("Where the brand stands today", contentLeft + 18, 258, {
-        width: 166,
-      });
-      drawParagraph(currentSignalSummary, contentLeft + 204, 238, contentWidth - 222, 9.2, 4);
-
-      const tableX = contentLeft;
-      const tableY = 334;
-      const labelW = 112;
-      const colW = (contentWidth - labelW) / 3;
-      const rowH = 74;
-      const columns = [
-        { label: "TODAY", color: colors.terracotta },
-        { label: "AFTER CORE FIXES", color: colors.amber },
-        { label: "COMMERCIAL SHIFT", color: colors.mint },
-      ];
-      const rows = [
+      const flowCards = [
         {
-          label: "VISIBILITY",
-          values: [currentTrafficBand, afterFixTrafficBand, "The offer becomes easier to understand and repeat."],
+          label: "01 / CURRENT LEAK",
+          title: "What is likely happening now",
+          accent: colors.terracotta,
+          body: "This is the baseline: the brand is real, but the page still asks buyers and AI systems to work too hard before the offer becomes easy to repeat.",
+          metrics: [
+            { label: "External visibility", value: currentTrafficBand },
+            { label: "Serious demand today", value: currentInquiryBand },
+          ],
         },
         {
-          label: "DEMAND",
-          values: [currentInquiryBand, afterFixInquiryBand, afterFixImpactBand],
+          label: "02 / AFTER CORE FIXES",
+          title: "What improves when the page gets clearer",
+          accent: colors.amber,
+          body: "When the offer lands earlier, proof sits higher, and the entity layer is cleaner, the same traffic has a better chance of understanding and trusting the page.",
+          metrics: [
+            { label: "Clarity lift", value: clarityLiftBand },
+            { label: "AI visibility lift", value: aiVisibilityLiftBand },
+          ],
         },
         {
-          label: "WHY IT MOVES",
-          values: [
-            "Current proof and CTA do not work together tightly enough.",
-            "The promise becomes specific earlier, so buyers and AI systems can repeat it.",
-            "More visitors can see what is sold, why it matters, and what to do next.",
+          label: "03 / COMMERCIAL IMPACT",
+          title: "What that can unlock",
+          accent: colors.mint,
+          body: "This is not a revenue promise. It is the practical upside: more of the right people understand what is sold, why it matters, and what to do next.",
+          metrics: [
+            { label: "Qualified demand", value: afterFixImpactBand },
+            { label: "After-fix demand", value: afterFixInquiryBand },
           ],
         },
       ];
 
-      drawPanel(tableX, tableY, contentWidth, 278, colors.panelSoft);
-      columns.forEach((column, index) => {
-        const x = tableX + labelW + index * colW;
-        drawSectionTag(column.label, x + 14, tableY + 18, column.color);
-      });
-      rows.forEach((row, rowIndex) => {
-        const y = tableY + 50 + rowIndex * rowH;
-        doc.moveTo(tableX + 16, y - 12).lineTo(tableX + contentWidth - 16, y - 12).strokeColor(colors.darkRule).lineWidth(0.8).stroke();
-        drawSectionTag(row.label, tableX + 18, y + 8, colors.textMuted);
-        row.values.forEach((value, colIndex) => {
-          const x = tableX + labelW + colIndex * colW + 14;
-          const fitted = fitTextToBox(value, colW - 28, 48, rowIndex === 2 ? 8.7 : 9.4, 8.0, 4);
-          drawParagraph(fitted.text, x, y + 4, colW - 28, fitted.size, fitted.lineGap);
+      const cardY = 232;
+      const cardH = 130;
+      flowCards.forEach((card, index) => {
+        const y = cardY + index * (cardH + 18);
+        drawPanel(contentLeft, y, contentWidth, cardH, colors.panelSoft);
+        doc.roundedRect(contentLeft, y, 10, cardH, 5).fill(card.accent);
+        drawSectionTag(card.label, contentLeft + 24, y + 18, card.accent);
+        doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(16).text(card.title, contentLeft + 24, y + 40, {
+          width: 260,
+        });
+        const bodyFit = fitTextToBox(card.body, 306, 34, 7.9, 7.0, 3);
+        drawParagraph(bodyFit.text, contentLeft + 24, y + 88, 306, bodyFit.size, bodyFit.lineGap);
+        card.metrics.forEach((metric, metricIndex) => {
+          const metricY = y + 26 + metricIndex * 47;
+          drawSectionTag(metric.label.toUpperCase(), contentRight - 132, metricY, colors.textMuted);
+          const metricFit = fitTextToBox(metric.value, 124, 30, 10.6, 8.6, 3, "Helvetica");
+          doc.fillColor(card.accent).font("Helvetica").fontSize(metricFit.size).text(metricFit.text, contentRight - 132, metricY + 18, {
+            width: 124,
+            lineGap: metricFit.lineGap,
+          });
         });
       });
 
-      drawPanel(contentLeft, 634, contentWidth, 70, colors.panelSoft);
-      drawSectionTag("HOW TO READ THIS", contentLeft + 18, 654, colors.textMuted);
+      drawPanel(contentLeft, 650, contentWidth, 58, colors.panelSoft);
+      drawSectionTag(competitiveContext.label, contentLeft + 18, 669, colors.textMuted);
       drawParagraph(
-        "This is not a revenue promise. It is a directional planning read: current external visibility, what improves after the core fixes, and why that change becomes more realistic.",
-        contentLeft + 154,
-        648,
-        contentWidth - 172,
+        competitiveContext.body,
+        contentLeft + 206,
+        662,
+        contentWidth - 224,
         8.6,
         4,
       );
