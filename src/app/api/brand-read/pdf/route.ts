@@ -393,22 +393,22 @@ async function renderBrandReadPdf(
       x,
       y,
       width,
-      height: 58,
+      height: 48,
       color: highlighted ? rgb(color.red * 0.16, color.green * 0.16, color.blue * 0.16) : COLORS.panel,
       borderColor: rgb(color.red * 0.55, color.green * 0.55, color.blue * 0.55),
       borderWidth: highlighted ? 1.2 : 0.8,
     });
     page.drawText(range, {
       x: x + width / 2 - sans.widthOfTextAtSize(range, 9.5) / 2,
-      y: y + 34,
+      y: y + 28,
       size: 9.5,
       font: sansBold,
       color,
     });
     page.drawText(label, {
-      x: x + width / 2 - sans.widthOfTextAtSize(label, 8.8) / 2,
-      y: y + 16,
-      size: 8.8,
+      x: x + width / 2 - sans.widthOfTextAtSize(label, 8.2) / 2,
+      y: y + 12,
+      size: 8.2,
       font: sans,
       color,
     });
@@ -510,7 +510,7 @@ async function renderBrandReadPdf(
     });
 
     const lineLeft = PAGE.marginX + 120;
-    const lineRight = PAGE.width - PAGE.marginX - 120;
+    const lineRight = PAGE.width - PAGE.marginX - 170;
 
     page1.drawLine({
       start: { x: lineLeft, y: rowY + 6 },
@@ -525,11 +525,10 @@ async function renderBrandReadPdf(
       color: rowBandColor,
     });
     const numeric = String(value);
-    const scoreRight = PAGE.width - PAGE.marginX;
-    const scoreX = scoreRight - 160;
-    const labelX = scoreRight - 92;
+    const scoreRightX = PAGE.width - PAGE.marginX - 110;
+    const labelX = PAGE.width - PAGE.marginX - 78;
     page1.drawText(numeric, {
-      x: scoreX,
+      x: scoreRightX - sansBold.widthOfTextAtSize(numeric, 12),
       y: rowY,
       size: 12,
       font: sansBold,
@@ -545,12 +544,13 @@ async function renderBrandReadPdf(
   });
 
   drawLabel(page1, "Indicator scale", PAGE.marginX, 112);
-  const badgeY = 54;
+  const badgeY = 58;
   const badgeGap = 8;
-  const badgeWidth = (contentWidth - badgeGap * 4) / 5;
+  const badgeWidth = 82;
+  const badgeStartX = PAGE.marginX + (contentWidth - badgeWidth * 5 - badgeGap * 4) / 2;
   const activeBand = safeText(result.scoreBand, posterBand.label).toUpperCase();
   tiers.forEach(([label, range, hex], index) => {
-    const badgeX = PAGE.marginX + index * (badgeWidth + badgeGap);
+    const badgeX = badgeStartX + index * (badgeWidth + badgeGap);
     drawTierBadge(
       page1,
       badgeX,
