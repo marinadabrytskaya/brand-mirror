@@ -323,29 +323,23 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     setError("");
     setIsTestingFullPdf(true);
     try {
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "/api/brand-report/pdf";
-      form.target = "_blank";
-      form.style.display = "none";
-
-      const fields = {
-        url: currentUrl,
-        language: locale,
-        readResult: JSON.stringify(result),
-      };
-
-      Object.entries(fields).forEach(([name, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
+      const response = await fetch("/api/brand-report/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: currentUrl, language: locale, readResult: result }),
       });
 
-      document.body.appendChild(form);
-      form.submit();
-      form.remove();
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
+        throw new Error(
+          payload.detail || payload.error || "Unable to export the full PDF right now.",
+        );
+      }
+
+      const filename = `${(result.brandName || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-full-report.pdf`;
+      await downloadPdfFromResponse(response, filename);
     } catch (downloadError) {
       setError(
         downloadError instanceof Error
