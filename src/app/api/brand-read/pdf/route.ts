@@ -627,7 +627,7 @@ async function renderBrandReadPdf(
   y2 -= 22;
   y2 = drawWrapped(
     page2,
-    "The symptom is visible. The commercial cost needs naming.",
+    "The brand is not weak. The surface is not sharp enough yet.",
     serifBold,
     19,
     PAGE.marginX,
@@ -636,21 +636,21 @@ async function renderBrandReadPdf(
     COLORS.text,
     22,
   );
-  y2 -= 12;
 
+  const currentPanelY = 460;
   page2.drawRectangle({
     x: PAGE.marginX,
-    y: y2 - 200,
+    y: currentPanelY,
     width: contentWidth,
-    height: 196,
+    height: 166,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page2, "Current state", PAGE.marginX + 18, y2 - 28, COLORS.accent);
-  let readY = y2 - 54;
+  drawLabel(page2, "Current state", PAGE.marginX + 18, currentPanelY + 136, COLORS.accent);
+  let readY = currentPanelY + 112;
   brandReadParagraphs.forEach((paragraph, index) => {
-    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 58, 10.5, 9.2, 1.38);
+    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 34, 9.6, 8.2, 1.28);
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
         x: PAGE.marginX + 18,
@@ -661,33 +661,31 @@ async function renderBrandReadPdf(
       });
       readY -= fitted.lineHeight;
     });
-    readY -= 6;
+    readY -= 5;
   });
-  y2 -= 224;
 
-  const signalWidth = (contentWidth - 24) / 3;
-  const signalCardHeight = 206;
-  const signalY = Math.max(94, y2 - signalCardHeight - 14);
+  const signalWidth = (contentWidth - 18) / 2;
+  const signalCardHeight = 250;
+  const signalY = 168;
   [
     { label: "Strongest signal", body: buildExpandedSignal(result, "strongest"), color: COLORS.accent },
     { label: "Main friction", body: buildExpandedSignal(result, "friction"), color: COLORS.warn },
-    { label: "Next move", body: nextMoveParagraphs.join(" "), color: COLORS.soft },
   ].forEach((card, index) => {
-    const x = PAGE.marginX + index * (signalWidth + 12);
+    const x = PAGE.marginX + index * (signalWidth + 18);
     page2.drawRectangle({ x, y: signalY, width: signalWidth, height: signalCardHeight, color: COLORS.panel });
-    drawLabel(page2, card.label, x + 16, signalY + signalCardHeight - 26, card.color);
-    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 142, 9.8, 8.1, 1.35);
-    let cardY = signalY + signalCardHeight - 56;
+    drawLabel(page2, card.label, x + 16, signalY + signalCardHeight - 28, card.color);
+    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 178, 9.0, 7.4, 1.3);
+    let cardY = signalY + signalCardHeight - 62;
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
         x: x + 16,
         y: cardY,
         size: fitted.size,
         font: sans,
-        color: card.color === COLORS.soft ? COLORS.soft : COLORS.text,
-        });
-        cardY -= fitted.lineHeight;
+        color: COLORS.text,
       });
+      cardY -= fitted.lineHeight;
+    });
   });
   page2.drawText("Powered by SAHAR / saharstudio.com", {
     x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
@@ -707,44 +705,79 @@ async function renderBrandReadPdf(
     font: sans,
     color: COLORS.faint,
   });
-  y3 -= 34;
-
-  drawLabel(page3, "Unlock", PAGE.marginX, y3, COLORS.accent);
-  y3 -= 22;
-  y3 = drawWrapped(
+  drawLabel(page3, "Next move", PAGE.marginX, 704, COLORS.accent);
+  drawWrapped(
     page3,
-    "The full report turns the diagnosis into exact fixes.",
+    "The cure is visible. The exact move is inside the full report.",
     serifBold,
-    22,
+    21,
     PAGE.marginX,
-    y3,
+    676,
     contentWidth,
     COLORS.text,
-    25,
+    24,
   );
-  y3 -= 16;
 
-  const teaserY = y3 - 254;
+  const nextPanelY = 466;
+  page3.drawRectangle({
+    x: PAGE.marginX,
+    y: nextPanelY,
+    width: contentWidth,
+    height: 172,
+    color: COLORS.panel,
+    borderColor: COLORS.line,
+    borderWidth: 1,
+  });
+  let nextY = nextPanelY + 132;
+  nextMoveParagraphs.forEach((paragraph, index) => {
+    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 36, 9.4, 8.1, 1.3);
+    fitted.lines.forEach((line) => {
+      page3.drawText(line, {
+        x: PAGE.marginX + 18,
+        y: nextY,
+        size: fitted.size,
+        font: sans,
+        color: index === nextMoveParagraphs.length - 1 ? COLORS.text : COLORS.soft,
+      });
+      nextY -= fitted.lineHeight;
+    });
+    nextY -= 5;
+  });
+
+  drawLabel(page3, "Unlock", PAGE.marginX, 426, COLORS.accent);
+  drawWrapped(
+    page3,
+    "The full report turns this read into exact fixes.",
+    serifBold,
+    18,
+    PAGE.marginX,
+    402,
+    contentWidth,
+    COLORS.text,
+    21,
+  );
+
+  const teaserY = 92;
   const teaserWidth = (contentWidth - 20) / 2;
   page3.drawRectangle({
     x: PAGE.marginX,
     y: teaserY,
     width: teaserWidth,
-    height: 242,
+    height: 286,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page3, "$197 full report", PAGE.marginX + 16, teaserY + 222, COLORS.accent);
+  drawLabel(page3, "$197 full report", PAGE.marginX + 16, teaserY + 264, COLORS.accent);
   page3.drawText("What's inside", {
     x: PAGE.marginX + 16,
-    y: teaserY + 198,
+    y: teaserY + 240,
     size: 17,
     font: serifBold,
     color: COLORS.text,
   });
-  let unlockY = teaserY + 174;
-  fullReportIncludes.slice(0, 6).forEach((item, index) => {
+  let unlockY = teaserY + 216;
+  fullReportIncludes.slice(0, 7).forEach((item, index) => {
     page3.drawText(`${index + 1}.`, {
       x: PAGE.marginX + 16,
       y: unlockY,
@@ -752,7 +785,7 @@ async function renderBrandReadPdf(
       font: sansBold,
       color: posterBandColor,
     });
-    const fitted = fitBodyText(item, sans, teaserWidth - 54, 28, 8.4, 7.4, 1.28);
+    const fitted = fitBodyText(item, sans, teaserWidth - 54, 24, 7.8, 6.9, 1.24);
     let itemY = unlockY;
     fitted.lines.forEach((line) => {
       page3.drawText(line, {
@@ -767,7 +800,7 @@ async function renderBrandReadPdf(
     unlockY = itemY - 3;
   });
   const linkText = "brandmirror.app";
-  const linkY = teaserY + 16;
+  const linkY = teaserY + 18;
   page3.drawText(linkText, {
     x: PAGE.marginX + 16,
     y: linkY,
@@ -794,14 +827,14 @@ async function renderBrandReadPdf(
     x: fixX,
     y: teaserY,
     width: teaserWidth,
-    height: 242,
+    height: 286,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page3, "Fix stack preview", fixX + 16, teaserY + 222, COLORS.accent);
-  const guaranteeFit = fitBodyText(refundLine, sans, teaserWidth - 32, 48, 9.2, 8.1, 1.35);
-  let guaranteeY = teaserY + 196;
+  drawLabel(page3, "Fix stack preview", fixX + 16, teaserY + 264, COLORS.accent);
+  const guaranteeFit = fitBodyText(refundLine, sans, teaserWidth - 32, 54, 8.6, 7.4, 1.28);
+  let guaranteeY = teaserY + 238;
   guaranteeFit.lines.forEach((line) => {
     page3.drawText(line, {
       x: fixX + 16,
@@ -817,7 +850,7 @@ async function renderBrandReadPdf(
     { label: "FIX NEXT", color: COLORS.warn },
     { label: "KEEP", color: COLORS.accent },
   ].forEach((row, idx) => {
-    const yy = teaserY + 122 - idx * 38;
+    const yy = teaserY + 154 - idx * 42;
     page3.drawRectangle({ x: fixX + 16, y: yy, width: 104, height: 28, color: rgb(row.color.red * 0.18, row.color.green * 0.18, row.color.blue * 0.18) });
     page3.drawText(row.label, { x: fixX + 30, y: yy + 9, size: 9.2, font: sansBold, color: row.color });
     for (let i = 0; i < 3; i += 1) {
@@ -832,14 +865,14 @@ async function renderBrandReadPdf(
   });
   page3.drawText("Unlock full report", {
     x: fixX + 18,
-    y: teaserY + 26,
+    y: teaserY + 28,
     size: 10,
     font: sansBold,
     color: COLORS.text,
   });
   page3.drawText("brandmirror.app", {
     x: fixX + 18,
-    y: teaserY + 10,
+    y: teaserY + 12,
     size: 9.8,
     font: sansBold,
     color: COLORS.accent,

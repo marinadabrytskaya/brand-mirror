@@ -71,15 +71,26 @@ export function buildBrandReadParagraphs(result: BrandReadResult) {
   );
   const weakest = rankedDimensions(result)[0];
   const consequence = scoreConsequence(weakest.key, weakest.value);
+  const buyerCost =
+    weakest.key === "toneCoherence"
+      ? "AI-assisted discovery becomes easier for cleaner competitors than for this brand"
+      : weakest.key === "offerSpecificity"
+        ? "good buyers have to infer the offer before they can want it"
+        : weakest.key === "conversionReadiness"
+          ? "interested visitors can leave before the next step feels safe enough"
+          : weakest.key === "visualCredibility"
+            ? "the page asks the copy to defend trust the visual layer should already be earning"
+            : "buyers can understand the category before they understand the difference";
 
   return [
-    `${brand} has a real advantage: ${strongest}. That signal is commercially useful when it is surfaced quickly enough for a cold buyer to repeat.`,
+    `${brand} has a real advantage: ${strongest}. That signal can create commercial weight when a cold buyer can repeat it quickly.`,
     `But the page does not yet make the buying reason unmistakable. ${friction}. The brand is creating interest before it has fully earned certainty.`,
-    `At a ${weakest.label} score of ${weakest.value}, this is not a cosmetic issue. ${consequence} Every month this stays unfixed, cleaner competitors become easier to find, explain, and choose.`,
+    `At a ${weakest.label} score of ${weakest.value}, this is not a cosmetic issue. ${consequence} In practical terms, ${buyerCost}.`,
   ];
 }
 
 export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" | "friction") {
+  const brand = cleanSentence(result.brandName, "This brand");
   const strongest = cleanSentence(
     result.strongestSignal || result.strength,
     "The brand already has a signal worth protecting",
@@ -91,16 +102,17 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
 
   if (kind === "strongest") {
     return [
-      `${strongest}.`,
-      "This is the part of the brand not to dilute. The full report turns it into the KEEP layer, so future fixes do not accidentally flatten what is already earning trust.",
+      `${brand}'s strongest commercial asset is already visible: ${strongest}.`,
+      "That matters because most brands in a category sound interchangeable until they name what they can do differently.",
+      "The full report turns this into the KEEP layer, so the fixes sharpen the signal instead of flattening what is already earning trust.",
     ].join(" ");
   }
 
   const weakest = rankedDimensions(result)[0];
   return [
-    `${friction}.`,
+    `The main friction is not a small copy problem. ${friction}.`,
     `That matters because ${scoreConsequence(weakest.key, weakest.value)}`,
-    "The full report turns this into the first practical fix, not another abstract recommendation.",
+    "The full report names the exact first correction, where it belongs, and what should happen after it lands.",
   ].join(" ");
 }
 
@@ -127,18 +139,19 @@ export function buildNextMoveCliffhanger(result: BrandReadResult) {
   return [
     "The problem is not the product. It is the announcement.",
     `The first move is a single reframe: ${reframe}. It does not require a rebrand. It requires the right sentence in the right place.`,
-    "The exact reframe, where to place it, and how to carry it into the homepage, AI-readable assets, and competitor position is inside the Full Report.",
+    "The exact sentence, where to place it, how to carry it into the homepage and AI-readable assets, and what competitors are making easier to understand is inside the Full Report.",
   ];
 }
 
 export const fullReportIncludes = [
-  "3 named competitors: where they are easier to find, explain, or choose.",
-  "Fix Now: the highest-impact blocker and exact first correction.",
+  "Fix Now: the highest-impact blocker, named and solved.",
   "Fix Next: the secondary priority with implementation steps.",
   "Keep: what is already earning trust and should not be flattened.",
-  "AI Visibility audit: what AI tools cannot understand yet.",
+  "3 named competitors: where they are easier to find, explain, or choose.",
+  "AI Visibility audit: what AI tools cannot understand yet and how to break the next threshold.",
   "Commercial impact estimate: what can change after the fixes land.",
-  "16-page shareable PDF with competitor intelligence, a brand brief, and an implementation playbook for your team.",
+  "One-page brand brief: sharper headline, support line, and CTA direction.",
+  "16-page shareable PDF with competitor intelligence and implementation playbook.",
 ];
 
 export const refundLine =
