@@ -138,7 +138,7 @@ export const fullReportIncludes = [
   "Keep: what is already earning trust and should not be flattened.",
   "AI Visibility audit: what AI tools cannot understand yet.",
   "Commercial impact estimate: what can change after the fixes land.",
-  "15-page shareable PDF with an implementation playbook for your team.",
+  "16-page shareable PDF with competitor intelligence, a brand brief, and an implementation playbook for your team.",
 ];
 
 export const refundLine =

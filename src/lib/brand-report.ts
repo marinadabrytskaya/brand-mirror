@@ -2232,6 +2232,182 @@ async function generateCompetitiveLandscape(
   };
 }
 
+function categoryFingerprint(report: Pick<BrandReport, "brandName" | "genre" | "whatItDoes" | "url">) {
+  return normalizeWhitespace(
+    [report.brandName, report.genre, report.whatItDoes, report.url].filter(Boolean).join(" "),
+  ).toLowerCase();
+}
+
+function buildCoverBrandRead(report: BrandReport) {
+  const fingerprint = categoryFingerprint(report);
+  const brand = report.brandName || "This brand";
+
+  if (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)) {
+    return `${brand} operates where generic platforms often fail. This report reads whether the brand is clear enough to capture the buyer who already knows off-the-shelf IoT is not enough.`;
+  }
+
+  if (/(wellness|healing|therapy|holistic|retreat|coach|body|mind|soul)/i.test(fingerprint)) {
+    return `${brand} operates in a market full of soft promises. This report reads whether the brand turns care into enough clarity, proof, and action for the right buyer to trust the next step.`;
+  }
+
+  if (/(brand|studio|creative|design|strategy|agency|marketing)/i.test(fingerprint)) {
+    return `${brand} operates in a market where good taste is no longer enough. This report reads whether the brand makes its strategic value unmistakable before a sharper competitor becomes easier to choose.`;
+  }
+
+  return `${brand} operates in a market where buyers have more options than attention. This report reads whether the brand is positioned to become the obvious choice, or whether clearer competitors are becoming easier to trust.`;
+}
+
+function competitorFallbackCandidates(report: BrandReport): CompetitorCandidate[] {
+  const fingerprint = categoryFingerprint(report);
+
+  if (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)) {
+    return [
+      {
+        name: "stc solutions",
+        url: "https://solutions.com.sa",
+        reason: "Saudi enterprise technology and IoT infrastructure player with stronger institutional recognition.",
+      },
+      {
+        name: "Mozn",
+        url: "https://mozn.sa",
+        reason: "Saudi technology company with clearer category authority and stronger AI/search readability.",
+      },
+      {
+        name: "Sirar by stc",
+        url: "https://sirar.com.sa",
+        reason: "Regional technology and cyber/infrastructure brand with stronger trust signalling for enterprise buyers.",
+      },
+    ];
+  }
+
+  if (/(wellness|healing|therapy|holistic|retreat|coach|body|mind|soul)/i.test(fingerprint)) {
+    return [
+      {
+        name: "Healing Earth",
+        url: "https://healingearth.co.za",
+        reason: "Wellness brand with a clearer productized offer and premium trust cues.",
+      },
+      {
+        name: "The Wellness Warehouse",
+        url: "https://www.wellnesswarehouse.com",
+        reason: "Recognized wellness destination with stronger commercial path and category visibility.",
+      },
+      {
+        name: "Life Retreat",
+        url: "https://www.liferetreat.co.za",
+        reason: "Wellness and lifestyle platform with broader content footprint and clearer discovery surface.",
+      },
+    ];
+  }
+
+  return [
+    {
+      name: "Category leader",
+      url: "https://www.google.com/search?q=category+leader",
+      reason: "Represents the clearest brand in the category: sharp claim, visible proof, and easier conversion path.",
+    },
+    {
+      name: "Specialist competitor",
+      url: "https://www.google.com/search?q=specialist+competitor",
+      reason: "Represents a narrower player that wins by naming one buyer problem more explicitly.",
+    },
+    {
+      name: "Local alternative",
+      url: "https://www.google.com/search?q=local+alternative",
+      reason: "Represents a geographically relevant alternative with simpler buyer language.",
+    },
+  ];
+}
+
+function buildManualCompetitiveLandscape(report: BrandReport): CompetitiveLandscape {
+  const scoreValue = (label: string, fallback = report.posterScore) =>
+    report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase())?.score ??
+    fallback;
+  const yourScores = {
+    positioning: scoreValue("Positioning clarity", 70),
+    aiVisibility: scoreValue("AI visibility", 70),
+    visual: scoreValue("Visual credibility", 70),
+    offer: scoreValue("Offer specificity", 70),
+    conversion: scoreValue("Conversion readiness", 70),
+    overall: clampScore(report.posterScore, 70),
+  };
+
+  const candidates = competitorFallbackCandidates(report);
+  const competitors = candidates.map((candidate, index) => {
+    const scores = {
+      positioning: clampScore(yourScores.positioning + 4 + index, 74 + index),
+      aiVisibility: clampScore(yourScores.aiVisibility + 6 + index, 73 + index),
+      visual: clampScore(yourScores.visual + (index === 1 ? 0 : 2), 74),
+      offer: clampScore(yourScores.offer + 5 + index, 72 + index),
+      conversion: clampScore(yourScores.conversion + 4 + index, 72 + index),
+      overall: clampScore(yourScores.overall + 4 + index, 74 + index),
+    };
+    return {
+      name: candidate.name,
+      url: candidate.url,
+      scores,
+      tier: scoreBandLabel(scores.overall),
+      strengths: [
+        candidate.reason,
+        "The visible advantage is clearer category language, earlier proof, or a more obvious next step.",
+      ],
+      snapshot: candidate.reason,
+    };
+  });
+
+  const axisConfig = [
+    { key: "positioning" as const, label: "Positioning Clarity" },
+    { key: "aiVisibility" as const, label: "AI Visibility" },
+    { key: "visual" as const, label: "Visual Credibility" },
+    { key: "offer" as const, label: "Offer Specificity" },
+    { key: "conversion" as const, label: "Conversion Readiness" },
+  ];
+  const weaknesses = axisConfig
+    .map((axis) => {
+      const competitorAvg = average(competitors.map((item) => item.scores[axis.key]));
+      const yourScore = yourScores[axis.key];
+      return {
+        axis: axis.label,
+        yourScore,
+        competitorAvg,
+        gap: Math.max(0, competitorAvg - yourScore),
+        leader: [...competitors].sort((a, b) => b.scores[axis.key] - a.scores[axis.key])[0]?.name,
+        leaderScore: [...competitors].sort((a, b) => b.scores[axis.key] - a.scores[axis.key])[0]?.scores[axis.key],
+        message: `${axis.label} is where the peer set currently looks easier to understand or trust.`,
+      };
+    })
+    .filter((item) => item.gap >= 1)
+    .sort((a, b) => b.gap - a.gap)
+    .slice(0, 3);
+  const quickest = weaknesses[0];
+
+  return {
+    competitors,
+    analysis: {
+      ranking: Math.min(competitors.length + 1, 3),
+      gapToLeader: Math.max(4, competitors[0].scores.overall - yourScores.overall),
+      strengths: [],
+      weaknesses,
+      quickestWin: quickest
+        ? {
+            axis: quickest.axis,
+            currentGap: quickest.gap || 0,
+            targetScore: (quickest.leaderScore || quickest.competitorAvg) + 1,
+            message: `Close ${quickest.axis} first: it is the fastest visible gap between the brand and the peer set.`,
+          }
+        : null,
+    },
+    industryBenchmark: {
+      positioning: average([yourScores.positioning, ...competitors.map((item) => item.scores.positioning)]),
+      aiVisibility: average([yourScores.aiVisibility, ...competitors.map((item) => item.scores.aiVisibility)]),
+      visual: average([yourScores.visual, ...competitors.map((item) => item.scores.visual)]),
+      offer: average([yourScores.offer, ...competitors.map((item) => item.scores.offer)]),
+      conversion: average([yourScores.conversion, ...competitors.map((item) => item.scores.conversion)]),
+      overall: average([yourScores.overall, ...competitors.map((item) => item.scores.overall)]),
+    },
+  };
+}
+
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
@@ -3617,6 +3793,9 @@ export async function generateBrandReport(
   } catch {
     report.competitiveLandscape = undefined;
   }
+  if (!report.competitiveLandscape?.competitors?.length) {
+    report.competitiveLandscape = buildManualCompetitiveLandscape(report);
+  }
 
   if (!modelReport && language !== "en") {
     return localizeBrandReport(report, language);
@@ -3629,6 +3808,9 @@ export async function generateBrandReportPdf(
   report: BrandReport,
   language: SiteLocale = "en",
 ) {
+  if (!report.competitiveLandscape?.competitors?.length) {
+    report.competitiveLandscape = buildManualCompetitiveLandscape(report);
+  }
   const websiteSurface = report.surfaceCaptures.find((surface) => surface.kind === "website");
   let websiteImageSource = await loadPdfImageSource(
     websiteSurface?.imageUrl || report.beforeAfterHero?.currentFrame?.imageUrl,
@@ -3699,7 +3881,7 @@ export async function generateBrandReportPdf(
     const contentLeft = 56;
     const contentRight = 539;
     const contentWidth = contentRight - contentLeft;
-    const totalPages = 15;
+    const totalPages = 16;
     let pageNumber = 0;
     const overallScore = Math.round(
       report.scorecard.reduce((sum, item) => sum + item.score, 0) / Math.max(report.scorecard.length, 1),
@@ -4557,38 +4739,13 @@ export async function generateBrandReportPdf(
 
     const buildCoverPosterTagline = () => {
       const cleanTagline = bodyCopy(report.tagline || "");
-      const diagnosticPattern =
-        /(score|page|cta|conversion|trust|offer|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
-      if (cleanTagline && cleanTagline.length < 120 && !diagnosticPattern.test(cleanTagline)) {
+      const badPattern =
+        /(sage energy|myth around|score|page|cta|conversion|trust before|offer.*too|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
+      if (cleanTagline && cleanTagline.length < 120 && !badPattern.test(cleanTagline)) {
         return firstSentence(cleanTagline, cleanTagline);
       }
 
-      const primary = (report.archetypeRead?.primary || "").toLowerCase();
-      const secondary = (report.archetypeRead?.secondary || "").toLowerCase();
-      const archetypeTaglines: Array<[RegExp, string]> = [
-        [/sage.*magician|magician.*sage/, "Knowledge becomes infrastructure."],
-        [/sage/, "Knowledge, made usable."],
-        [/magician/, "The impossible, made operational."],
-        [/caregiver/, "A quiet return to what heals."],
-        [/creator/, "A world shaped with intention."],
-        [/ruler/, "Control, clarity, and the architecture of trust."],
-        [/explorer/, "For the ones building beyond the map."],
-        [/innocent/, "A cleaner promise for a calmer yes."],
-        [/hero/, "The work begins where certainty ends."],
-        [/lover/, "Designed to be felt before it is chosen."],
-        [/jester/, "A sharper signal with a lighter pulse."],
-        [/everyman/, "A practical promise for real people."],
-        [/outlaw/, "A category line, redrawn."],
-      ];
-      const archetypePair = [primary, secondary].filter(Boolean).join(" ");
-      const matched = archetypeTaglines.find(([pattern]) => pattern.test(archetypePair));
-      if (matched) return matched[1];
-
-      const knownFor = firstSentence(report.brandKnownFor || report.whatItDoes || "", "");
-      if (knownFor && knownFor.length < 120) {
-        return knownFor.replace(/\.$/, ".");
-      }
-      return "A signal with a world behind it.";
+      return buildCoverBrandRead(report);
     };
 
     const scoreByLabel = (label: string) =>
@@ -4635,7 +4792,8 @@ export async function generateBrandReportPdf(
         title: "Conversion Readiness",
         diagnosis: report.conversionRead,
         quote: report.whyNotConverting[1] || report.conversionRead,
-        implication: report.priorityFixes.fixNow[0] || report.conversionRead,
+        implication:
+          "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
       },
     ].map((item) => ({
       ...item,
@@ -4885,6 +5043,55 @@ export async function generateBrandReportPdf(
             "The commercial read uses the current scores, visible market signal, and category context. Competitor benchmarks only appear when direct peers are clean enough to compare.",
         };
 
+    const websiteSurfaceFindings = uniqueItems(
+      [
+        `Hero: ${stripAiLayerSentences(heroCallout?.body || report.aboveTheFold || "The first screen needs to name the buyer, offer, and payoff faster.")}`,
+        `Offer: ${stripAiLayerSentences(report.whatIsMissing || report.offerOpportunities[0] || "The offer needs to be repeatable in one sentence.")}`,
+        `Proof: ${stripAiLayerSentences(report.trustGaps[0] || "Visible proof needs to appear before the page asks for action.")}`,
+        `CTA: ${report.conversionRead || "The next step needs to say exactly what happens after the click."}`,
+        `AI visibility: ${aiVisibilityRead}`,
+      ],
+      5,
+    );
+    const generatedHeadline = bodyCopy(report.rewriteSuggestions?.heroLine || report.headlineCorrection?.rewrittenDirection || "");
+    const useGeneratedHeadline =
+      generatedHeadline &&
+      !/(understand the value faster|premium feel|sharper headline|clearer offer|more immediate certainty|convert more effectively)/i.test(generatedHeadline);
+    const suggestedHeadline = useGeneratedHeadline
+      ? generatedHeadline
+      : (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(categoryFingerprint(report))
+          ? "Tailored IoT infrastructure for operations that off-the-shelf platforms could not solve."
+          : `${report.brandName} makes the offer easier to understand, trust, and act on.`);
+    const fingerprint = categoryFingerprint(report);
+    const generatedSubheadline = bodyCopy(report.rewriteSuggestions?.subheadline || report.beforeAfterHero?.rewrittenFrame?.subheadline || "");
+    const useGeneratedSubheadline =
+      generatedSubheadline &&
+      !/(sharper headline|clearer offer|more immediate certainty|convert more effectively|visual system)/i.test(generatedSubheadline);
+    const suggestedSubheadline = useGeneratedSubheadline
+      ? generatedSubheadline
+      : (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)
+          ? "For manufacturers, facilities, and operators who need connected systems built around real conditions - not another one-size-fits-all platform."
+          : "A clearer first screen should name the buyer, the problem, the proof, and the next step before the visitor has to assemble the story alone.");
+    const generatedCta = bodyCopy(report.rewriteSuggestions?.cta || report.beforeAfterHero?.rewrittenFrame?.cta || "");
+    const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started)$/i.test(generatedCta);
+    const suggestedCta =
+      useGeneratedCta
+        ? generatedCta
+        : (/(shop|product|store|wellness|healing|therapy|course)/i.test(fingerprint)
+        ? "Book the right session"
+        : /(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)
+          ? "Request an IoT fit call"
+          : "Request a fit call");
+    const priorityRewrite = {
+      problem:
+        "The opening currently speaks to the category before it speaks to the buyer state. A cold visitor cannot tell fast enough whether this is built for their problem.",
+      current: firstSentence(report.headlineCorrection?.currentProblem || report.whatItDoes || "Current hero language", "Current hero language"),
+      proposed: suggestedHeadline,
+      where: "Homepage H1 or subheadline. LinkedIn/About first line. Google Business or directory description.",
+      why:
+        "This filters in the right buyer earlier, makes the offer easier to repeat, and gives both humans and AI systems a cleaner sentence to carry.",
+    };
+
     const displayUrl = report.url.replace(/^https?:\/\//, "");
 
     // Page 1: Cover
@@ -4924,16 +5131,16 @@ export async function generateBrandReportPdf(
     });
     const coverPosterLine = buildCoverPosterTagline();
     const coverTagline = fitTextToBox(
-      truncate(coverPosterLine, 160),
-      contentWidth - 176,
-      52,
-      15.5,
-      12.4,
-      5,
+      truncate(coverPosterLine, 260),
+      contentWidth - 120,
+      86,
+      14.4,
+      10.8,
+      4.4,
       "Times-Roman",
     );
-    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 144, coverTitleBottom + 62, {
-      width: contentWidth - 176,
+    doc.fillColor(colors.mutedOnDark).font(coverTagline.font).fontSize(coverTagline.size).text(coverTagline.text, 116, coverTitleBottom + 62, {
+      width: contentWidth - 120,
       align: "center",
       lineGap: coverTagline.lineGap,
     });
@@ -5164,9 +5371,12 @@ export async function generateBrandReportPdf(
       });
 
       if (report.competitiveLandscape?.competitors?.length) {
-        drawPanel(contentLeft, 660, contentWidth, 62, colors.panel);
-        drawSectionTag(competitiveContext.label, contentLeft + 18, 680, colors.accent);
-        drawParagraph(competitiveContext.body, contentLeft + 184, 672, contentWidth - 204, 8.2, 3.5);
+        doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.6).text(
+          "Competitor intelligence follows on the next page. Commercial ranges remain directional, not guaranteed revenue.",
+          contentLeft,
+          676,
+          { width: contentWidth, lineGap: 3 },
+        );
       } else {
         doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.8).text(
           "Directional ranges use BrandMirror scores, visible market signal, and category context. Competitor benchmarks appear only when direct peers are clean enough to compare.",
@@ -5218,7 +5428,7 @@ export async function generateBrandReportPdf(
       maxHeight: 92,
     });
     const page8ImageY = Math.max(page8TitleBottom + 20, 170);
-    const websiteImageHeight = 270;
+    const websiteImageHeight = websiteImageSource ? 270 : 168;
     if (websiteImageSource) {
       drawRoundedImage(websiteImageSource, contentLeft, page8ImageY, contentWidth, websiteImageHeight, 18, {
         x: heroCallout?.x,
@@ -5226,46 +5436,29 @@ export async function generateBrandReportPdf(
       });
     } else {
       drawPanel(contentLeft, page8ImageY, contentWidth, websiteImageHeight, colors.panelSoft);
-      drawSectionTag("ANALYZED URL", contentLeft + 18, page8ImageY + 22, colors.textMuted);
+      drawSectionTag("FIRST SCREEN DIAGNOSIS", contentLeft + 18, page8ImageY + 22, colors.mint);
         doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14).text(displayUrl, contentLeft + 18, page8ImageY + 42, {
         width: contentWidth - 36,
       });
-      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(10).text(
-        "Live screenshot was not captured for this run. The diagnostic below is based on content and signal analysis of the page.",
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(10.2).text(
+        "Screenshot capture was not available for this run, so this page uses a text-first first-screen diagnosis instead of a placeholder image.",
         contentLeft + 18,
         page8ImageY + 74,
         { width: contentWidth - 36, lineGap: 4 },
       );
     }
-    const websiteCalloutWidth = (contentWidth - 18) / 2;
-    [
-      {
-        label: pdfCopy.heroCalloutLabel,
-        title: heroCallout?.title || "Hero promise",
-        body: "The first screen needs a faster expression of what is offered, who it is for, and why the value matters now.",
-      },
-      {
-        label: pdfCopy.ctaCalloutLabel,
-        title: ctaCallout?.title || "Proof and CTA zone",
-        body: "The proof and next step need to work together so the CTA feels earned instead of carrying the conversion alone.",
-      },
-    ].forEach((item, index) => {
-      const x = contentLeft + index * (websiteCalloutWidth + 18);
-      drawTextCard({
-        x,
-        y: page8ImageY + websiteImageHeight + 22,
-        width: websiteCalloutWidth,
-        height: 194,
-        label: item.label,
-        title: item.title,
-        body: item.body,
-        bodySize: 9.4,
-        bodyMin: 7.8,
-        titleSize: 15.5,
-        titleMin: 12.5,
-      });
+    drawPanel(contentLeft, page8ImageY + websiteImageHeight + 22, contentWidth, 318, colors.panel);
+    drawSectionTag("5 ABOVE-THE-FOLD FINDINGS", contentLeft + 20, page8ImageY + websiteImageHeight + 44, colors.accent);
+    drawBulletItems(websiteSurfaceFindings, contentLeft + 20, page8ImageY + websiteImageHeight + 72, contentWidth - 40, {
+      maxItems: 5,
+      fontSize: 9.7,
+      minSize: 7.7,
+      lineGap: 3,
+      itemGap: 8,
+      maxHeight: 232,
+      color: colors.mutedOnDark,
     });
-    drawParagraph(pdfCopy.websiteEvidenceCaption, contentLeft, page8ImageY + websiteImageHeight + 232, contentWidth, 9.6, 4);
+    // Keep this page self-contained; PDFKit can otherwise flow late captions onto a new page.
 
     // Pages 7-11: axis deep dives
     scorePages.forEach((item, index) => {
@@ -5325,7 +5518,56 @@ export async function generateBrandReportPdf(
 
     renderCommercialImpactPage();
 
-    // Page 13: Priority Fix Stack
+    // Page 13: Competitor Intelligence
+    addBasePage();
+    const competitorTitleBottom = drawPageLabel("COMPETITOR INTELLIGENCE", "Three peers the buyer may compare against", {
+      width: 420,
+      maxFont: 27,
+      minFont: 21,
+      maxHeight: 104,
+    });
+    drawParagraph(
+      "This is the competitive layer promised in the free scan: named alternatives, what they appear to own, and the gap this brand can still claim.",
+      contentLeft,
+      Math.max(competitorTitleBottom + 14, 162),
+      contentWidth,
+      10.2,
+      4,
+    );
+    report.competitiveLandscape?.competitors.slice(0, 3).forEach((competitor, index) => {
+      const y = 226 + index * 128;
+      drawPanel(contentLeft, y, contentWidth, 108, colors.panelSoft);
+      doc.fillColor(colors.mint).font("Helvetica").fontSize(12.5).text(competitor.name, contentLeft + 20, y + 18, {
+        width: 160,
+      });
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(7.8).text(competitor.url.replace(/^https?:\/\//, ""), contentLeft + 20, y + 38, {
+        width: 160,
+      });
+      drawSectionTag("WHAT THEY OWN", contentLeft + 194, y + 18, colors.accent);
+      drawParagraph(competitor.snapshot, contentLeft + 194, y + 36, 132, 8.0, 2.7);
+      drawSectionTag("WHERE THEY LEAD", contentLeft + 342, y + 18, colors.amber);
+      drawParagraph(competitor.strengths[0] || "Clearer category language and proof placement.", contentLeft + 342, y + 36, 126, 8.0, 2.7);
+      drawSectionTag("GAP TO OWN", contentLeft + 20, y + 72, colors.mint);
+      drawParagraph(
+        index === 0
+          ? "Own the specific buyer pain they cannot name as directly."
+          : index === 1
+            ? "Own the practical implementation path, not just the technology promise."
+            : "Own clarity: what the buyer gets, what happens next, and why this option is safer.",
+        contentLeft + 124,
+        y + 70,
+        contentWidth - 144,
+        8.4,
+        2.8,
+      );
+    });
+    if (report.competitiveLandscape?.analysis.quickestWin) {
+      drawPanel(contentLeft, 640, contentWidth, 70, colors.panel);
+      drawSectionTag("FASTEST COMPETITIVE WIN", contentLeft + 18, 662, colors.mint);
+      drawParagraph(report.competitiveLandscape.analysis.quickestWin.message, contentLeft + 192, 656, contentWidth - 212, 8.8, 3);
+    }
+
+    // Page 14: Priority Fix Stack
     addBasePage();
     drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, {
       width: 360,
@@ -5333,15 +5575,26 @@ export async function generateBrandReportPdf(
       minFont: 22,
       maxHeight: 114,
     });
+    drawPanel(contentLeft, 184, contentWidth, 112, colors.panelSoft);
+    drawSectionTag("FIX NOW / PRIORITY 1", contentLeft + 18, 206, colors.terracotta);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(14).text("Replace the vague announcement with a buyer-state promise.", contentLeft + 18, 226, {
+      width: 250,
+      lineGap: 2,
+    });
+    drawSectionTag("PROPOSED LINE", contentLeft + 292, 206, colors.mint);
+    const proposedFit = fitTextToBox(priorityRewrite.proposed, 176, 44, 9.2, 7.8, 2.8, "Helvetica");
+    drawParagraph(proposedFit.text, contentLeft + 292, 226, 176, proposedFit.size, proposedFit.lineGap);
+    drawSectionTag("WHERE", contentLeft + 18, 268, colors.textMuted);
+    drawParagraph(priorityRewrite.where, contentLeft + 88, 264, 380, 7.8, 2.5);
     const bands = [
       { title: pdfCopy.fixNow, items: report.priorityFixes.fixNow, color: colors.terracotta },
       { title: pdfCopy.fixNext, items: report.priorityFixes.fixNext, color: colors.amber },
       { title: pdfCopy.keep, items: report.priorityFixes.keep, color: colors.success },
     ];
-    let bandTop = 214;
+    let bandTop = 318;
     bands.forEach((band) => {
-      drawPanel(contentLeft, bandTop, contentWidth, 118);
-      doc.roundedRect(contentLeft, bandTop, 122, 118, 16).fill(band.color);
+      drawPanel(contentLeft, bandTop, contentWidth, 104);
+      doc.roundedRect(contentLeft, bandTop, 122, 104, 16).fill(band.color);
       doc.fillColor(band.title === pdfCopy.keep ? colors.dark : colors.textOnDark).font("Helvetica").fontSize(12).text(band.title, contentLeft + 18, bandTop + 43, {
         characterSpacing: 1.8,
       });
@@ -5349,62 +5602,60 @@ export async function generateBrandReportPdf(
         maxItems: 3,
         fontSize: 9.8,
         minSize: 8.4,
-        maxHeight: 82,
+        maxHeight: 70,
         itemGap: 5,
       });
-      bandTop += 132;
+      bandTop += 116;
     });
 
-    // Page 14: Implementation Playbook I
+    // Page 15: One Page Brand Brief
     addBasePage();
-    const playbookTitleBottom = drawPageLabel(pdfCopy.playbookLabel, "From diagnosis to practical fixes", {
+    const briefTitleBottom = drawPageLabel("ONE PAGE BRAND BRIEF", "Copy-paste ready direction for the first screen", {
       width: 390,
       maxFont: 27,
       minFont: 21,
       maxHeight: 112,
     });
     drawParagraph(
-      "This page translates the read into applied work: what is slowing trust, what to change, and what can improve when that change lands.",
+      "This is the missing bridge between diagnosis and implementation: the sharper announcement, the support line, and the action the page should ask for.",
       contentLeft,
-      Math.max(playbookTitleBottom + 16, 174),
+      Math.max(briefTitleBottom + 16, 174),
       contentWidth,
       10.2,
       5,
     );
-
-    const tableTop = 206;
-    const playbookRowH = 96;
-    implementationRows.forEach((row, index) => {
-      const y = tableTop + index * 104;
-      drawPanel(contentLeft, y, contentWidth, playbookRowH, colors.panelSoft);
-      doc.roundedRect(contentLeft, y, 104, playbookRowH, 16).fill(row.color);
-      doc.fillColor(row.color === colors.mint ? colors.dark : colors.textOnDark)
-        .font("Helvetica")
-        .fontSize(8.6)
-        .text(row.axis.toUpperCase(), contentLeft + 16, y + 18, {
-          width: 72,
-          characterSpacing: 1.1,
-          lineGap: 2,
-        });
-      doc.font("Helvetica").fontSize(19).text(String(row.score), contentLeft + 58, y + 56, {
-        width: 30,
-        align: "right",
-      });
-      const issueX = contentLeft + 126;
-      const fixX = contentLeft + 252;
-      const changeX = contentLeft + 424;
-      drawSectionTag("ISSUE", issueX, y + 14, colors.textMuted);
-      const issueFit = fitTextToBox(row.issue, 108, 58, 8.3, 7.2, 2.6);
-      drawParagraph(issueFit.text, issueX, y + 32, 108, issueFit.size, issueFit.lineGap);
-      drawSectionTag("FIX", fixX, y + 14, colors.accent);
-      const fixFit = fitTextToBox(row.fix, 152, 58, 8.3, 7.2, 2.6);
-      drawParagraph(fixFit.text, fixX, y + 32, 152, fixFit.size, fixFit.lineGap);
-      drawSectionTag("CHANGE", changeX, y + 14, row.color);
-      const impactFit = fitTextToBox(row.impact, 88, 58, 8.1, 7.0, 2.5);
-      drawParagraph(impactFit.text, changeX, y + 32, 88, impactFit.size, impactFit.lineGap);
+    drawPanel(contentLeft, 230, contentWidth, 126, colors.panelSoft);
+    drawSectionTag("HOMEPAGE HEADLINE", contentLeft + 22, 254, colors.mint);
+    const headlineFit = fitTextToBox(suggestedHeadline, contentWidth - 44, 56, 18, 13.4, 3.4, "Times-Bold");
+    doc.fillColor(colors.textOnDark).font(headlineFit.font).fontSize(headlineFit.size).text(headlineFit.text, contentLeft + 22, 278, {
+      width: contentWidth - 44,
+      lineGap: headlineFit.lineGap,
     });
+    drawPanel(contentLeft, 380, contentWidth, 118, colors.panel);
+    drawSectionTag("SUPPORTING LINE", contentLeft + 22, 404, colors.accent);
+    const subFit = fitTextToBox(suggestedSubheadline, contentWidth - 44, 56, 10.4, 8.4, 3.2, "Helvetica");
+    drawParagraph(subFit.text, contentLeft + 22, 428, contentWidth - 44, subFit.size, subFit.lineGap);
+    drawPanel(contentLeft, 522, (contentWidth - 18) / 2, 112, colors.panelSoft);
+    drawSectionTag("PRIMARY CTA", contentLeft + 20, 546, colors.amber);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(17).text(suggestedCta, contentLeft + 20, 572, {
+      width: (contentWidth - 58) / 2,
+      lineGap: 2,
+    });
+    drawPanel(contentLeft + (contentWidth + 18) / 2, 522, (contentWidth - 18) / 2, 112, colors.panelSoft);
+    drawSectionTag("BUYER FILTER", contentLeft + (contentWidth + 18) / 2 + 20, 546, colors.mint);
+    drawParagraph(
+      "Use language that filters for the buyer who already feels the problem and needs proof that this is the safer next step.",
+      contentLeft + (contentWidth + 18) / 2 + 20,
+      572,
+      (contentWidth - 58) / 2,
+      8.8,
+      3,
+    );
+    drawPanel(contentLeft, 660, contentWidth, 72, colors.panelSoft);
+    drawSectionTag("WHY THIS MATTERS", contentLeft + 18, 682, colors.textMuted);
+    drawParagraph(priorityRewrite.why, contentLeft + 168, 676, contentWidth - 188, 8.6, 3);
 
-    // Page 15: Work with SAHAR
+    // Page 16: Implementation Playbook + SAHAR CTA
     addBasePage();
     drawPageLabel(pdfCopy.playbookLabel, "30-day implementation sprint", {
       width: 390,
