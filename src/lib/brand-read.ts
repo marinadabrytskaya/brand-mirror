@@ -1663,7 +1663,9 @@ function mergeAeoVisibilityScore(
     ? Boolean(technical.blocksClaude)
     : false;
 
-  let merged = Math.round(semanticScore * 0.5 + aeoAudit.totalScore * 0.5);
+  // AI Visibility should feel externally grounded: the technical AEO layer
+  // carries more weight, while BrandMirror still catches semantic clarity.
+  let merged = Math.round(semanticScore * 0.4 + aeoAudit.totalScore * 0.6);
 
   if (blocksGpt || blocksClaude) {
     merged = Math.min(merged, 58);
@@ -1999,7 +2001,7 @@ positioningClarity — how quickly the homepage makes the offer legible to a fir
 - 70-85  offer and audience are legible inside the hero frame. A first-time visitor can describe what this company does.
 - 85-100 offer, audience, and reason-to-care all land before the first scroll. Anchor: Stripe homepage hero, Linear hero, Notion hero.
 
-toneCoherence — AI visibility: whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand based on its website content AND its technical AEO readiness.
+toneCoherence — AI visibility: whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand. Treat this as 60% technical AEO readiness (metadata, schema, crawler access, AI-readable structure) and 40% semantic brand clarity (category nouns, offer specificity, consistent naming).
 - 0-30   AI tools cannot find or describe the brand at all. No structured data, no meta descriptions, no indexable content, or crawler access is broken.
 - 30-50  AI tools find the domain but cannot accurately describe what the brand does. Generic or misleading summaries. Weak schema, weak metadata, weak AI-readable structure.
 - 50-70  AI tools find the brand and get the category right but miss specifics. Some metadata exists, but the technical and narrative signals are still incomplete.

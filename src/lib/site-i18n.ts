@@ -59,7 +59,7 @@ export const siteCopy = {
           label: "AI visibility",
           title: "How visible your brand is to AI-powered search",
           body:
-            "It checks whether AI tools like ChatGPT, Gemini, and Perplexity can find, understand, and accurately recommend your brand. AI visibility combines recommendation readiness with a technical AEO layer: metadata, schema, crawler access, and AI-readable structure.",
+            "It checks whether AI tools like ChatGPT, Gemini, and Perplexity can find, understand, and accurately recommend your brand. AI visibility is weighted toward the external technical AEO layer: 60% metadata, schema, crawler access, and AI-readable structure; 40% semantic brand clarity.",
         },
         {
           label: "Visual identity",

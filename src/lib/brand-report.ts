@@ -3086,7 +3086,7 @@ Positioning clarity — how quickly the homepage makes the offer legible to a fi
 - 70-85  offer and audience are legible inside the hero frame.
 - 85-100  offer, audience, and reason-to-care all land before the first scroll.
 
-AI visibility — whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand, combining recommendation readiness with a technical AEO layer.
+AI visibility — whether AI tools (ChatGPT, Gemini, Perplexity, Google AI Overviews) can find, accurately describe, and recommend this brand. Weight this axis toward external evidence: 60% technical AEO readiness (metadata, schema, crawler access, AI-readable structure) and 40% semantic brand clarity (category nouns, offer specificity, consistent naming).
 - 0-30   AI tools cannot find or describe the brand at all. The brand is effectively invisible or unreadable to AI systems.
 - 30-50  AI tools find the domain but describe it generically or incorrectly. Technical signals and brand clarity are too weak to support confident recommendation.
 - 50-70  AI tools find the brand and mostly get the category right, but flatten the specifics. Some metadata or structured signals exist, but not enough to make the offer reliably retrievable.
@@ -3948,7 +3948,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "PROOF AND CTA ZONE",
         methodologyBullets: [
           "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-          "AI Visibility measures whether AI tools can find, read, and recommend the brand, combining recommendation readiness with a technical AEO layer: metadata, schema, crawler access, and AI-readable structure.",
+          "AI Visibility measures whether AI tools can find, read, and recommend the brand. It is weighted 60% technical AEO layer - metadata, schema, crawler access, and AI-readable structure - and 40% semantic brand clarity.",
           "Visual Credibility measures whether the design signals quality and control.",
           "Offer Specificity measures how directly the page explains what it does and why it matters.",
           "Conversion Readiness measures whether the page has earned a confident next step.",
@@ -4072,7 +4072,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "AI Visibility mide si las herramientas de IA pueden encontrar, leer y recomendar la marca, combinando legibilidad para IA con una capa técnica de AEO: metadatos, schema, acceso para crawlers y estructura legible por IA.",
+          "AI Visibility mide si las herramientas de IA pueden encontrar, leer y recomendar la marca. Pesa 60% capa técnica AEO - metadatos, schema, acceso para crawlers y estructura legible por IA - y 40% claridad semántica de marca.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
@@ -4196,7 +4196,7 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ЗОНА PROOF И CTA",
         methodologyBullets: [
           "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "AI Visibility измеряет, могут ли AI tools найти бренд, корректно прочитать его и рекомендовать, объединяя recommendation readiness с техническим AEO-слоем: metadata, schema, crawler access и AI-readable structure.",
+          "AI Visibility измеряет, могут ли AI tools найти бренд, корректно прочитать его и рекомендовать. Вес: 60% technical AEO layer - metadata, schema, crawler access и AI-readable structure - и 40% semantic brand clarity.",
           "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
           "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
           "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
