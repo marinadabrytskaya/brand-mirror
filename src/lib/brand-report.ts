@@ -5567,46 +5567,88 @@ export async function generateBrandReportPdf(
       drawParagraph(report.competitiveLandscape.analysis.quickestWin.message, contentLeft + 192, 656, contentWidth - 212, 8.8, 3);
     }
 
-    // Page 14: Priority Fix Stack
+    // Page 14: Recommendations
     addBasePage();
-    drawPageLabel(pdfCopy.fixesLabel, pdfCopy.fixesTitle, {
-      width: 360,
-      maxFont: 27,
-      minFont: 22,
-      maxHeight: 114,
-    });
-    drawPanel(contentLeft, 184, contentWidth, 112, colors.panelSoft);
-    drawSectionTag("FIX NOW / PRIORITY 1", contentLeft + 18, 206, colors.terracotta);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(14).text("Replace the vague announcement with a buyer-state promise.", contentLeft + 18, 226, {
-      width: 250,
-      lineGap: 2,
-    });
-    drawSectionTag("PROPOSED LINE", contentLeft + 292, 206, colors.mint);
-    const proposedFit = fitTextToBox(priorityRewrite.proposed, 176, 44, 9.2, 7.8, 2.8, "Helvetica");
-    drawParagraph(proposedFit.text, contentLeft + 292, 226, 176, proposedFit.size, proposedFit.lineGap);
-    drawSectionTag("WHERE", contentLeft + 18, 268, colors.textMuted);
-    drawParagraph(priorityRewrite.where, contentLeft + 88, 264, 380, 7.8, 2.5);
-    const bands = [
-      { title: pdfCopy.fixNow, items: report.priorityFixes.fixNow, color: colors.terracotta },
-      { title: pdfCopy.fixNext, items: report.priorityFixes.fixNext, color: colors.amber },
-      { title: pdfCopy.keep, items: report.priorityFixes.keep, color: colors.success },
+    const recommendationsTitleBottom = drawPageLabel(
+      "RECOMMENDATIONS",
+      `Your BrandMirror Score: ${overallScore}/100 - ${getBandForScore(overallScore)}`,
+      {
+        width: 430,
+        maxFont: 27,
+        minFont: 21,
+        maxHeight: 104,
+      },
+    );
+    drawParagraph(
+      "You have a real product and a clear niche. What is holding the brand back is not the offer itself - it is how quickly buyers, algorithms, and AI systems can understand it.",
+      contentLeft,
+      Math.max(recommendationsTitleBottom + 14, 164),
+      contentWidth,
+      10,
+      4,
+    );
+
+    const scoreLookup = (label: string) => scoreByLabel(label)?.score ?? overallScore;
+    const recommendationRows = [
+      {
+        title: "AI Visibility",
+        score: scoreLookup("AI visibility"),
+        body:
+          "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
+        fix:
+          "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
+      },
+      {
+        title: "Offer Clarity",
+        score: scoreLookup("Offer specificity"),
+        body:
+          "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
+        fix:
+          "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
+      },
+      {
+        title: "Conversion Logic",
+        score: scoreLookup("Conversion readiness"),
+        body:
+          "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
+        fix:
+          "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
+      },
     ];
-    let bandTop = 318;
-    bands.forEach((band) => {
-      drawPanel(contentLeft, bandTop, contentWidth, 104);
-      doc.roundedRect(contentLeft, bandTop, 122, 104, 16).fill(band.color);
-      doc.fillColor(band.title === pdfCopy.keep ? colors.dark : colors.textOnDark).font("Helvetica").fontSize(12).text(band.title, contentLeft + 18, bandTop + 43, {
-        characterSpacing: 1.8,
+
+    recommendationRows.forEach((row, index) => {
+      const y = 236 + index * 132;
+      const rowColor = bandColor(row.score);
+      drawPanel(contentLeft, y, contentWidth, 112, colors.panelSoft);
+      doc.roundedRect(contentLeft, y, 110, 112, 16).fill(rowColor);
+      doc.fillColor(row.score >= 70 ? colors.dark : colors.textOnDark)
+        .font("Helvetica")
+        .fontSize(9.5)
+        .text(row.title.toUpperCase(), contentLeft + 18, y + 24, {
+          width: 76,
+          characterSpacing: 1.2,
+          lineGap: 2,
+        });
+      doc.font("Helvetica").fontSize(24).text(String(row.score), contentLeft + 18, y + 68, {
+        width: 72,
+        align: "right",
       });
-      drawBulletItems(band.items, contentLeft + 148, bandTop + 18, 312, {
-        maxItems: 3,
-        fontSize: 9.8,
-        minSize: 8.4,
-        maxHeight: 70,
-        itemGap: 5,
-      });
-      bandTop += 116;
+      drawSectionTag("WHY THIS MATTERS", contentLeft + 134, y + 18, colors.accent);
+      drawParagraph(row.body, contentLeft + 134, y + 36, 170, 8.6, 2.7);
+      drawSectionTag("WHAT NEEDS TO HAPPEN", contentLeft + 322, y + 18, colors.amber);
+      drawParagraph(row.fix, contentLeft + 322, y + 36, 142, 8.2, 2.5);
     });
+
+    drawPanel(contentLeft, 636, contentWidth, 86, colors.panel);
+    drawSectionTag("WHAT IS WORKING", contentLeft + 18, 658, colors.mint);
+    drawParagraph(
+      `Positioning (${scoreLookup("Positioning clarity")}) gives the brand a real niche to sharpen. Visual credibility (${scoreLookup("Visual credibility")}) already creates some professional trust. Build on those signals instead of rebuilding from zero.`,
+      contentLeft + 18,
+      682,
+      contentWidth - 36,
+      8.8,
+      3,
+    );
 
     // Page 15: One Page Brand Brief
     addBasePage();
@@ -5657,91 +5699,74 @@ export async function generateBrandReportPdf(
 
     // Page 16: Implementation Playbook + SAHAR CTA
     addBasePage();
-    drawPageLabel(pdfCopy.playbookLabel, "30-day implementation sprint", {
-      width: 390,
+    const nextStepTitleBottom = drawPageLabel("WHAT HAPPENS NEXT", "This report was built to be used - not filed", {
+      width: 430,
       maxFont: 27,
       minFont: 21,
       maxHeight: 112,
     });
-    const sprintIntro = fitTextToBox(
-      "Use this as a self-guided sprint, or bring it into a working session with SAHAR. The goal is simple: make the page clearer, easier to trust, easier for AI to read, and easier to act on.",
+    drawParagraph(
+      "A report can show what is broken. A conversation decides the fastest way to fix it for your team, timeline, and actual priorities.",
+      contentLeft,
+      Math.max(nextStepTitleBottom + 14, 166),
       contentWidth,
-      46,
-      10.8,
-      9.6,
-      4,
+      10.4,
+      4.5,
     );
-    drawParagraph(sprintIntro.text, contentLeft, 176, contentWidth, sprintIntro.size, sprintIntro.lineGap);
-    const sprintBands = [
-      {
-        label: pdfCopy.playbookNow,
-        subtitle: "Days 1-7",
-        items: sprintNow,
-        color: colors.terracotta,
-      },
-      {
-        label: pdfCopy.playbookNext,
-        subtitle: "Days 8-21",
-        items: sprintNext,
-        color: colors.amber,
-      },
-      {
-        label: pdfCopy.playbookThen,
-        subtitle: "Days 22-30",
-        items: sprintThen,
-        color: colors.mint,
-      },
-    ];
-    sprintBands.forEach((band, index) => {
-      const y = 238 + index * 112;
-      drawPanel(contentLeft, y, contentWidth, 94, colors.panelSoft);
-      doc.roundedRect(contentLeft, y, 108, 94, 16).fill(band.color);
-      doc.fillColor(band.color === colors.mint ? colors.dark : colors.textOnDark)
-        .font("Helvetica")
-        .fontSize(13)
-        .text(band.label, contentLeft + 20, y + 30, { characterSpacing: 2.2 });
-      doc.font("Helvetica").fontSize(8.2).text(band.subtitle.toUpperCase(), contentLeft + 20, y + 52, {
-        width: 74,
-        characterSpacing: 1.4,
-      });
-      drawBulletItems(band.items, contentLeft + 130, y + 16, contentWidth - 154, {
-        maxItems: 3,
-        fontSize: 8.2,
-        minSize: 7.1,
-        lineGap: 2.5,
-        itemGap: 4,
-        maxHeight: 62,
-      });
-    });
 
-    drawPanel(contentLeft, 584, contentWidth, 144, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 20, 606, colors.mint);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(17.5).text("Want SAHAR to build the sharper version?", contentLeft + 20, 632, {
-      width: contentWidth - 196,
+    drawPanel(contentLeft, 234, contentWidth, 118, colors.panelSoft);
+    drawSectionTag("BOOK A FREE SAHAR DISCOVERY CALL", contentLeft + 22, 258, colors.mint);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text("30 minutes. No pitch. Just clarity.", contentLeft + 22, 286, {
+      width: contentWidth - 44,
+    });
+    drawParagraph(
+      "We look at the scores together, decide what matters first, and map the practical route for a SAHAR project: positioning, offer structure, proof, AI visibility, and conversion path.",
+      contentLeft + 22,
+      320,
+      contentWidth - 44,
+      9.6,
+      3.5,
+    );
+
+    drawPanel(contentLeft, 392, contentWidth, 168, colors.panel);
+    drawSectionTag("WORK WITH SAHAR", contentLeft + 24, 420, colors.mint);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(23).text("Build the sharper version with us.", contentLeft + 24, 452, {
+      width: contentWidth - 48,
       lineGap: 2,
     });
     drawParagraph(
-      "Bring this report into a working session. We turn the highest-leverage fixes into a focused homepage sprint: clearer positioning, stronger proof, cleaner AI visibility, and a cleaner next step.",
-      contentLeft + 20,
-      678,
-      contentWidth - 206,
-      9.0,
+      "A SAHAR project turns this diagnosis into the actual system: sharper positioning, clearer offer architecture, stronger proof, cleaner AI visibility, and a homepage that gives buyers one obvious next step.",
+      contentLeft + 24,
+      496,
+      contentWidth - 48,
+      10,
       4,
     );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.8).text("BOOK THE NEXT STEP", contentRight - 154, 640, {
-      width: 142,
-      align: "right",
-      characterSpacing: 1.2,
+    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.8).text(
+      "We scope the right version together on the call - no pressure, no generic package.",
+      contentLeft + 24,
+      538,
+      { width: contentWidth - 48 },
+    );
+
+    drawPanel(contentLeft, 604, contentWidth, 106, colors.panelSoft);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(19).text("Book your free Discovery Call", contentLeft + 22, 630, {
+      width: 250,
     });
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(15.5).text("saharstudio.com", contentRight - 174, 670, {
-      width: 162,
+    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.6).text("30 minutes. We read the report together and choose the next best move.", contentLeft + 22, 660, {
+      width: 270,
+      lineGap: 3,
+    });
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(17).text("saharstudio.com", contentRight - 176, 646, {
+      width: 164,
       align: "right",
       link: "https://saharstudio.com",
       underline: true,
     });
-    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.2).text("Bring the report. Leave with the next page version.", contentRight - 174, 696, {
-      width: 142,
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.4).text("BOOK THE NEXT STEP", contentRight - 176, 676, {
+      width: 164,
       align: "right",
+      characterSpacing: 1.4,
     });
 
     doc.end();
