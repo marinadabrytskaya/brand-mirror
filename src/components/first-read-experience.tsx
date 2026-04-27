@@ -7,6 +7,15 @@ import { type BrandReadResult } from "@/lib/brand-read";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
+import {
+  buildBrandReadParagraphs,
+  buildExpandedSignal,
+  buildNextMoveCliffhanger,
+  buildScopeLine,
+  fullReportIncludes,
+  refundLine,
+  scoreConsequence,
+} from "@/lib/free-report-copy";
 
 type SiteLocale = "en" | "es" | "ru";
 
@@ -207,8 +216,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const posterBand = bandFor(result.posterScore);
   const scoreRows = DIMENSIONS.map((d) => ({
     label: d.shortLabel,
+    key: d.key,
     value: result[d.key] as number,
+    consequence: scoreConsequence(d.key, result[d.key] as number),
   }));
+  const brandReadParagraphs = buildBrandReadParagraphs(result);
+  const nextMoveParagraphs = buildNextMoveCliffhanger(result);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -585,39 +598,56 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             isLive={Boolean(currentUrl)}
           />
         </section>
+        <p
+          className="mt-4 text-center"
+          style={{
+            ...terminalText,
+            color: COLOR.textMuted,
+            fontSize: "10px",
+            letterSpacing: "0.13em",
+          }}
+          suppressHydrationWarning
+        >
+          {buildScopeLine(clock)}
+        </p>
 
         {/* =================== Editorial anatomy =================== */}
-        <section className="mt-20 grid gap-10 lg:grid-cols-[1fr_2fr]">
+        <section className="mt-20 grid gap-8 lg:grid-cols-[0.34fr_0.66fr]">
           <div>
-            <p style={metaLabel}>{copy.whatItDoes}</p>
-            <p
-              className="mt-4 leading-7"
-              style={{ color: COLOR.textSoft, fontSize: "15px" }}
-            >
-              {result.whatItDoes}
-            </p>
-          </div>
-          <div>
-            <p style={metaLabel}>{copy.firstDiagnosis}</p>
-            <p
-              className="mt-4 leading-[1.1] tracking-[-0.015em]"
+            <p style={metaLabel}>BRAND&nbsp;READ</p>
+            <h3
+              className="mt-4 leading-[1.05] tracking-[-0.02em]"
               style={{
                 fontFamily: "var(--font-cormorant), Georgia, serif",
-                fontSize: "clamp(1.75rem, 3.4vw, 2.5rem)",
+                fontSize: "clamp(2rem, 4vw, 3.1rem)",
                 color: COLOR.text,
                 fontWeight: 500,
               }}
             >
-              {"\u201C"}{result.summary}{"\u201D"}
-            </p>
-            <div className="mt-8 rounded-xl border px-5 py-5" style={{ borderColor: COLOR.lineSoft, background: "rgba(255,255,255,0.02)" }}>
-              <p style={metaLabel}>{copy.currentState}</p>
-              <p
-                className="mt-3 max-w-[44rem] leading-7"
-                style={{ color: COLOR.textSoft, fontSize: "15px" }}
-              >
-                {result.current}
-              </p>
+              The symptom is visible. The commercial cost needs naming.
+            </h3>
+          </div>
+          <div
+            className="rounded-2xl border p-6 sm:p-8"
+            style={{
+              borderColor: COLOR.lineSoft,
+              background: "rgba(255,255,255,0.02)",
+            }}
+          >
+            <p style={{ ...metaLabel, color: COLOR.accent }}>CURRENT&nbsp;STATE</p>
+            <div className="mt-5 space-y-5">
+              {brandReadParagraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  className="max-w-[48rem] leading-7"
+                  style={{
+                    color: index === 2 ? COLOR.text : COLOR.textSoft,
+                    fontSize: "15.5px",
+                  }}
+                >
+                  {paragraph}
+                </p>
+              ))}
             </div>
           </div>
         </section>
@@ -710,18 +740,30 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           <AnatomyColumn
             label={copy.strongestSignal.toUpperCase()}
             tone="#6FE0C2"
-            body={result.strongestSignal}
+            body={buildExpandedSignal(result, "strongest")}
           />
           <AnatomyColumn
             label={copy.mainFriction.toUpperCase()}
             tone="#E8B04C"
-            body={result.mainFriction}
+            body={buildExpandedSignal(result, "friction")}
           />
           <div className="rounded-xl border p-5" style={{ borderColor: `${COLOR.line}`, background: `${COLOR.line}22` }}>
             <p style={{ ...metaLabel, color: COLOR.text }}>{copy.nextMove.toUpperCase()}</p>
-            <p className="mt-3 leading-6" style={{ color: COLOR.textSoft, fontSize: "14px", fontStyle: "italic" }}>
-              Available in full report
-            </p>
+            <div className="mt-3 space-y-3">
+              {nextMoveParagraphs.map((paragraph, index) => (
+                <p
+                  key={index}
+                  className="leading-6"
+                  style={{
+                    color: index === nextMoveParagraphs.length - 1 ? COLOR.text : COLOR.textSoft,
+                    fontSize: "13.5px",
+                    fontStyle: index === 0 ? "italic" : "normal",
+                  }}
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -762,13 +804,32 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     fontWeight: 500,
                   }}
                 >
-                  Unlock the full diagnosis, competitor position, and implementation playbook.
+                  Unlock the exact fix stack behind this scan.
                 </p>
+                <ol className="mt-5 space-y-2">
+                  {fullReportIncludes.slice(0, 7).map((item, index) => (
+                    <li
+                      key={item}
+                      className="grid grid-cols-[1.6rem_1fr] gap-2 leading-6"
+                      style={{ color: COLOR.textSoft, fontSize: "13.5px" }}
+                    >
+                      <span style={{ color: "#6FE0C2", fontFamily: "var(--font-mono), ui-monospace, monospace" }}>
+                        {index + 1}.
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ol>
                 <p
-                  className="mt-5 max-w-lg leading-7"
-                  style={{ color: COLOR.textSoft, fontSize: "14px" }}
+                  className="mt-5 rounded-xl border px-4 py-3 leading-6"
+                  style={{
+                    borderColor: "rgba(111,224,194,0.18)",
+                    background: "rgba(111,224,194,0.05)",
+                    color: COLOR.text,
+                    fontSize: "13.5px",
+                  }}
                 >
-                  Includes signal read, commercial impact scenarios, competitor comparison, implementation playbook, and the downloadable PDF.
+                  {refundLine}
                 </p>
               </div>
               <div className="mt-8 flex flex-col gap-3">
@@ -870,9 +931,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>UNLOCK FULL REPORT</p>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT</p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    $197 at brandmirror.app — priority fix stack, implementation playbook, competitor position, and PDF export.
+                    Fix Now, Fix Next, and Keep — prioritized by commercial impact.
                   </p>
                   <a
                     href="https://brandmirror.app"
@@ -996,7 +1057,7 @@ function ScannerReadout({
   band: Band;
   tagline: string;
   clock: string;
-  scoreRows: Array<{ label: string; value: number }>;
+  scoreRows: Array<{ label: string; key: string; value: number; consequence: string }>;
   isPending: boolean;
   isLive: boolean;
 }) {
@@ -1154,22 +1215,34 @@ function ScannerReadout({
                 key={row.label}
                 className="grid items-center gap-4 py-3"
                 style={{
-                  gridTemplateColumns: "minmax(128px, 156px) minmax(0, 1fr) 236px",
+                  gridTemplateColumns: "minmax(168px, 210px) minmax(0, 1fr) 148px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
                       : `0.5px solid ${COLOR.lineSoft}`,
                 }}
               >
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontSize: "10px",
-                    letterSpacing: "0.24em",
-                    color: "rgba(237,237,242,0.55)",
-                  }}
-                >
-                  {row.label}
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "10px",
+                      letterSpacing: "0.24em",
+                      color: "rgba(237,237,242,0.55)",
+                    }}
+                  >
+                    {row.label}
+                  </div>
+                  <div
+                    className="mt-1 hidden leading-4 xl:block"
+                    style={{
+                      color: COLOR.textFaint,
+                      fontSize: "10.5px",
+                      maxWidth: 204,
+                    }}
+                  >
+                    {row.consequence}
+                  </div>
                 </div>
                 <div
                   className="overflow-hidden rounded-full"
@@ -1188,9 +1261,9 @@ function ScannerReadout({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "64px 132px",
+                    gridTemplateColumns: "42px 94px",
                     alignItems: "center",
-                    columnGap: 20,
+                    columnGap: 12,
                     justifyContent: "end",
                   }}
                 >
