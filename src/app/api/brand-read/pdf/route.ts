@@ -771,39 +771,46 @@ async function renderBrandReadPdf(
     21,
   );
 
-  const teaserY = 92;
-  const teaserWidth = (contentWidth - 20) / 2;
+  const teaserY = 78;
+  const teaserHeight = 308;
   page3.drawRectangle({
     x: PAGE.marginX,
     y: teaserY,
-    width: teaserWidth,
-    height: 286,
+    width: contentWidth,
+    height: teaserHeight,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page3, "$197 full report", PAGE.marginX + 16, teaserY + 264, COLORS.accent);
+  drawLabel(page3, "$197 full report", PAGE.marginX + 18, teaserY + teaserHeight - 30, COLORS.accent);
   page3.drawText("What's inside", {
-    x: PAGE.marginX + 16,
-    y: teaserY + 240,
-    size: 17,
+    x: PAGE.marginX + 18,
+    y: teaserY + teaserHeight - 56,
+    size: 21,
     font: serifBold,
     color: COLORS.text,
   });
-  let unlockY = teaserY + 216;
+  const includesColumnGap = 22;
+  const includesColumnWidth = (contentWidth - 36 - includesColumnGap) / 2;
+  let unlockY = teaserY + teaserHeight - 92;
   fullReportIncludes.slice(0, 7).forEach((item, index) => {
+    const column = index < 4 ? 0 : 1;
+    const itemX = PAGE.marginX + 18 + column * (includesColumnWidth + includesColumnGap);
+    if (index === 4) {
+      unlockY = teaserY + teaserHeight - 92;
+    }
     page3.drawText(`${index + 1}.`, {
-      x: PAGE.marginX + 16,
+      x: itemX,
       y: unlockY,
-      size: 8.4,
+      size: 10.2,
       font: sansBold,
       color: posterBandColor,
     });
-    const fitted = fitBodyText(item, sans, teaserWidth - 54, 24, 7.8, 6.9, 1.24);
+    const fitted = fitBodyText(item, sans, includesColumnWidth - 34, 42, 10.2, 9.2, 1.24);
     let itemY = unlockY;
     fitted.lines.forEach((line) => {
       page3.drawText(line, {
-        x: PAGE.marginX + 38,
+        x: itemX + 24,
         y: itemY,
         size: fitted.size,
         font: sans,
@@ -811,47 +818,38 @@ async function renderBrandReadPdf(
       });
       itemY -= fitted.lineHeight;
     });
-    unlockY = itemY - 3;
+    unlockY = itemY - 7;
   });
   const linkText = "brandmirror.app";
-  const linkY = teaserY + 18;
+  const linkY = teaserY + 24;
   page3.drawText(linkText, {
-    x: PAGE.marginX + 16,
+    x: PAGE.marginX + 18,
     y: linkY,
     size: 12.5,
     font: sansBold,
     color: posterBandColor,
   });
   page3.drawLine({
-    start: { x: PAGE.marginX + 16, y: linkY - 2 },
-    end: { x: PAGE.marginX + 16 + sansBold.widthOfTextAtSize(linkText, 12.5), y: linkY - 2 },
+    start: { x: PAGE.marginX + 18, y: linkY - 2 },
+    end: { x: PAGE.marginX + 18 + sansBold.widthOfTextAtSize(linkText, 12.5), y: linkY - 2 },
     thickness: 0.8,
     color: posterBandColor,
   });
   addExternalLink(
     page3,
-    PAGE.marginX + 16,
+    PAGE.marginX + 18,
     linkY - 2,
     sansBold.widthOfTextAtSize(linkText, 12.5),
     16,
     "https://brandmirror.app",
   );
-  const fixX = PAGE.marginX + teaserWidth + 20;
-  page3.drawRectangle({
-    x: fixX,
-    y: teaserY,
-    width: teaserWidth,
-    height: 286,
-    color: COLORS.panel,
-    borderColor: COLORS.line,
-    borderWidth: 1,
-  });
-  drawLabel(page3, "Fix stack preview", fixX + 16, teaserY + 264, COLORS.accent);
-  const guaranteeFit = fitBodyText(refundLine, sans, teaserWidth - 32, 54, 8.6, 7.4, 1.28);
-  let guaranteeY = teaserY + 238;
+  const guaranteeX = PAGE.marginX + 18 + includesColumnWidth + includesColumnGap;
+  drawLabel(page3, "Guarantee", guaranteeX, teaserY + 50, COLORS.accent);
+  const guaranteeFit = fitBodyText(refundLine, sans, includesColumnWidth, 34, 9.2, 8.4, 1.24);
+  let guaranteeY = teaserY + 30;
   guaranteeFit.lines.forEach((line) => {
     page3.drawText(line, {
-      x: fixX + 16,
+      x: guaranteeX,
       y: guaranteeY,
       size: guaranteeFit.size,
       font: sans,
@@ -859,54 +857,6 @@ async function renderBrandReadPdf(
     });
     guaranteeY -= guaranteeFit.lineHeight;
   });
-  [
-    { label: "FIX NOW", color: rgb(224/255,122/255,95/255) },
-    { label: "FIX NEXT", color: COLORS.warn },
-    { label: "KEEP", color: COLORS.accent },
-  ].forEach((row, idx) => {
-    const yy = teaserY + 154 - idx * 42;
-    page3.drawRectangle({ x: fixX + 16, y: yy, width: 104, height: 28, color: rgb(row.color.red * 0.18, row.color.green * 0.18, row.color.blue * 0.18) });
-    page3.drawText(row.label, { x: fixX + 30, y: yy + 9, size: 9.2, font: sansBold, color: row.color });
-    for (let i = 0; i < 3; i += 1) {
-      const barX = fixX + 132 + i * 34;
-      page3.drawLine({
-        start: { x: barX, y: yy + 14 },
-        end: { x: barX + 18, y: yy + 14 },
-        thickness: 6,
-        color: rgb(row.color.red * 0.24, row.color.green * 0.24, row.color.blue * 0.24),
-      });
-    }
-  });
-  page3.drawText("Unlock full report", {
-    x: fixX + 18,
-    y: teaserY + 28,
-    size: 10,
-    font: sansBold,
-    color: COLORS.text,
-  });
-  page3.drawText("brandmirror.app", {
-    x: fixX + 18,
-    y: teaserY + 12,
-    size: 9.8,
-    font: sansBold,
-    color: COLORS.accent,
-  });
-  addExternalLink(
-    page3,
-    fixX + 18,
-    teaserY + 22,
-    sansBold.widthOfTextAtSize("Unlock full report", 10),
-    16,
-    "https://brandmirror.app",
-  );
-  addExternalLink(
-    page3,
-    fixX + 18,
-    teaserY + 8,
-    sansBold.widthOfTextAtSize("brandmirror.app", 9.8),
-    14,
-    "https://brandmirror.app",
-  );
   page3.drawText("Powered by SAHAR / saharstudio.com", {
     x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
     y: 24,
