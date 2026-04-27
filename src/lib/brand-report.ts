@@ -1765,7 +1765,7 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       fixNow: [
         safeNextMove,
         "Bring the core value proposition into the first screen.",
-        "Add a visible proof or credibility cue before the midpoint of the page.",
+        "Choose one primary next step and make the route obvious: book, enquire, buy, register, or request a call.",
       ],
       fixNext: [
         "Tighten section-level copy so each block earns its place.",
@@ -3699,7 +3699,7 @@ export async function generateBrandReportPdf(
     const contentLeft = 56;
     const contentRight = 539;
     const contentWidth = contentRight - contentLeft;
-    const totalPages = 16;
+    const totalPages = 15;
     let pageNumber = 0;
     const overallScore = Math.round(
       report.scorecard.reduce((sum, item) => sum + item.score, 0) / Math.max(report.scorecard.length, 1),
@@ -4555,6 +4555,42 @@ export async function generateBrandReportPdf(
       return filtered.length ? filtered.join(" ") : clean;
     };
 
+    const buildCoverPosterTagline = () => {
+      const cleanTagline = bodyCopy(report.tagline || "");
+      const diagnosticPattern =
+        /(score|page|cta|conversion|trust|offer|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
+      if (cleanTagline && cleanTagline.length < 120 && !diagnosticPattern.test(cleanTagline)) {
+        return firstSentence(cleanTagline, cleanTagline);
+      }
+
+      const primary = (report.archetypeRead?.primary || "").toLowerCase();
+      const secondary = (report.archetypeRead?.secondary || "").toLowerCase();
+      const archetypeTaglines: Array<[RegExp, string]> = [
+        [/sage.*magician|magician.*sage/, "Knowledge becomes infrastructure."],
+        [/sage/, "Knowledge, made usable."],
+        [/magician/, "The impossible, made operational."],
+        [/caregiver/, "A quiet return to what heals."],
+        [/creator/, "A world shaped with intention."],
+        [/ruler/, "Control, clarity, and the architecture of trust."],
+        [/explorer/, "For the ones building beyond the map."],
+        [/innocent/, "A cleaner promise for a calmer yes."],
+        [/hero/, "The work begins where certainty ends."],
+        [/lover/, "Designed to be felt before it is chosen."],
+        [/jester/, "A sharper signal with a lighter pulse."],
+        [/everyman/, "A practical promise for real people."],
+        [/outlaw/, "A category line, redrawn."],
+      ];
+      const archetypePair = [primary, secondary].filter(Boolean).join(" ");
+      const matched = archetypeTaglines.find(([pattern]) => pattern.test(archetypePair));
+      if (matched) return matched[1];
+
+      const knownFor = firstSentence(report.brandKnownFor || report.whatItDoes || "", "");
+      if (knownFor && knownFor.length < 120) {
+        return knownFor.replace(/\.$/, ".");
+      }
+      return "A signal with a world behind it.";
+    };
+
     const scoreByLabel = (label: string) =>
       report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase());
 
@@ -4662,8 +4698,8 @@ export async function generateBrandReportPdf(
         mid: "Clarify who the offer is for and what changes after someone buys. The transformation still lands too late.",
       },
       "Conversion Readiness": {
-        low: "Create one clear next step near the promise and keep the proof close to it. The page still hides the door.",
-        mid: "Make the CTA more specific and more earned. Reduce friction between interest, trust, and the click.",
+        low: "Choose the one action the visitor should take next: book, enquire, buy, register, or request a call. Put that route in the hero and repeat it after proof.",
+        mid: "Make the CTA operational, not decorative: say what happens after the click and remove competing paths that dilute the decision.",
       },
     } as const;
 
@@ -4692,8 +4728,7 @@ export async function generateBrandReportPdf(
         title: "Conversion",
         axis: "Conversion Readiness",
         body:
-          report.priorityFixes.fixNow[2] ||
-          "Make the CTA a specific next step. Put proof next to it and make the visitor understand what happens after the click.",
+          "Define the primary conversion route: Book, Enquire, Buy, Register, or Request a call. Put that CTA in the hero, repeat it after the first proof block, and add one line explaining what happens after the click.",
       },
       {
         title: "Visual",
@@ -4713,7 +4748,7 @@ export async function generateBrandReportPdf(
       "Offer Specificity":
         "More buyers can repeat what is sold, who it is for, and why it matters now.",
       "Conversion Readiness":
-        "The next step feels safer and more obvious, so qualified interest has less friction.",
+        "Qualified visitors know exactly how to move from interest to booking, enquiry, checkout, or call request.",
     };
 
     const practicalFixForAxis = (axisLabel: string, score: number) => {
@@ -4728,9 +4763,10 @@ export async function generateBrandReportPdf(
         const issue =
           item.title === "AI Visibility"
             ? "AI systems need clearer category nouns, metadata, schema, and consistent naming before they can describe the brand confidently."
-            :
-          firstSentence(stripBrandLead(item.score.note || item.diagnosis), item.score.note) ||
-          firstSentence(stripBrandLead(item.diagnosis), "This axis is slowing the page down.");
+            : item.title === "Conversion Readiness"
+              ? "The page needs a clearer action path: what to click, what happens next, and whether the visitor is booking, buying, registering, or enquiring."
+              : firstSentence(stripBrandLead(item.score.note || item.diagnosis), item.score.note) ||
+                firstSentence(stripBrandLead(item.diagnosis), "This axis is slowing the page down.");
         return {
           axis: item.title,
           score: item.score.score,
@@ -4754,7 +4790,7 @@ export async function generateBrandReportPdf(
     const sprintNow = uniqueItems(
       [
         "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
-        "Move one proof cue next to the CTA so the next step feels earned.",
+        "Choose the primary conversion event and make the CTA explicit: Book, Enquire, Buy, Register, or Request a call.",
         "Remove vague mood copy that does not explain what is being sold.",
       ],
       3,
@@ -4844,9 +4880,9 @@ export async function generateBrandReportPdf(
           ].join(" "),
         }
       : {
-          label: "EXTERNAL CONTEXT",
+          label: "CATEGORY CONTEXT",
           body:
-            "External competitor research did not return a usable peer set for this run. This page still uses the current scores, external visibility band, and category assumptions as a directional read.",
+            "The commercial read uses the current scores, visible market signal, and category context. Competitor benchmarks only appear when direct peers are clean enough to compare.",
         };
 
     const displayUrl = report.url.replace(/^https?:\/\//, "");
@@ -4886,11 +4922,7 @@ export async function generateBrandReportPdf(
       align: "center",
       characterSpacing: 1.9,
     });
-    const coverPosterLine =
-      firstSentence(report.brandMyth, "") ||
-      firstSentence(report.archetypeRead.rationale, "") ||
-      report.tagline ||
-      pdfCopy.footer.replace("\n", " ");
+    const coverPosterLine = buildCoverPosterTagline();
     const coverTagline = fitTextToBox(
       truncate(coverPosterLine, 160),
       contentWidth - 176,
@@ -4930,29 +4962,29 @@ export async function generateBrandReportPdf(
       align: "right",
       characterSpacing: 2,
     });
-    const scanTitle = fitHeading(bodyCopy(report.brandName).toLowerCase(), contentWidth - 100, 68, 29, 21, -1.4, "Helvetica");
-    doc.fillColor(colors.textOnDark).font(scanTitle.font).fontSize(scanTitle.size).text(scanTitle.text, contentLeft + 50, 102, {
-      width: contentWidth - 100,
+    const scanTitle = fitHeading(bodyCopy(report.brandName).toLowerCase(), contentWidth - 124, 62, 25, 18, -1.2, "Helvetica");
+    doc.fillColor(colors.textOnDark).font(scanTitle.font).fontSize(scanTitle.size).text(scanTitle.text, contentLeft + 62, 94, {
+      width: contentWidth - 124,
       align: "center",
       lineGap: scanTitle.lineGap,
     });
-    drawCenteredText(displayUrl.toUpperCase(), "Helvetica", 9, centerX, 168, colors.mutedOnDark);
-    drawGauge(centerX, 266, 64, overallScore, bandColor(overallScore));
-    drawCenteredText(String(overallScore), "Helvetica", 42, centerX, 250, bandColor(overallScore));
-    drawCenteredText("/ 100", "Helvetica", 10, centerX, 306, colors.mutedOnDark);
-    drawCenteredText(getBandForScore(overallScore), "Helvetica", 11, centerX, 334, bandColor(overallScore));
+    drawCenteredText(displayUrl.toUpperCase(), "Helvetica", 8.6, centerX, 158, colors.mutedOnDark);
+    drawGauge(centerX, 284, 60, overallScore, bandColor(overallScore));
+    drawCenteredText(String(overallScore), "Helvetica", 40, centerX, 268, bandColor(overallScore));
+    drawCenteredText("/ 100", "Helvetica", 9.6, centerX, 322, colors.mutedOnDark);
+    drawCenteredText(getBandForScore(overallScore), "Helvetica", 10.5, centerX, 348, bandColor(overallScore));
     const liveScanTagline = buildSignalTaglineFromScores(
       scorePages.map((item) => ({ label: item.label, score: item.score.score })),
       truncate(report.tagline || "", 120),
     );
     const liveTagline = fitTextToBox(liveScanTagline, contentWidth - 160, 44, 15.2, 12.6, 4, "Times-Roman");
-    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 80, 362, {
+    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 80, 376, {
       width: contentWidth - 160,
       align: "center",
       lineGap: liveTagline.lineGap,
     });
-    drawSectionTag("SCORE BREAKDOWN", contentLeft, 410, colors.mutedOnDark);
-    const scoreStartY = 426;
+    drawSectionTag("SCORE BREAKDOWN", contentLeft, 422, colors.mutedOnDark);
+    const scoreStartY = 438;
     scorePages.forEach((item, index) => {
       const rowY = scoreStartY + index * 44;
       const scoreColor = bandColor(item.score.score);
@@ -4979,7 +5011,7 @@ export async function generateBrandReportPdf(
       );
       doc.moveTo(contentLeft, rowY + 32).lineTo(contentRight, rowY + 32).lineWidth(0.8).strokeColor(colors.darkRule).stroke();
     });
-    drawSectionTag("INDICATOR SCALE", contentLeft, 672, colors.mutedOnDark);
+    drawSectionTag("INDICATOR SCALE", contentLeft, 682, colors.mutedOnDark);
     [
       { label: "0-30", name: "FLATLINING", color: "#B65C5C" },
       { label: "30-50", name: "FRAGILE", color: colors.terracotta },
@@ -4990,13 +5022,13 @@ export async function generateBrandReportPdf(
       const pillW = 82;
       const pillGap = 8;
       const x = contentLeft + (contentWidth - pillW * 5 - pillGap * 4) / 2 + index * (pillW + pillGap);
-      drawPanel(x, 684, pillW, 34, item.color === colors.amber ? colors.panelSoft : colors.panel);
-      doc.fillColor(item.color).font("Helvetica").fontSize(9.4).text(item.label, x, 699, {
+      drawPanel(x, 694, pillW, 34, item.color === colors.amber ? colors.panelSoft : colors.panel);
+      doc.fillColor(item.color).font("Helvetica").fontSize(9.4).text(item.label, x, 709, {
         width: pillW,
         align: "center",
         characterSpacing: 1,
       });
-      doc.font("Helvetica").fontSize(7.7).text(item.name, x, 692, {
+      doc.font("Helvetica").fontSize(7.7).text(item.name, x, 702, {
         width: pillW,
         align: "center",
         characterSpacing: 1.4,
@@ -5131,79 +5163,18 @@ export async function generateBrandReportPdf(
         });
       });
 
-      drawPanel(contentLeft, 660, contentWidth, 56, colors.panel);
-      drawSectionTag("HOW TO READ THIS", contentLeft + 18, 679, colors.textMuted);
-      drawParagraph(pdfCopy.roiFootnote, contentLeft + 170, 672, contentWidth - 190, 8.2, 4);
-
-      addBasePage();
-      const page6TitleBottom = drawPageLabel("EXTERNAL CONTEXT", "Competitors, category language, and what Exa returned", {
-        width: 420,
-        maxFont: 24,
-        minFont: 19,
-        maxHeight: 92,
-      });
-      drawParagraph(
-        "This page explains whether the external research layer found usable peers. If it did, the report uses those signals to sharpen the commercial impact read. If it did not, BrandMirror keeps the recommendation directional instead of inventing fake benchmarks.",
-        contentLeft,
-        Math.max(page6TitleBottom + 14, 166),
-        contentWidth,
-        10.2,
-        5,
-      );
-
-      drawPanel(contentLeft, 254, contentWidth, 118, colors.panelSoft);
-      drawSectionTag(competitiveContext.label, contentLeft + 22, 278, colors.accent);
-      drawParagraph(competitiveContext.body, contentLeft + 22, 306, contentWidth - 44, 10.2, 5);
-
       if (report.competitiveLandscape?.competitors?.length) {
-        const peers = report.competitiveLandscape.competitors.slice(0, 4);
-        peers.forEach((peer, index) => {
-          const rowY = 408 + index * 66;
-          drawPanel(contentLeft, rowY, contentWidth, 50, colors.panel);
-          doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(11).text(peer.name, contentLeft + 18, rowY + 14, {
-            width: 150,
-          });
-          doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(8.4).text(peer.reason, contentLeft + 184, rowY + 12, {
-            width: 276,
-            lineGap: 3,
-          });
-        });
+        drawPanel(contentLeft, 660, contentWidth, 62, colors.panel);
+        drawSectionTag(competitiveContext.label, contentLeft + 18, 680, colors.accent);
+        drawParagraph(competitiveContext.body, contentLeft + 184, 672, contentWidth - 204, 8.2, 3.5);
       } else {
-        const fallbackRows = [
-          {
-            label: "WHY IT MAY BE EMPTY",
-            body:
-              "Exa can be configured but still return no clean direct competitors if the domain is very small, the category language is vague, or the results are mostly directories/social profiles rather than real peer sites.",
-          },
-          {
-            label: "WHAT THE REPORT USES INSTEAD",
-            body:
-              "The commercial impact page uses current BrandMirror scores, the external traffic band, and the weak axes found in the report: AI visibility, offer specificity, visual credibility, and conversion readiness.",
-          },
-          {
-            label: "BEST NEXT DATA",
-            body:
-              "For a sharper benchmark, connect first-party analytics or provide 3-5 known competitors. Then this page can compare current signal, peer signal, and after-fix upside with more confidence.",
-          },
-        ];
-        fallbackRows.forEach((row, index) => {
-          const y = 410 + index * 82;
-          drawPanel(contentLeft, y, contentWidth, 64, colors.panel);
-          drawSectionTag(row.label, contentLeft + 18, y + 18, index === 0 ? colors.terracotta : colors.accent);
-          drawParagraph(row.body, contentLeft + 250, y + 14, contentWidth - 268, 8.2, 3.5);
-        });
+        doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.8).text(
+          "Directional ranges use BrandMirror scores, visible market signal, and category context. Competitor benchmarks appear only when direct peers are clean enough to compare.",
+          contentLeft,
+          672,
+          { width: contentWidth, lineGap: 3 },
+        );
       }
-
-      drawPanel(contentLeft, 684, contentWidth, 52, colors.panelSoft);
-      drawSectionTag("BOTTOM LINE", contentLeft + 18, 702, colors.mint);
-      drawParagraph(
-        "Use the commercial numbers as a planning range, not a guarantee. The strongest value is the sequence: what to fix, why it matters, and which signal should improve first.",
-        contentLeft + 146,
-        696,
-        contentWidth - 166,
-        8.4,
-        4,
-      );
     };
 
     // Page 6: Signal Read Part 1
@@ -5256,7 +5227,7 @@ export async function generateBrandReportPdf(
     } else {
       drawPanel(contentLeft, page8ImageY, contentWidth, websiteImageHeight, colors.panelSoft);
       drawSectionTag("ANALYZED URL", contentLeft + 18, page8ImageY + 22, colors.textMuted);
-      doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14).text(displayUrl, contentLeft + 18, page8ImageY + 42, {
+        doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14).text(displayUrl, contentLeft + 18, page8ImageY + 42, {
         width: contentWidth - 36,
       });
       doc.fillColor(colors.textMuted).font("Helvetica").fontSize(10).text(
@@ -5308,8 +5279,8 @@ export async function generateBrandReportPdf(
         width: 64,
         align: "right",
       });
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(pdfCopy.whatScoreTells, contentLeft, 178);
-      const diagnosisText = fitTextToBox(bodyCopy(item.diagnosis), 260, 288, 9.8, 7.8, 4);
+      drawSectionTag(pdfCopy.whatScoreTells.toUpperCase(), contentLeft, 178, colors.textOnDark);
+      const diagnosisText = fitTextToBox(bodyCopy(item.diagnosis), 268, 300, 10.2, 8.4, 4.2, "Helvetica");
       drawParagraph(diagnosisText.text, contentLeft, 206, 260, diagnosisText.size, diagnosisText.lineGap);
       const sidePanelX = 342;
       const sidePanelW = contentRight - sidePanelX;
@@ -5326,27 +5297,27 @@ export async function generateBrandReportPdf(
           { x: report.beforeAfterHero.currentFrame.focusX, y: report.beforeAfterHero.currentFrame.focusY },
         );
         drawSectionTag(pdfCopy.revealingLine, sidePanelX + 20, 366);
-        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), sidePanelW - 40, 52, 9.4, 7.8, 3.4, "Helvetica");
+        const revealVisual = fitTextToBox(stripBrandLead(firstSentence(item.quote)), sidePanelW - 40, 52, 9.2, 8.0, 3.4, "Helvetica");
         doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(revealVisual.size).text(revealVisual.text, sidePanelX + 20, 386, {
           width: sidePanelW - 40,
           lineGap: revealVisual.lineGap,
         });
         drawSectionTag("WHAT THIS MEANS", sidePanelX + 20, 458, colors.textMuted);
-        const implicationVisual = fitTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 72, 8.2, 6.4, 2.8);
+        const implicationVisual = fitTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 72, 8.2, 7.2, 2.8, "Helvetica");
         drawParagraph(implicationVisual.text, sidePanelX + 20, 478, sidePanelW - 40, implicationVisual.size, implicationVisual.lineGap);
       } else {
         drawSectionTag(pdfCopy.revealingLine, sidePanelX + 20, 232);
-        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), sidePanelW - 40, 96, 10.4, 8.0, 3.6, "Helvetica");
+        const revealText = fitTextToBox(stripBrandLead(firstSentence(item.quote)), sidePanelW - 40, 96, 9.6, 8.2, 3.5, "Helvetica");
         doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(revealText.size).text(revealText.text, sidePanelX + 20, 252, {
           width: sidePanelW - 40,
           lineGap: revealText.lineGap,
         });
         drawSectionTag("WHAT THIS MEANS", sidePanelX + 20, 396, colors.textMuted);
-        const implicationText = fitTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 90, 8.8, 7.5, 3.4);
+        const implicationText = fitTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 90, 8.4, 7.4, 3.2, "Helvetica");
         drawParagraph(implicationText.text, sidePanelX + 20, 416, sidePanelW - 40, implicationText.size, implicationText.lineGap);
       }
       drawScoreMeter(contentLeft, 650, contentWidth, item.score.score);
-      doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(16).text(pdfCopy.benchmark, contentLeft, 618);
+      drawSectionTag(pdfCopy.benchmark.toUpperCase(), contentLeft, 618, colors.textOnDark);
       if (index === 4) {
         // no-op, keeps page count readable
       }
@@ -5401,48 +5372,37 @@ export async function generateBrandReportPdf(
       5,
     );
 
-    const tableTop = 226;
-    const playbookRowH = 78;
+    const tableTop = 206;
+    const playbookRowH = 96;
     implementationRows.forEach((row, index) => {
-      const y = tableTop + index * 86;
+      const y = tableTop + index * 104;
       drawPanel(contentLeft, y, contentWidth, playbookRowH, colors.panelSoft);
       doc.roundedRect(contentLeft, y, 104, playbookRowH, 16).fill(row.color);
       doc.fillColor(row.color === colors.mint ? colors.dark : colors.textOnDark)
         .font("Helvetica")
-        .fontSize(8.3)
+        .fontSize(8.6)
         .text(row.axis.toUpperCase(), contentLeft + 16, y + 18, {
           width: 72,
           characterSpacing: 1.1,
           lineGap: 2,
         });
-      doc.font("Helvetica").fontSize(18).text(String(row.score), contentLeft + 58, y + 46, {
+      doc.font("Helvetica").fontSize(19).text(String(row.score), contentLeft + 58, y + 56, {
         width: 30,
         align: "right",
       });
       const issueX = contentLeft + 126;
-      const fixX = contentLeft + 256;
-      const changeX = contentLeft + 414;
+      const fixX = contentLeft + 252;
+      const changeX = contentLeft + 424;
       drawSectionTag("ISSUE", issueX, y + 14, colors.textMuted);
-      const issueFit = fitTextToBox(row.issue, 112, 42, 7.7, 6.8, 2.2);
-      drawParagraph(issueFit.text, issueX, y + 30, 112, issueFit.size, issueFit.lineGap);
+      const issueFit = fitTextToBox(row.issue, 108, 58, 8.3, 7.2, 2.6);
+      drawParagraph(issueFit.text, issueX, y + 32, 108, issueFit.size, issueFit.lineGap);
       drawSectionTag("FIX", fixX, y + 14, colors.accent);
-      const fixFit = fitTextToBox(row.fix, 138, 42, 7.7, 6.8, 2.2);
-      drawParagraph(fixFit.text, fixX, y + 30, 138, fixFit.size, fixFit.lineGap);
+      const fixFit = fitTextToBox(row.fix, 152, 58, 8.3, 7.2, 2.6);
+      drawParagraph(fixFit.text, fixX, y + 32, 152, fixFit.size, fixFit.lineGap);
       drawSectionTag("CHANGE", changeX, y + 14, row.color);
-      const impactFit = fitTextToBox(row.impact, 98, 42, 7.5, 6.7, 2.1);
-      drawParagraph(impactFit.text, changeX, y + 30, 98, impactFit.size, impactFit.lineGap);
+      const impactFit = fitTextToBox(row.impact, 88, 58, 8.1, 7.0, 2.5);
+      drawParagraph(impactFit.text, changeX, y + 32, 88, impactFit.size, impactFit.lineGap);
     });
-
-    drawPanel(contentLeft, 672, contentWidth, 54, colors.panel);
-    drawSectionTag("IMPLEMENTATION LOGIC", contentLeft + 18, 690, colors.accent);
-    drawParagraph(
-      "Fix the weakest drag first. Then turn the improved message into proof, AI-readable structure, and a cleaner path to enquiry.",
-      contentLeft + 190,
-      686,
-      contentWidth - 210,
-      8.8,
-      4,
-    );
 
     // Page 15: Work with SAHAR
     addBasePage();
@@ -5456,8 +5416,8 @@ export async function generateBrandReportPdf(
       "Use this as a self-guided sprint, or bring it into a working session with SAHAR. The goal is simple: make the page clearer, easier to trust, easier for AI to read, and easier to act on.",
       contentWidth,
       46,
-      10.2,
-      9,
+      10.8,
+      9.6,
       4,
     );
     drawParagraph(sprintIntro.text, contentLeft, 176, contentWidth, sprintIntro.size, sprintIntro.lineGap);
@@ -5503,30 +5463,34 @@ export async function generateBrandReportPdf(
       });
     });
 
-    drawPanel(contentLeft, 588, contentWidth, 134, colors.panelSoft);
-    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 18, 610, colors.mint);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(15.5).text("Want the sharper version built with you?", contentLeft + 18, 632, {
-      width: contentWidth - 210,
+    drawPanel(contentLeft, 584, contentWidth, 144, colors.panelSoft);
+    drawSectionTag(pdfCopy.playbookCtaLabel, contentLeft + 20, 606, colors.mint);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(17.5).text("Want SAHAR to build the sharper version?", contentLeft + 20, 632, {
+      width: contentWidth - 196,
       lineGap: 2,
     });
     drawParagraph(
-      "Bring this report into a working session. SAHAR can turn the highest-leverage fixes into a focused homepage sprint: sharper positioning, clearer proof, cleaner AI visibility, and a next step people understand.",
-      contentLeft + 18,
-      676,
-      contentWidth - 212,
-      8.2,
-      3,
+      "Bring this report into a working session. We turn the highest-leverage fixes into a focused homepage sprint: clearer positioning, stronger proof, cleaner AI visibility, and a cleaner next step.",
+      contentLeft + 20,
+      678,
+      contentWidth - 206,
+      9.0,
+      4,
     );
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.5).text("BOOK THE NEXT STEP", contentRight - 160, 638, {
+    doc.fillColor(colors.accent).font("Helvetica").fontSize(10.8).text("BOOK THE NEXT STEP", contentRight - 154, 640, {
       width: 142,
       align: "right",
       characterSpacing: 1.2,
     });
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(12).text("saharstudio.com", contentRight - 160, 664, {
-      width: 142,
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(15.5).text("saharstudio.com", contentRight - 174, 670, {
+      width: 162,
       align: "right",
       link: "https://saharstudio.com",
       underline: true,
+    });
+    doc.fillColor(colors.mutedOnDark).font("Helvetica").fontSize(9.2).text("Bring the report. Leave with the next page version.", contentRight - 174, 696, {
+      width: 142,
+      align: "right",
     });
 
     doc.end();
