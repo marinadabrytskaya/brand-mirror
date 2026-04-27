@@ -664,21 +664,35 @@ async function renderBrandReadPdf(
     readY -= 5;
   });
 
-  const signalWidth = (contentWidth - 18) / 2;
-  const signalCardHeight = 250;
-  const signalY = 168;
+  const signalWidth = (contentWidth - 20) / 2;
+  const signalCardHeight = 304;
+  const signalY = 116;
   [
     { label: "Strongest signal", body: buildExpandedSignal(result, "strongest"), color: COLORS.accent },
     { label: "Main friction", body: buildExpandedSignal(result, "friction"), color: COLORS.warn },
   ].forEach((card, index) => {
-    const x = PAGE.marginX + index * (signalWidth + 18);
-    page2.drawRectangle({ x, y: signalY, width: signalWidth, height: signalCardHeight, color: COLORS.panel });
-    drawLabel(page2, card.label, x + 16, signalY + signalCardHeight - 28, card.color);
-    const fitted = fitBodyText(card.body, sans, signalWidth - 32, 178, 9.0, 7.4, 1.3);
-    let cardY = signalY + signalCardHeight - 62;
+    const x = PAGE.marginX + index * (signalWidth + 20);
+    page2.drawRectangle({
+      x,
+      y: signalY,
+      width: signalWidth,
+      height: signalCardHeight,
+      color: COLORS.panel,
+      borderColor: COLORS.line,
+      borderWidth: 1,
+    });
+    page2.drawText(card.label.toUpperCase(), {
+      x: x + 18,
+      y: signalY + signalCardHeight - 36,
+      size: 11.6,
+      font: sans,
+      color: card.color,
+    });
+    const fitted = fitBodyText(card.body, sans, signalWidth - 40, 214, 10.6, 9.0, 1.34);
+    let cardY = signalY + signalCardHeight - 78;
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
-        x: x + 16,
+        x: x + 20,
         y: cardY,
         size: fitted.size,
         font: sans,
