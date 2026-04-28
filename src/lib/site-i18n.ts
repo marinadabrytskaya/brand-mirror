@@ -32,10 +32,10 @@ export const siteCopy = {
       navHow: "How it works",
       navOffer: "Offer",
       navSample: "Sample report",
-      kicker: "Premium diagnostic for brands that should convert better",
-      title: "See what your brand is actually saying.",
+      kicker: "Free first read for brands that should convert better",
+      title: "Let BrandMirror read the first signal.",
       body:
-        "See exactly what's working, what's broken, and why clients don't choose you. Start with a free first read, then unlock the full report for $197.",
+        "Enter a website. Get the first diagnostic read: score, signal, friction, and the clearest reason buyers hesitate.",
       primaryCta: "Read my brand",
       secondaryCta: "See sample report",
       heroProofs: [
@@ -383,10 +383,10 @@ export const siteCopy = {
       navHow: "Cómo funciona",
       navOffer: "Oferta",
       navSample: "Reporte de muestra",
-      kicker: "Diagnóstico premium para marcas que deberían convertir mejor",
-      title: "Mira lo que tu marca realmente está diciendo.",
+      kicker: "Primera lectura gratis para marcas que deberían convertir mejor",
+      title: "Deja que BrandMirror lea la primera señal.",
       body:
-        "Ve exactamente qué está funcionando, qué está roto y por qué los clientes no te eligen. Empieza con una primera lectura gratis y luego desbloquea el reporte completo por $197.",
+        "Introduce un sitio web. Recibe la primera lectura diagnóstica: score, señal, fricción y la razón más clara por la que el comprador duda.",
       primaryCta: "Lee mi marca",
       secondaryCta: "Ver reporte de muestra",
       heroProofs: [
@@ -723,10 +723,10 @@ export const siteCopy = {
       navHow: "Как это работает",
       navOffer: "Оффер",
       navSample: "Пример отчёта",
-      kicker: "Премиальный диагностический продукт для брендов, которым нужно конвертировать лучше",
-      title: "Посмотри, что твой бренд реально транслирует.",
+      kicker: "Бесплатный first read для брендов, которым нужно конвертировать лучше",
+      title: "Дай BrandMirror прочитать первый сигнал.",
       body:
-        "Увидь точно, что работает, что ломается и почему клиенты тебя не выбирают. Начни с бесплатного first read, а потом открой полный отчёт за $197.",
+        "Вставь сайт и получи первый диагноз: score, сильный сигнал, friction и главную причину, почему покупатель сомневается.",
       primaryCta: "Прочитать мой бренд",
       secondaryCta: "Смотреть пример отчёта",
       heroProofs: [

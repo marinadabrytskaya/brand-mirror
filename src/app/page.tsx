@@ -1,7 +1,126 @@
 import Link from "next/link";
-import DiagnosticEvidenceBoard from "@/components/diagnostic-evidence-board";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
+
+const heroScanRows = [
+  { label: "Positioning", value: 72, status: "Stable", color: "#6FE0C2" },
+  { label: "AI Visibility", value: 54, status: "Developing", color: "#F4B63F" },
+  { label: "Visual", value: 75, status: "Stable", color: "#6FE0C2" },
+  { label: "Offer", value: 64, status: "Developing", color: "#F4B63F" },
+  { label: "Conversion", value: 72, status: "Stable", color: "#6FE0C2" },
+];
+
+function HeroLiveScan({ cta }: { cta: string }) {
+  return (
+    <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(111,224,194,0.28)] bg-[#090A0D] p-5 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-7">
+      <span className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute right-3 top-3 h-3 w-3 border-r border-t border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute bottom-3 left-3 h-3 w-3 border-b border-l border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-[#6FE0C2]/70" />
+
+      <div className="flex items-center justify-between gap-4 font-mono text-[0.62rem] uppercase tracking-[0.32em] text-[rgba(237,237,242,0.42)]">
+        <span>Live scan</span>
+        <span>BrandMirror</span>
+      </div>
+
+      <div className="mt-8 text-center">
+        <p className="font-sans text-[clamp(2rem,5vw,3.7rem)] font-semibold leading-[0.9] tracking-[-0.06em] text-[#F4F5F8]">
+          your first read
+        </p>
+        <p className="mt-2 font-mono text-[0.62rem] uppercase tracking-[0.34em] text-[rgba(237,237,242,0.38)]">
+          homepage / AI visibility / offer / conversion
+        </p>
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <svg viewBox="0 0 260 160" width="238" height="148" aria-hidden>
+          <path
+            d="M 30 130 A 100 100 0 0 1 230 130"
+            fill="none"
+            stroke="rgba(255,255,255,0.08)"
+            strokeLinecap="round"
+            strokeWidth="14"
+          />
+          <path
+            d="M 30 130 A 100 100 0 0 1 230 130"
+            fill="none"
+            stroke="#F4B63F"
+            strokeDasharray="214 420"
+            strokeLinecap="round"
+            strokeWidth="14"
+          />
+          <text
+            x="130"
+            y="100"
+            fill="#F4B63F"
+            fontSize="62"
+            fontWeight="600"
+            textAnchor="middle"
+            style={{ fontFamily: "var(--font-sans), Inter, system-ui, sans-serif" }}
+          >
+            68
+          </text>
+          <text
+            x="130"
+            y="126"
+            fill="rgba(237,237,242,0.58)"
+            fontSize="11"
+            letterSpacing="2"
+            textAnchor="middle"
+            style={{ fontFamily: "var(--font-mono), ui-monospace, monospace" }}
+          >
+            / 100
+          </text>
+        </svg>
+      </div>
+
+      <p className="mx-auto -mt-1 max-w-sm text-center font-serif text-xl italic leading-snug text-[rgba(244,245,248,0.9)]">
+        The offer is under-named. AI visibility is too thin to carry the story.
+      </p>
+
+      <div className="mt-8 space-y-3">
+        {heroScanRows.map((row) => (
+          <div
+            key={row.label}
+            className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
+            style={{ gridTemplateColumns: "112px minmax(0,1fr) 116px" }}
+          >
+            <span className="font-mono text-[0.62rem] uppercase tracking-[0.26em] text-[rgba(237,237,242,0.52)]">
+              {row.label}
+            </span>
+            <span className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
+              <span
+                className="block h-full rounded-full"
+                style={{ width: `${row.value}%`, background: row.color }}
+              />
+            </span>
+            <span className="flex items-baseline justify-end gap-3">
+              <span
+                className="font-sans text-3xl font-semibold leading-none"
+                style={{ color: row.color }}
+              >
+                {row.value}
+              </span>
+              <span
+                className="font-mono text-[0.52rem] uppercase tracking-[0.22em]"
+                style={{ color: row.color }}
+              >
+                {row.status}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.1)] px-4 py-3">
+        <span className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.44)]">
+          Free first read
+        </span>
+        <span className="text-sm font-medium text-[#6FE0C2]">{cta} →</span>
+      </div>
+    </div>
+  );
+}
 
 function SectionHeading({
   label,
@@ -33,59 +152,6 @@ export default async function Home({
   const params = await searchParams;
   const locale = siteI18n.getSiteLocale(params.lang);
   const copy = siteI18n.siteCopy[locale].landing;
-  const heroPoster = locale === "ru" ? "/poster images/Sage2.png" : "/poster images/Creator2.png";
-  const heroMarkers = {
-    en: [
-      {
-        id: "hero-promise",
-        label: "promise",
-        title: "The offer reveals itself too late.",
-        note: "The page looks premium immediately, but the commercial meaning arrives one beat behind.",
-        x: 79,
-        y: 14,
-      },
-    ],
-    es: [
-      {
-        id: "hero-promise",
-        label: "promesa",
-        title: "La oferta se revela demasiado tarde.",
-        note: "La página se siente premium rápido, pero el significado comercial llega un paso después.",
-        x: 79,
-        y: 14,
-      },
-    ],
-    ru: [
-      {
-        id: "hero-promise",
-        label: "обещание",
-        title: "Оффер раскрывается слишком поздно.",
-        note: "Страница быстро выглядит premium, но коммерческий смысл приходит на один шаг позже.",
-        x: 79,
-        y: 14,
-      },
-    ],
-  }[locale];
-  const heroPosterCopy = {
-    en: {
-      label: "Poster artifact",
-      title: "The poster becomes part of the diagnosis.",
-      body: "A shareable supporting visual built from the same read, not a decorative extra.",
-      cue: "Shareable layer",
-    },
-    es: {
-      label: "Artefacto póster",
-      title: "El póster se vuelve parte del diagnóstico.",
-      body: "Una capa visual compartible construida desde la misma lectura, no un extra decorativo.",
-      cue: "Capa compartible",
-    },
-    ru: {
-      label: "Постер-артефакт",
-      title: "Постер становится частью диагноза.",
-      body: "Поддерживающий визуальный слой, который рождается из того же анализа, а не работает как декор.",
-      cue: "Слой для шеринга",
-    },
-  }[locale];
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
@@ -121,10 +187,10 @@ export default async function Home({
             </div>
           </header>
 
-          <div className="grid flex-1 items-center gap-10 pb-4 pt-8 lg:grid-cols-[1.04fr_0.96fr] lg:pt-8">
-            <div className="max-w-2xl">
+          <div className="grid flex-1 items-center gap-10 pb-4 pt-8 lg:grid-cols-[0.88fr_1.12fr] lg:pt-8">
+            <div className="max-w-xl">
               <p className="section-label soft-fade-up">{copy.kicker}</p>
-              <p className="soft-fade-up mt-4 font-serif text-[clamp(4.5rem,15vw,8.8rem)] leading-[0.88] tracking-[-0.06em] text-[color:var(--foreground)]">
+              <p className="soft-fade-up mt-4 font-serif text-[clamp(4.2rem,12vw,8rem)] leading-[0.88] tracking-[-0.06em] text-[color:var(--foreground)]">
                 BrandMirror
               </p>
               <h1 className="soft-fade-up-delay mt-6 max-w-xl font-serif text-4xl leading-[1.02] tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl lg:text-6xl">
@@ -147,57 +213,16 @@ export default async function Home({
                   {copy.secondaryCta}
                 </Link>
               </div>
-              <div className="editorial-rule mt-14 grid gap-6 pt-6 text-sm text-[color:var(--foreground-soft)] sm:grid-cols-3">
-                {copy.heroProofs.map((item) => (
-                  <p key={item}>{item}</p>
-                ))}
-              </div>
             </div>
 
-            <div className="soft-fade-up-slow relative lg:min-h-[42rem]">
-              <div className="relative mx-auto max-w-[42rem] lg:ml-auto lg:mr-0">
-                <DiagnosticEvidenceBoard
-                  brandName="BrandMirror"
-                  websiteLabel="diagnostic preview"
-                  eyebrow={copy.evidence.eyebrow}
-                  headline={copy.evidence.headline}
-                  subheadline={copy.evidence.subheadline}
-                  cta={copy.evidence.cta}
-                  scores={copy.previewRows.map((row) => ({
-                    label: row.title,
-                    value: row.score,
-                    note: row.copy,
-                  }))}
-                  markers={heroMarkers}
-                  verdicts={[]}
-                  className="homepage-board relative z-10"
-                />
-              </div>
-              <div className="hero-artifact-strip grain-panel mt-5 overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--surface)]">
-                <div className="hero-artifact-poster">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroPoster}
-                    alt="BrandMirror poster artifact"
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="hero-artifact-overlay" />
-                  <div className="hero-artifact-caption">
-                    <p className="text-[9px] uppercase tracking-[0.22em] text-[rgba(236,233,244,0.62)]">
-                      {heroPosterCopy.label}
-                    </p>
-                    <p className="mt-2 font-serif text-[1.35rem] leading-[0.98] tracking-[-0.04em] text-[#f3f1f7]">
-                      {heroPosterCopy.title}
-                    </p>
-                  </div>
-                </div>
-                <div className="hero-artifact-copy">
-                  <p className="section-label">{heroPosterCopy.cue}</p>
-                  <p className="mt-3 max-w-md text-sm leading-6 text-[color:var(--foreground-soft)]">
-                    {heroPosterCopy.body}
-                  </p>
-                </div>
-              </div>
+            <div className="soft-fade-up-slow relative">
+              <Link
+                href={siteI18n.withLang("/first-read", locale)}
+                className="block transition duration-500 hover:-translate-y-1"
+                aria-label={copy.primaryCta}
+              >
+                <HeroLiveScan cta={copy.primaryCta} />
+              </Link>
             </div>
           </div>
         </div>
