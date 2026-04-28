@@ -639,7 +639,7 @@ def draw_how_we_read_brands(c, report, total_pages):
         "Positioning Clarity — does your buyer know what you are?",
         "Offer Specificity — can someone repeat what you sell without your help?",
         "Visual Credibility — does the way you look match the price you ask?",
-        "Tone Coherence — does the voice sound like one clear point of view?",
+        "AI Discoverability — can AI tools find, understand, and recommend your brand?",
         "Conversion Readiness — when someone is ready, is there a door to walk through?",
     ]
     yy = 574
@@ -658,7 +658,7 @@ def draw_how_we_read_brands(c, report, total_pages):
     draw_wrapped(c, genre_block, MARGIN_X + 18, 338, CONTENT_W - 36, "Helvetica", 10.2, COLORS["muted_light"], 14)
 
     close = (
-        "A score. A genre. A Priority Fix Stack. A 7-day action plan. And one final page — your brand rendered as a film.\n\n"
+        "A score. A genre. A Priority Fix Stack. A 30-day action plan. And one clear answer — what to fix first.\n\n"
         "Some people frame it. Most people fix it first."
     )
     draw_wrapped(c, close, MARGIN_X, 228, CONTENT_W, "Times-Italic", 15.5, COLORS["ink"], 19, "center")
@@ -756,7 +756,7 @@ def render(payload):
     draw_page_label(c, copy["method_label"], copy["method_title"], dark=False)
     bullets = [
         "Positioning Clarity measures how quickly the homepage makes the offer legible.",
-        "Tone Coherence measures whether the written voice supports the visual impression.",
+        "AI Discoverability measures whether AI tools (ChatGPT, Gemini, Perplexity) can find, summarize, and recommend the brand accurately.",
         "Visual Credibility measures whether the design signals quality and control.",
         "Offer Specificity measures how directly the page explains what it does and why it matters.",
         "Conversion Readiness measures whether the page has earned a confident next step.",
@@ -765,44 +765,71 @@ def render(payload):
     for bullet in bullets:
         y = draw_wrapped(c, f"- {bullet}", MARGIN_X, y, 272, "Helvetica", 11, COLORS["ink"], 17) - 8
     c.setFillColor(COLORS["paper_soft"])
-    c.roundRect(360, 340, 179, 326, 14, stroke=0, fill=1)
-    scales = [("0-40", "Critical. Trust is weak or the signal is actively confusing."), ("40-70", "Developing. There is potential, but the buyer still has to work too hard."), ("70-100", "Strong. The page is creating clarity, trust, and momentum.")]
-    yy = 620
+    c.roundRect(360, 240, 179, 426, 14, stroke=0, fill=1)
+    scales = [
+        ("0-30", "Flatlining. The signal is broken or absent."),
+        ("30-50", "Fragile. Foundation exists but does not hold trust."),
+        ("50-70", "Unstable. Works in bursts, then loses the buyer."),
+        ("70-85", "Stable. Signal holds, room to push harder."),
+        ("85-100", "Leading. Page converts before copy has to explain."),
+    ]
+    yy = 630
     for title, body in scales:
         c.setFillColor(COLORS["accent"])
-        c.setFont("Helvetica-Bold", 13)
-        c.drawString(382, yy, title)
-        yy = draw_wrapped(c, body, 382, yy - 18, 130, "Helvetica", 10, COLORS["muted_light"], 14) - 16
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(378, yy, title)
+        yy = draw_wrapped(c, body, 378, yy - 16, 140, "Helvetica", 9.5, COLORS["muted_light"], 13) - 12
     c.showPage()
 
+    # --- Page 6: Signal Read Part 1 (diagnosis) ---
     draw_page_shell(c, 6, total_pages, dark=False)
-    draw_page_label(c, "SIGNAL READ", "What is missing, where it drifts, and what to do next", dark=False)
-    cards = [
+    draw_page_label(c, "SIGNAL READ", "What is missing, where it drifts, and what the AI sees", dark=False)
+    cards_p1 = [
         ("WHAT IS MISSING", report.get("whatIsMissing", "")),
         ("MIXED SIGNALS", report.get("mixedSignals", "")),
-        ("TONE CHECK", report.get("toneCheck", "")),
+        ("AI DISCOVERABILITY", report.get("toneCheck", "")),
+    ]
+    card_w = (CONTENT_W - 18) / 2
+    for index, (label, body) in enumerate(cards_p1):
+        col = index % 2
+        row = index // 2
+        x = MARGIN_X + col * (card_w + 18)
+        y = 616 - row * 220
+        card_h = 180
+        c.setFillColor(COLORS["paper_soft"])
+        c.roundRect(x, y - card_h + 18, card_w, card_h, 14, stroke=0, fill=1)
+        c.setFillColor(COLORS["accent"])
+        c.setFont("Helvetica", 8.5)
+        c.drawString(x + 18, y - 12, label)
+        body_text, body_size, body_leading = fit_text_to_box(body, "Helvetica", 11, card_w - 36, 120, min_size=9.8)
+        draw_wrapped(c, body_text, x + 18, y - 38, card_w - 36, "Helvetica", body_size, COLORS["muted_light"], body_leading)
+    c.showPage()
+
+    # --- Page 7: Signal Read Part 2 (action) ---
+    draw_page_shell(c, 7, total_pages, dark=False)
+    draw_page_label(c, "SIGNAL READ", "What to do next, what to amplify, and what to drop", dark=False)
+    cards_p2 = [
         ("WHAT TO DO NEXT", report.get("whatToDoNext", "")),
         ("WHAT TO AMPLIFY", report.get("whatToAmplify", "")),
         ("WHAT TO DROP", report.get("whatToDrop", "")),
     ]
-    card_w = (CONTENT_W - 18) / 2
-    start_y = 616
-    for index, (label, body) in enumerate(cards):
+    for index, (label, body) in enumerate(cards_p2):
         col = index % 2
         row = index // 2
         x = MARGIN_X + col * (card_w + 18)
-        y = start_y - row * 178
+        y = 616 - row * 220
+        card_h = 180
         c.setFillColor(COLORS["paper_soft"])
-        c.roundRect(x, y - 132, card_w, 144, 14, stroke=0, fill=1)
+        c.roundRect(x, y - card_h + 18, card_w, card_h, 14, stroke=0, fill=1)
         c.setFillColor(COLORS["accent"])
         c.setFont("Helvetica", 8.5)
         c.drawString(x + 18, y - 12, label)
-        body_text, body_size, body_leading = fit_text_to_box(body, "Helvetica", 10.5, card_w - 36, 86, min_size=9.4)
+        body_text, body_size, body_leading = fit_text_to_box(body, "Helvetica", 11, card_w - 36, 120, min_size=9.8)
         draw_wrapped(c, body_text, x + 18, y - 38, card_w - 36, "Helvetica", body_size, COLORS["muted_light"], body_leading)
     c.showPage()
 
     website_surface = website_surface_source_for(report)
-    draw_page_shell(c, 7, total_pages, dark=False)
+    draw_page_shell(c, 8, total_pages, dark=False)
     draw_page_label(c, copy["website_label"], copy["website_title"], dark=False)
     if website_surface:
         draw_image_cover(c, website_surface, MARGIN_X, 292, CONTENT_W, 308)
@@ -819,14 +846,43 @@ def render(payload):
         cx += (CONTENT_W - 18) / 2 + 18
     c.showPage()
 
+    # Practical fix suggestions per axis when score is below threshold
+    AXIS_FIXES = {
+        "Positioning Clarity": {
+            "low": "Rewrite your hero headline to state exactly what you do, for whom, and why it matters — in one sentence. Remove abstract language.",
+            "mid": "Move your strongest proof point (case study, metric, testimonial) above the fold so it is visible without scrolling.",
+        },
+        "AI Discoverability": {
+            "low": "Add structured data (Schema.org markup), a clear meta description, and an FAQ section that mirrors how people ask AI assistants about your category.",
+            "mid": "Create a dedicated 'About' or 'What We Do' page with natural-language descriptions that AI tools can parse and recommend accurately.",
+        },
+        "Visual Credibility": {
+            "low": "Replace stock photos with custom imagery. Align your colour palette, typography, and spacing to match the price point you are asking for.",
+            "mid": "Commission a professional brand shoot or illustration set. Ensure visual consistency across hero, about, and service pages.",
+        },
+        "Offer Specificity": {
+            "low": "List your exact services or products with pricing (or pricing logic). Replace 'solutions' and 'services' with concrete deliverables the buyer can picture.",
+            "mid": "Add a comparison table or 'Who This Is For' section that helps the buyer self-select. Make the transformation explicit.",
+        },
+        "Conversion Readiness": {
+            "low": "Add a single, clear CTA above the fold. Remove competing CTAs. Add one piece of social proof (testimonial, client logo, or metric) within scroll distance of the button.",
+            "mid": "Add urgency or specificity to your CTA (e.g. 'Book a 15-min call' instead of 'Get in touch'). Ensure the form or booking flow takes under 30 seconds.",
+        },
+    }
+
     axis_pages = [
-        ("Positioning Clarity", report.get("positioningRead", ""), report.get("whatsBroken", [""])[0]),
-        ("Tone Coherence", report.get("toneCheck", ""), report.get("audienceMismatch", [""])[0]),
-        ("Visual Credibility", report.get("visualIdentityRead", ""), report.get("whatWorks", [""])[0]),
-        ("Offer Specificity", report.get("aboveTheFold", ""), report.get("headlineCorrection", {}).get("currentProblem", "")),
-        ("Conversion Readiness", report.get("conversionRead", ""), report.get("whyNotConverting", [""])[0]),
+        ("Positioning Clarity", report.get("positioningRead", ""), report.get("whatsBroken", [""])[0],
+         report.get("whatIsMissing", "")),
+        ("AI Discoverability", report.get("toneCheck", ""), report.get("audienceMismatch", [""])[0],
+         report.get("mixedSignals", "")),
+        ("Visual Credibility", report.get("visualIdentityRead", ""), report.get("whatWorks", [""])[0],
+         report.get("whatToAmplify", "")),
+        ("Offer Specificity", report.get("aboveTheFold", ""), report.get("headlineCorrection", {}).get("currentProblem", ""),
+         report.get("whatToDoNext", "")),
+        ("Conversion Readiness", report.get("conversionRead", ""), report.get("whyNotConverting", [""])[0],
+         report.get("whatToDrop", "")),
     ]
-    for idx, (title, body, quote) in enumerate(axis_pages, start=8):
+    for idx, (title, body, quote, extra) in enumerate(axis_pages, start=9):
         draw_page_shell(c, idx, total_pages, dark=False)
         c.setFillColor(COLORS["dark"])
         c.rect(0, PAGE_H - 156, PAGE_W, 156, stroke=0, fill=1)
@@ -834,15 +890,25 @@ def render(payload):
         c.setFont("Helvetica", 10)
         c.drawString(MARGIN_X, PAGE_H - 78, title.upper())
         draw_wrapped(c, title, MARGIN_X, PAGE_H - 110, 320, "Times-Bold", 30, COLORS["text"], 32)
-        draw_wrapped(c, body, MARGIN_X, 600, 250, "Helvetica", 12, COLORS["muted_light"], 17)
+
+        # Main analysis — use body + extra for more meat
+        combined_body = body
+        if extra and extra != body:
+            combined_body = f"{body}\n\n{extra}"
+        fitted_body, bsz, blead = fit_text_to_box(combined_body, "Helvetica", 12, 250, 220, min_size=10.2)
+        draw_wrapped(c, fitted_body, MARGIN_X, 600, 250, "Helvetica", bsz, COLORS["muted_light"], blead)
+
+        # Right card — most revealing line
         c.setFillColor(COLORS["paper_soft"])
-        c.roundRect(338, 374, 201, 204, 14, stroke=0, fill=1)
+        c.roundRect(338, 424, 201, 154, 14, stroke=0, fill=1)
         c.setFillColor(COLORS["accent"])
         c.setFont("Helvetica", 9)
         c.drawString(358, 548, copy["axis_reveal"])
         draw_wrapped(c, first_sentence(quote), 358, 520, 161, "Times-Roman", 14, COLORS["ink"], 18)
         if title == "Visual Credibility" and website_surface:
-            c.drawImage(website_surface, 358, 394, width=161, height=88, preserveAspectRatio=True, mask="auto")
+            c.drawImage(website_surface, 358, 444, width=161, height=88, preserveAspectRatio=True, mask="auto")
+
+        # Score bar
         score = 70
         for row in report.get("scorecard", []):
             if norm(row.get("label", "")).lower() == norm(title).lower():
@@ -850,39 +916,70 @@ def render(payload):
                 break
         c.setFillColor(COLORS["ink"])
         c.setFont("Times-Bold", 16)
-        c.drawString(MARGIN_X, 246, f"Current score · {score}/100")
+        c.drawString(MARGIN_X, 336, f"Current score · {score}/100")
         c.setFillColor(COLORS["paper_soft"])
-        c.roundRect(MARGIN_X, 204, CONTENT_W, 8, 4, stroke=0, fill=1)
+        c.roundRect(MARGIN_X, 302, CONTENT_W, 8, 4, stroke=0, fill=1)
         c.setFillColor(COLORS["accent"])
-        c.roundRect(MARGIN_X, 204, max(8, CONTENT_W * score / 100.0), 8, 4, stroke=0, fill=1)
+        c.roundRect(MARGIN_X, 302, max(8, CONTENT_W * score / 100.0), 8, 4, stroke=0, fill=1)
+
+        # Practical fix box — tailored to score level
+        fixes = AXIS_FIXES.get(title, {})
+        fix_text = fixes.get("low", "") if score < 60 else fixes.get("mid", "")
+        if fix_text:
+            c.setFillColor(COLORS["dark_soft"])
+            c.roundRect(MARGIN_X, 148, CONTENT_W, 118, 14, stroke=0, fill=1)
+            c.setFillColor(COLORS["terracotta"])
+            c.setFont("Helvetica", 8.5)
+            c.drawString(MARGIN_X + 18, 244, "PRACTICAL FIX" if score < 60 else "NEXT LEVEL MOVE")
+            fix_fitted, fsz, flead = fit_text_to_box(fix_text, "Helvetica", 11, CONTENT_W - 36, 72, min_size=9.8)
+            draw_wrapped(c, fix_fitted, MARGIN_X + 18, 222, CONTENT_W - 36, "Helvetica", fsz, COLORS["muted_light"], flead)
         c.showPage()
 
-    draw_page_shell(c, 13, total_pages, dark=False)
+    # --- Page 14: Archetype + Poster (merged) ---
+    draw_page_shell(c, 14, total_pages, dark=False)
     draw_page_label(c, copy["archetype_label"], f"{report.get('archetypeRead', {}).get('primary', '')} with {report.get('archetypeRead', {}).get('secondary', '')} pull", dark=False)
+
+    # Left: rationale text
     left_w = 246
     right_x = MARGIN_X + left_w + 24
     right_w = PAGE_W - right_x - MARGIN_X
     draw_wrapped(c, trunc(report.get("archetypeRead", {}).get("rationale", ""), 280), MARGIN_X, 626, left_w, "Helvetica", 12.2, COLORS["muted_light"], 18)
+
+    # Right: poster image (larger since this is the only poster page now)
     poster = poster_source_for(report)
     if poster:
-        c.drawImage(poster, right_x, 420, width=right_w, height=206, preserveAspectRatio=True, mask="auto")
+        c.drawImage(poster, right_x, 372, width=right_w, height=260, preserveAspectRatio=True, mask="auto")
+
+    # Genre + tagline
+    genre = report.get("genre", "")
+    tagline = report.get("tagline", "")
     c.setStrokeColor(COLORS["rule"])
     c.setLineWidth(0.8)
-    c.line(MARGIN_X, 382, PAGE_W - MARGIN_X, 382)
-    draw_wrapped(c, "SO WHAT DOES THIS MEAN COMMERCIALLY?", MARGIN_X, 356, CONTENT_W, "Helvetica", 9, COLORS["accent"], 12)
+    c.line(MARGIN_X, 340, PAGE_W - MARGIN_X, 340)
+    if genre:
+        draw_centered_tracked(c, genre.upper(), PAGE_W / 2, 316, "Helvetica", 9, COLORS["accent"], 1.6)
+    if tagline:
+        draw_wrapped(c, tagline, MARGIN_X + 20, 292, CONTENT_W - 40, "Times-Italic", 15, COLORS["ink"], 18, "center")
+
+    # Commercial implications
+    draw_wrapped(c, "SO WHAT DOES THIS MEAN COMMERCIALLY?", MARGIN_X, 248, CONTENT_W, "Helvetica", 9, COLORS["accent"], 12)
     implications = report.get("expectationGap", [])[:3] or ["Buyers expect the value story to feel as deliberate as the visual system."]
     box_w = (CONTENT_W - 24) / 3
-    start_x = MARGIN_X
     for index, item in enumerate(implications):
-        x = start_x + index * (box_w + 12)
+        x = MARGIN_X + index * (box_w + 12)
         c.setFillColor(COLORS["paper_soft"])
-        c.roundRect(x, 214, box_w, 104, 14, stroke=0, fill=1)
-        draw_wrapped(c, item, x + 16, 292, box_w - 32, "Helvetica", 10.5, COLORS["muted_light"], 14)
+        c.roundRect(x, 124, box_w, 94, 14, stroke=0, fill=1)
+        draw_wrapped(c, item, x + 14, 196, box_w - 28, "Helvetica", 10, COLORS["muted_light"], 13)
     c.showPage()
 
-    draw_page_shell(c, 14, total_pages, dark=False)
+    # --- Page 15: Priority Fix Stack ---
+    draw_page_shell(c, 15, total_pages, dark=False)
     draw_page_label(c, copy["fix_label"], "What to fix now, what can wait, and what is already earning trust", dark=False)
-    bands = [("FIX NOW", report.get("priorityFixes", {}).get("fixNow", []), COLORS["terracotta"]), ("FIX NEXT", report.get("priorityFixes", {}).get("fixNext", []), COLORS["accent"]), ("KEEP", report.get("priorityFixes", {}).get("keep", []), COLORS["success"])]
+    bands = [
+        ("FIX NOW", report.get("priorityFixes", {}).get("fixNow", []), COLORS["terracotta"]),
+        ("FIX NEXT", report.get("priorityFixes", {}).get("fixNext", []), COLORS["accent"]),
+        ("KEEP", report.get("priorityFixes", {}).get("keep", []), COLORS["success"]),
+    ]
     by = 560
     for title, items, col in bands:
         c.setFillColor(COLORS["dark_soft"])
@@ -896,46 +993,66 @@ def render(payload):
         for item in items[:3]:
             yy = draw_wrapped(c, f"- {item}", MARGIN_X + 148, yy, 300, "Helvetica", 10.5, COLORS["text"], 14) - 6
         by -= 136
+
+    # Practical solution box for weakest axes
+    scorecard = report.get("scorecard", [])
+    weak_axes = sorted(scorecard, key=lambda r: int(r.get("score", 100)))[:2]
+    if weak_axes:
+        c.setFillColor(COLORS["dark_soft"])
+        c.roundRect(MARGIN_X, 92, CONTENT_W, 108, 14, stroke=0, fill=1)
+        c.setFillColor(COLORS["terracotta"])
+        c.setFont("Helvetica", 8.5)
+        c.drawString(MARGIN_X + 18, 180, "WHERE TO START — BASED ON YOUR WEAKEST SIGNALS")
+        sol_y = 160
+        for axis_row in weak_axes:
+            label = axis_row.get("label", "")
+            sc = int(axis_row.get("score", 70))
+            fix = AXIS_FIXES.get(label, {}).get("low" if sc < 60 else "mid", "")
+            if fix:
+                sol_y = draw_wrapped(c, f"{label} ({sc}): {fix}", MARGIN_X + 18, sol_y, CONTENT_W - 36, "Helvetica", 9.8, COLORS["muted_light"], 13) - 6
     c.showPage()
 
-    draw_page_shell(c, 15, total_pages, dark=False)
-    draw_page_label(c, copy["plan7"], "What to do first, and what comes next", dark=False)
+    # --- Page 16: 30-Day Action Plan + Back Cover ---
+    draw_page_shell(c, 16, total_pages, dark=False)
+    draw_page_label(c, copy["plan30"], "Your roadmap for the next 30 days", dark=False)
     left_w = 248
     right_x = 338
     right_w = PAGE_W - right_x - MARGIN_X
-    draw_wrapped(c, "Next 7 days", MARGIN_X, 648, left_w, "Times-Bold", 18, COLORS["ink"], 22)
-    yy = 614
-    for item in report.get("actionPlan", {}).get("next7Days", [])[:3]:
-        yy = draw_wrapped(c, f"- {item}", MARGIN_X, yy, left_w, "Helvetica", 11, COLORS["muted_light"], 16) - 10
-    c.setFillColor(COLORS["paper_soft"])
-    c.roundRect(right_x, 374, right_w, 254, 14, stroke=0, fill=1)
-    draw_wrapped(c, "Headline correction", right_x + 20, 602, right_w - 40, "Helvetica", 9, COLORS["accent"], 12)
-    draw_wrapped(c, "AFTER", right_x + 20, 578, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
-    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("heroLine", ""), right_x + 20, 556, right_w - 40, "Times-Bold", 16, COLORS["ink"], 18)
-    draw_wrapped(c, "SUPPORT", right_x + 20, 474, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
-    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("subheadline", ""), right_x + 20, 452, right_w - 40, "Helvetica", 10, COLORS["muted_light"], 13)
-    draw_wrapped(c, "CTA", right_x + 20, 402, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
-    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("cta", ""), right_x + 20, 382, right_w - 40, "Helvetica", 10, COLORS["terracotta"], 13)
-    draw_wrapped(c, "Next 30 days", MARGIN_X, 322, left_w, "Times-Bold", 18, COLORS["ink"], 22)
-    yy = 288
-    for item in report.get("actionPlan", {}).get("next30Days", [])[:3]:
-        yy = draw_wrapped(c, f"- {item}", MARGIN_X, yy, left_w, "Helvetica", 11, COLORS["muted_light"], 16) - 10
-    draw_wrapped(c, copy["next_label"], right_x, 322, right_w, "Helvetica", 9, COLORS["accent"], 12)
-    sahar_intro = (
-        "BrandMirror is built and operated by Sahar — a creative intelligence studio that turns brand strategy into commercial infrastructure.\n\n"
-        "The Mirror shows you what we see. What you do with it is up to you."
-    )
-    draw_wrapped(c, sahar_intro, right_x, 292, right_w, "Helvetica", 10, COLORS["muted_light"], 14)
-    yy = 220
-    for card in [
-        "Do it yourself — use the fix stack and action plan as your roadmap.",
-        "BrandMirror — Reviewed — guided walkthrough of the diagnosis and next moves.",
-        "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
-    ]:
-        yy = draw_wrapped(c, f"- {card}", right_x, yy, right_w, "Helvetica", 10.4, COLORS["muted_light"], 14) - 8
-    c.showPage()
 
-    draw_final_poster(c, report, copy, report_id)
+    # 30-day plan items
+    yy = 638
+    for item in report.get("actionPlan", {}).get("next30Days", [])[:5]:
+        yy = draw_wrapped(c, f"- {item}", MARGIN_X, yy, left_w, "Helvetica", 11, COLORS["muted_light"], 16) - 10
+
+    # Headline correction card
+    c.setFillColor(COLORS["paper_soft"])
+    c.roundRect(right_x, 414, right_w, 224, 14, stroke=0, fill=1)
+    draw_wrapped(c, "Headline correction", right_x + 20, 612, right_w - 40, "Helvetica", 9, COLORS["accent"], 12)
+    draw_wrapped(c, "AFTER", right_x + 20, 588, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
+    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("heroLine", ""), right_x + 20, 566, right_w - 40, "Times-Bold", 16, COLORS["ink"], 18)
+    draw_wrapped(c, "SUPPORT", right_x + 20, 494, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
+    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("subheadline", ""), right_x + 20, 472, right_w - 40, "Helvetica", 10, COLORS["muted_light"], 13)
+    draw_wrapped(c, "CTA", right_x + 20, 436, right_w - 40, "Helvetica", 8.4, COLORS["accent"], 10)
+    draw_wrapped(c, report.get("rewriteSuggestions", {}).get("cta", ""), right_x + 20, 418, right_w - 40, "Helvetica", 10, COLORS["terracotta"], 13)
+
+    # What comes next
+    draw_wrapped(c, copy["next_label"], MARGIN_X, 362, CONTENT_W, "Helvetica", 9, COLORS["accent"], 12)
+    next_options = [
+        "Do it yourself — use the fix stack and action plan as your roadmap.",
+        "BrandMirror Reviewed — guided walkthrough of the diagnosis and next moves.",
+        "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
+    ]
+    yy = 336
+    for card in next_options:
+        yy = draw_wrapped(c, f"- {card}", MARGIN_X, yy, CONTENT_W, "Helvetica", 10.4, COLORS["muted_light"], 14) - 8
+
+    # Back cover footer
+    c.setStrokeColor(COLORS["rule"])
+    c.setLineWidth(1)
+    c.line(MARGIN_X, 160, PAGE_W - MARGIN_X, 160)
+    draw_wrapped(c, copy["back_cover"], MARGIN_X, 132, CONTENT_W, "Times-Italic", 16, COLORS["ink"], 20, "center")
+    draw_wrapped(c, "brandmirror.app", MARGIN_X, 78, CONTENT_W, "Helvetica", 11, COLORS["accent"], 14, "center")
+    draw_wrapped(c, copy["powered"], MARGIN_X, 52, CONTENT_W, "Helvetica", 9, COLORS["muted_dark"], 12, "center")
     c.showPage()
     c.save()
     return buff.getvalue()

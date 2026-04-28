@@ -17,6 +17,10 @@ function safeNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function lowerFirst(value: string) {
+  return value ? `${value.charAt(0).toLowerCase()}${value.slice(1)}` : value;
+}
+
 export function rankedDimensions(result: BrandReadResult): RankedDimension[] {
   return DIMENSIONS.map((dimension) => ({
     key: dimension.key,
@@ -105,15 +109,16 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
       `${brand}'s strongest commercial asset is already visible: ${strongest}.`,
       "That matters because most brands in a category sound interchangeable until they name what they can do differently.",
       "The full report turns this into the KEEP layer, so the fixes sharpen the signal instead of flattening what is already earning trust.",
-    ].join(" ");
+    ].join("\n\n");
   }
 
   const weakest = rankedDimensions(result)[0];
+  const consequence = lowerFirst(scoreConsequence(weakest.key, weakest.value));
   return [
     `The main friction is not a small copy problem. ${friction}.`,
-    `That matters because ${scoreConsequence(weakest.key, weakest.value)}`,
+    `That matters because ${consequence}`,
     "The full report names the exact first correction, where it belongs, and what should happen after it lands.",
-  ].join(" ");
+  ].join("\n\n");
 }
 
 export function buildNextMoveCliffhanger(result: BrandReadResult) {

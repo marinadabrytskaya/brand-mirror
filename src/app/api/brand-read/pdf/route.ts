@@ -118,6 +118,48 @@ function safeNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function displayUrlFor(url: string) {
+  return safeText(url).replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+}
+
+function titleCandidate(value: string) {
+  return safeText(value)
+    .replace(/^the\s+/i, "")
+    .replace(/\s+code$/i, "")
+    .split(/[|—–:-]/)[0]
+    .trim();
+}
+
+function deriveDisplayBrandName(result: BrandReadResult, url: string) {
+  const full = safeText(result.brandName, "BrandMirror").trim();
+  if (full.length <= 34) return full;
+
+  const fromTitle = titleCandidate(safeText(result.title));
+  if (fromTitle.length >= 3 && fromTitle.length <= 30 && !full.toLowerCase().includes(fromTitle.toLowerCase())) {
+    return fromTitle;
+  }
+
+  const haystack = [
+    result.title,
+    result.summary,
+    result.strongestSignal,
+    result.mainFriction,
+    result.whatItDoes,
+    result.nextMove,
+  ]
+    .map((item) => safeText(item))
+    .join(" ");
+  const mixedCaseMatches = haystack.match(/\b[A-Z]{1,4}[A-Za-z]*[A-Z][A-Za-z0-9]{1,16}\b/g) || [];
+  const blocked = new Set(["BrandMirror", "ChatGPT", "Google", "Gemini", "Perplexity"]);
+  const shortFromCopy = mixedCaseMatches.find((item) => !blocked.has(item) && item.length >= 3 && item.length <= 18);
+  if (shortFromCopy) return shortFromCopy;
+
+  const domainRoot = displayUrlFor(url).split(".")[0]?.replace(/[-_]+/g, " ");
+  if (domainRoot && domainRoot.length >= 3 && domainRoot.length <= 24) return domainRoot;
+
+  return full;
+}
+
 function hexToRgbColor(value: string) {
   const normalized = value.replace("#", "");
   const expanded =
@@ -189,6 +231,80 @@ function fitBodyText(
     lines[last] = `${lines[last].replace(/[ ,.;:]+$/, "")}...`;
   }
   return { lines, size, lineHeight };
+}
+
+function fitParagraphText(
+  paragraphs: string[],
+  font: PDFFont,
+  width: number,
+  height: number,
+  maxSize = 10.8,
+  minSize = 9.2,
+  lineHeightRatio = 1.34,
+  paragraphGapRatio = 0.72,
+) {
+  const cleanParagraphs = paragraphs.map((paragraph) => safeText(paragraph).trim()).filter(Boolean);
+
+  for (let size = maxSize; size >= minSize; size -= 0.2) {
+    const lineHeight = size * lineHeightRatio;
+    const paragraphGap = size * paragraphGapRatio;
+    const lines = cleanParagraphs.map((paragraph) => wrapText(paragraph, font, size, width));
+    const lineCount = lines.reduce((total, item) => total + item.length, 0);
+    const totalHeight = lineCount * lineHeight + Math.max(0, cleanParagraphs.length - 1) * paragraphGap;
+    if (totalHeight <= height) {
+      return { lines, size, lineHeight, paragraphGap };
+    }
+  }
+
+  const size = minSize;
+  const lineHeight = size * lineHeightRatio;
+  const paragraphGap = size * paragraphGapRatio;
+  const maxLines = Math.max(2, Math.floor(height / lineHeight));
+  const flatLines = cleanParagraphs.flatMap((paragraph, index) => [
+    ...wrapText(paragraph, font, size, width),
+    ...(index < cleanParagraphs.length - 1 ? [""] : []),
+  ]);
+  const visible = flatLines.slice(0, maxLines);
+  if (visible.length) {
+    const last = visible.length - 1;
+    visible[last] = `${visible[last].replace(/[ ,.;:]+$/, "")}...`;
+  }
+  return { lines: [visible], size, lineHeight, paragraphGap };
+}
+
+function drawFittedParagraphs(
+  page: PDFPage,
+  paragraphs: string[],
+  font: PDFFont,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: ReturnType<typeof rgb>,
+  maxSize = 10.8,
+  minSize = 9.2,
+  lineHeightRatio = 1.34,
+) {
+  const fitted = fitParagraphText(paragraphs, font, width, height, maxSize, minSize, lineHeightRatio);
+  let cursor = y;
+  fitted.lines.forEach((paragraphLines, paragraphIndex) => {
+    paragraphLines.forEach((line) => {
+      if (line) {
+        page.drawText(line, {
+          x,
+          y: cursor,
+          size: fitted.size,
+          font,
+          color,
+        });
+      }
+      cursor -= fitted.lineHeight;
+    });
+    if (paragraphIndex < fitted.lines.length - 1) {
+      cursor -= fitted.paragraphGap;
+    }
+  });
+  return cursor;
 }
 
 function drawWrapped(
@@ -348,6 +464,8 @@ async function renderBrandReadPdf(
       ? await pdf.embedJpg(websiteImageBytes)
       : await pdf.embedPng(websiteImageBytes)
     : undefined;
+  const displayBrandName = deriveDisplayBrandName(result, safeUrl);
+  const copyResult: BrandReadResult = { ...result, brandName: displayBrandName };
   const normalizedBrand = safeBrandName.toLowerCase();
   const normalizedTitle = safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const compactBrand = normalizedBrand.replace(/[^a-z0-9]+/g, " ").trim();
@@ -355,8 +473,8 @@ async function renderBrandReadPdf(
     normalizedTitle.includes(compactBrand) || compactBrand.includes(normalizedTitle)
       ? "Free brand read"
       : safeTitle;
-  const brandReadParagraphs = buildBrandReadParagraphs(result);
-  const nextMoveParagraphs = buildNextMoveCliffhanger(result);
+  const brandReadParagraphs = buildBrandReadParagraphs(copyResult);
+  const nextMoveParagraphs = buildNextMoveCliffhanger(copyResult);
 
   const addPage = () => {
     const page = pdf.addPage([PAGE.width, PAGE.height]);
@@ -480,7 +598,7 @@ async function renderBrandReadPdf(
     10,
   );
 
-  const headline = fitHeadlineLines(safeBrandName.toLowerCase(), sansBold, contentWidth - 80, 28, 20);
+  const headline = fitHeadlineLines(displayBrandName.toLowerCase(), sansBold, contentWidth - 80, 30, 21);
   let headlineY = 660;
   for (const line of headline.lines) {
     page1.drawText(line, {
@@ -493,9 +611,11 @@ async function renderBrandReadPdf(
     headlineY -= headline.lineHeight;
   }
 
-  page1.drawText(safeUrl.replace(/^https?:\/\//, "").toUpperCase(), {
-    x: centerX - sans.widthOfTextAtSize(safeUrl.replace(/^https?:\/\//, "").toUpperCase(), 9) / 2,
-    y: 626,
+  const urlDisplay = displayUrlFor(safeUrl).toUpperCase();
+  const urlY = Math.min(626, headlineY - 6);
+  page1.drawText(urlDisplay, {
+    x: centerX - sans.widthOfTextAtSize(urlDisplay, 9) / 2,
+    y: urlY,
     size: 9,
     font: sans,
     color: COLORS.faint,
@@ -637,20 +757,20 @@ async function renderBrandReadPdf(
     22,
   );
 
-  const currentPanelY = 460;
+  const currentPanelY = 420;
   page2.drawRectangle({
     x: PAGE.marginX,
     y: currentPanelY,
     width: contentWidth,
-    height: 166,
+    height: 220,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page2, "Current state", PAGE.marginX + 18, currentPanelY + 136, COLORS.accent);
-  let readY = currentPanelY + 112;
+  drawLabel(page2, "Current state", PAGE.marginX + 18, currentPanelY + 182, COLORS.accent);
+  let readY = currentPanelY + 150;
   brandReadParagraphs.forEach((paragraph, index) => {
-    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 34, 9.6, 8.2, 1.28);
+    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 48, 10.8, 9.2, 1.32);
     fitted.lines.forEach((line) => {
       page2.drawText(line, {
         x: PAGE.marginX + 18,
@@ -661,15 +781,15 @@ async function renderBrandReadPdf(
       });
       readY -= fitted.lineHeight;
     });
-    readY -= 5;
+    readY -= 7;
   });
 
   const signalWidth = (contentWidth - 20) / 2;
-  const signalCardHeight = 304;
-  const signalY = 116;
+  const signalCardHeight = 296;
+  const signalY = 90;
   [
-    { label: "Strongest signal", body: buildExpandedSignal(result, "strongest"), color: COLORS.accent },
-    { label: "Main friction", body: buildExpandedSignal(result, "friction"), color: COLORS.warn },
+    { label: "Strongest signal", body: buildExpandedSignal(copyResult, "strongest"), color: COLORS.accent },
+    { label: "Main friction", body: buildExpandedSignal(copyResult, "friction"), color: COLORS.warn },
   ].forEach((card, index) => {
     const x = PAGE.marginX + index * (signalWidth + 20);
     page2.drawRectangle({
@@ -688,18 +808,19 @@ async function renderBrandReadPdf(
       font: sans,
       color: card.color,
     });
-    const fitted = fitBodyText(card.body, sans, signalWidth - 40, 214, 10.6, 9.0, 1.34);
-    let cardY = signalY + signalCardHeight - 78;
-    fitted.lines.forEach((line) => {
-      page2.drawText(line, {
-        x: x + 20,
-        y: cardY,
-        size: fitted.size,
-        font: sans,
-        color: COLORS.text,
-      });
-      cardY -= fitted.lineHeight;
-    });
+    drawFittedParagraphs(
+      page2,
+      card.body.split(/\n{2,}/),
+      sans,
+      x + 20,
+      signalY + signalCardHeight - 72,
+      signalWidth - 40,
+      220,
+      COLORS.text,
+      10.8,
+      9.0,
+      1.34,
+    );
   });
   page2.drawText("Powered by SAHAR / saharstudio.com", {
     x: PAGE.width / 2 - sans.widthOfTextAtSize("Powered by SAHAR / saharstudio.com", 9.5) / 2,
@@ -732,19 +853,19 @@ async function renderBrandReadPdf(
     24,
   );
 
-  const nextPanelY = 466;
+  const nextPanelY = 440;
   page3.drawRectangle({
     x: PAGE.marginX,
     y: nextPanelY,
     width: contentWidth,
-    height: 172,
+    height: 198,
     color: COLORS.panel,
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  let nextY = nextPanelY + 132;
+  let nextY = nextPanelY + 150;
   nextMoveParagraphs.forEach((paragraph, index) => {
-    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 36, 9.4, 8.1, 1.3);
+    const fitted = fitBodyText(paragraph, sans, contentWidth - 36, 44, 10.6, 9.0, 1.3);
     fitted.lines.forEach((line) => {
       page3.drawText(line, {
         x: PAGE.marginX + 18,
@@ -755,24 +876,24 @@ async function renderBrandReadPdf(
       });
       nextY -= fitted.lineHeight;
     });
-    nextY -= 5;
+    nextY -= 7;
   });
 
-  drawLabel(page3, "Unlock", PAGE.marginX, 426, COLORS.accent);
+  drawLabel(page3, "Unlock", PAGE.marginX, 408, COLORS.accent);
   drawWrapped(
     page3,
     "The full report turns this read into exact fixes.",
     serifBold,
     18,
     PAGE.marginX,
-    402,
+    384,
     contentWidth,
     COLORS.text,
     21,
   );
 
   const teaserY = 78;
-  const teaserHeight = 308;
+  const teaserHeight = 286;
   page3.drawRectangle({
     x: PAGE.marginX,
     y: teaserY,
@@ -782,7 +903,7 @@ async function renderBrandReadPdf(
     borderColor: COLORS.line,
     borderWidth: 1,
   });
-  drawLabel(page3, "$197 full report", PAGE.marginX + 18, teaserY + teaserHeight - 30, COLORS.accent);
+  drawLabel(page3, "Inside the full report", PAGE.marginX + 18, teaserY + teaserHeight - 30, COLORS.accent);
   page3.drawText("What's inside", {
     x: PAGE.marginX + 18,
     y: teaserY + teaserHeight - 56,
@@ -822,6 +943,13 @@ async function renderBrandReadPdf(
   });
   const linkText = "brandmirror.app";
   const linkY = teaserY + 24;
+  page3.drawText("$197", {
+    x: PAGE.marginX + 18,
+    y: linkY + 28,
+    size: 17,
+    font: sansBold,
+    color: COLORS.text,
+  });
   page3.drawText(linkText, {
     x: PAGE.marginX + 18,
     y: linkY,
