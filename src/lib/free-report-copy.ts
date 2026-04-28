@@ -260,4 +260,4 @@ export const fullReportIncludes = [
 ];
 
 export const refundLine =
-  "If the full report does not surface at least 3 things you can action this week, reply and we will refund it.";
+  "\u2726 3 actionable findings this week — or a full refund. No questions asked.";

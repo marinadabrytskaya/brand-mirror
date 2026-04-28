@@ -37,19 +37,56 @@ type ErrorResponse = {
 // PDF all speak the same vocabulary.
 // ---------------------------------------------------------------------------
 
-// Deterministic "production file" code — BM-NIK-2026-084 for Nike at 84.
-// Abbreviation = first 3 A-Z chars of the first word of the brand name.
-function productionCode(brandName: string, score: number): string {
-  const first = (brandName || "BRAND").trim().split(/\s+/)[0] ?? "BRD";
-  const abbr = first
+function formatLocalClock(): string {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const offMinutes = -d.getTimezoneOffset();
+  const offH = Math.trunc(offMinutes / 60);
+  const sign = offH >= 0 ? "+" : "-";
+  return `${hh}:${mm} GMT${sign}${Math.abs(offH)}`;
+}
+
+function normalizeUrl(value: string):
+  | { ok: true; url: string; host: string }
+  | { ok: false; reason: "empty" | "invalid" } {
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: false, reason: "empty" };
+  if (/\s/.test(trimmed)) return { ok: false, reason: "invalid" };
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(withProtocol);
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (!host.includes(".") || host.length < 4) {
+      return { ok: false, reason: "invalid" };
+    }
+    return { ok: true, url: parsed.toString(), host };
+  } catch {
+    return { ok: false, reason: "invalid" };
+  }
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+// Deterministic "production file" code — generated from the URL, not a static score.
+function productionCode(brandName: string, sourceUrl: string): string {
+  const normalized = normalizeUrl(sourceUrl);
+  const source = normalized.ok ? normalized.host.split(".")[0] : brandName;
+  const abbr = (source || "BRAND")
     .toUpperCase()
     .replace(/[^A-Z]/g, "")
     .padEnd(3, "X")
     .slice(0, 3);
   const year = new Date().getFullYear();
-  const serial = String(
-    Math.max(0, Math.min(999, Math.round(Number.isFinite(score) ? score : 0))),
-  ).padStart(3, "0");
+  const serial = String(hashString(`${sourceUrl || brandName}-${year}`) % 1000).padStart(3, "0");
   return `BM-${abbr}-${year}-${serial}`;
 }
 
@@ -142,18 +179,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [isTestingFullPdf, setIsTestingFullPdf] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Real clock, client-side only to avoid SSR/CSR hydration mismatch.
-  const [clock, setClock] = useState<string>("--:-- GMT");
+  const [clock, setClock] = useState<string>(() => formatLocalClock());
   useEffect(() => {
-    const render = () => {
-      const d = new Date();
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
-      const offMinutes = -d.getTimezoneOffset();
-      const offH = Math.trunc(offMinutes / 60);
-      const sign = offH >= 0 ? "+" : "-";
-      setClock(`${hh}:${mm} GMT${sign}${Math.abs(offH)}`);
-    };
+    const render = () => setClock(formatLocalClock());
     render();
     const id = window.setInterval(render, 30_000);
     return () => window.clearInterval(id);
@@ -171,9 +199,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) {
-      setError(copy.emptyUrl);
+    const checkedUrl = normalizeUrl(url);
+    if (!checkedUrl.ok) {
+      setError(checkedUrl.reason === "empty" ? copy.emptyUrl : copy.invalidUrl);
       setStatus("");
       return;
     }
@@ -188,7 +216,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: trimmedUrl, language: locale }),
+          body: JSON.stringify({ url: checkedUrl.url, language: locale }),
         });
 
         const payload = (await response.json()) as ReadResponse | ErrorResponse;
@@ -206,20 +234,31 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         setResult(payload.result);
         setStatus(copy.statusDone);
       } catch (requestError) {
-        setError(
+        const message =
           requestError instanceof Error
             ? requestError.message
-            : "Unable to generate the first read right now.",
-        );
+            : "Unable to generate the first read right now.";
+        const lowerMessage = message.toLowerCase();
+        const looksUnreachable =
+          lowerMessage.includes("couldn't reach") ||
+          lowerMessage.includes("could not reach") ||
+          lowerMessage.includes("failed to fetch") ||
+          lowerMessage.includes("timeout") ||
+          lowerMessage.includes("unreachable") ||
+          lowerMessage.includes("page could not");
+        setError(looksUnreachable ? copy.unreachableUrl : message);
         setStatus("");
       }
     });
   }
 
-  const prodCode = productionCode(result.brandName, result.posterScore);
+  const normalizedPreviewUrl = normalizeUrl(url);
+  const reportSourceUrl = currentUrl || (normalizedPreviewUrl.ok ? normalizedPreviewUrl.url : url.trim());
+  const prodCode = reportSourceUrl ? productionCode(result.brandName, reportSourceUrl) : "BM-READY";
   const displayHost = (() => {
     try {
       if (currentUrl) return new URL(currentUrl).hostname.replace(/^www\./, "");
+      if (normalizedPreviewUrl.ok) return normalizedPreviewUrl.host;
     } catch {
       /* fall through */
     }
@@ -227,7 +266,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   })();
 
   const reportHref = siteI18n.withLang(
-    `/full-report${currentUrl || url ? `?url=${encodeURIComponent(currentUrl || url.trim())}` : ""}`,
+    `/full-report${reportSourceUrl ? `?url=${encodeURIComponent(reportSourceUrl)}` : ""}`,
     locale,
   );
 
@@ -454,6 +493,18 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 }}
               />
             </div>
+            <p
+              className="mt-2"
+              style={{
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontSize: "10.5px",
+                letterSpacing: "0.14em",
+                color: normalizedPreviewUrl.ok ? "#6FE0C2" : COLOR.textMuted,
+                textTransform: "uppercase",
+              }}
+            >
+              {normalizedPreviewUrl.ok ? copy.statusReady : copy.startHelper}
+            </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
@@ -485,7 +536,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     {copy.submitBusy.toUpperCase()}
                   </>
                 ) : (
-                  <>&#9654; {copy.submitIdle.toUpperCase()}</>
+                  <>{copy.submitIdle.toUpperCase()}</>
                 )}
               </button>
               <p
@@ -609,6 +660,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               The symptom is visible. The commercial cost needs naming.
             </h3>
+            <p
+              className="mt-5 max-w-md leading-7"
+              style={{ color: COLOR.textSoft, fontSize: "15px" }}
+            >
+              The free read surfaces the signal. The full report names what
+              it&apos;s costing you — and what to fix first.
+            </p>
           </div>
           <div
             className="rounded-2xl border p-6 sm:p-8"
@@ -1168,7 +1226,7 @@ function ScannerReadout({
                 key={row.label}
                 className="grid items-center gap-5 py-4"
                 style={{
-                  gridTemplateColumns: "minmax(132px, 180px) minmax(0, 1fr) 184px",
+                  gridTemplateColumns: "minmax(120px, 170px) minmax(0, 1fr) 94px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
@@ -1200,40 +1258,38 @@ function ScannerReadout({
                     }}
                   />
                 </div>
-                <div
+                <span
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "64px 104px",
-                    alignItems: "center",
-                    columnGap: 16,
-                    justifyContent: "end",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 4,
+                    color: rowBand.color,
+                    textAlign: "right",
+                    lineHeight: 1,
                   }}
                 >
-                    <span
-                      style={{
-                        fontSize: "30px",
-                        fontWeight: 600,
-                        color: rowBand.color,
-                        textAlign: "right",
-                        lineHeight: 0.9,
-                      }}
-                    >
-                      {row.value}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono), ui-monospace, monospace",
-                        fontSize: "8px",
-                        letterSpacing: "0.22em",
-                        color: rowBand.color,
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        lineHeight: 1.1,
-                      }}
-                    >
-                      {rowBand.label}
-                    </span>
-                </div>
+                  <span
+                    style={{
+                      fontSize: "38px",
+                      fontWeight: 600,
+                      lineHeight: 0.9,
+                    }}
+                  >
+                    {row.value}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "8px",
+                      letterSpacing: "0.22em",
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {rowBand.label}
+                  </span>
+                </span>
               </div>
             );
           })}

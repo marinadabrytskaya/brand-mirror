@@ -32,12 +32,12 @@ export const siteCopy = {
       navHow: "How it works",
       navOffer: "Offer",
       navSample: "Sample report",
-      kicker: "Free first read for brands that should convert better",
-      title: "Let BrandMirror read the first signal.",
+      kicker: "BrandMirror finds it in 60 seconds. Free.",
+      title: "Your brand has a leak.",
       body:
-        "Enter a website. Get the first diagnostic read: score, signal, friction, and the clearest reason buyers hesitate.",
-      primaryCta: "Read my brand",
-      secondaryCta: "See sample report",
+        "Buyers land on your homepage, sense something is off, and leave. They can't name it. BrandMirror can.",
+      primaryCta: "\u25B6 Read My Brand",
+      secondaryCta: "See sample report \u2192",
       heroProofs: [
         "Free first signal before asking for payment.",
         "Paid report only when the diagnosis already feels specific.",
@@ -45,27 +45,27 @@ export const siteCopy = {
       ],
       signalHeadingLabel: "What it reads",
       signalHeadingTitle:
-        "A brand diagnostic that treats taste, tone, and clarity as one system.",
+        "Buyers don't read your brand. They feel it.",
       signalHeadingBody:
-        "BrandMirror is built to expose what buyers sense before they can articulate it. The output is meant to feel like a commercial diagnostic, not a feedback dump.",
+        "BrandMirror reads what they feel — before they decide to leave.",
       signalColumns: [
         {
           label: "Positioning",
-          title: "What your offer sounds like in-market",
+          title: "If buyers can't repeat what you sell in one sentence — you don't have positioning.",
           body:
-            "BrandMirror reads how clearly your offer lands, where your promise becomes vague, and whether your positioning feels premium, specific, or too polished to convert.",
+            "You have atmosphere.",
         },
         {
           label: "AI visibility",
-          title: "How visible your brand is to AI-powered search",
+          title: "ChatGPT is your new homepage.",
           body:
-            "It checks whether AI tools like ChatGPT, Gemini, and Perplexity can find, understand, and accurately recommend your brand. AI visibility is weighted toward the external technical AEO layer: 60% metadata, schema, crawler access, and AI-readable structure; 40% semantic brand clarity.",
+            "If it can't explain your brand — neither can your buyers.",
         },
         {
           label: "Visual identity",
-          title: "What your visuals imply before anyone reads",
+          title: "Your visuals speak before your copy does.",
           body:
-            "Layout, typography, palette, restraint, hierarchy, and trust cues are reviewed together so the final read reflects the full brand impression, not isolated design notes.",
+            "BrandMirror reads what they're saying — and whether it's costing you money.",
         },
       ],
       evidence: {
@@ -125,36 +125,36 @@ export const siteCopy = {
       ],
       how: {
         label: "How it works",
-        title: "Free signal first. Full diagnosis only when it already feels useful.",
+        title: "How it works",
         body:
-          "The product flow should make BrandMirror easy to try without giving away the whole report. The first read earns the right to sell the paid layer.",
+          "Enter a URL. See the first signal. Unlock the full diagnosis only if the read hits.",
         notes: [
-          "The free layer proves BrandMirror can spot the gap fast.",
-          "The paid layer tells the buyer what is working, what is broken, why the brand is leaking trust, and what to fix first.",
+          "The free read shows you the signal.",
+          "The $197 report names the leak, the fix, and the commercial cost of doing nothing.",
         ],
         workflow: [
           {
             step: "01",
-            title: "Enter your website",
-            body: "BrandMirror pulls a first read from the homepage and shows the immediate impression for free.",
+            title: "Enter your URL",
+            body: "BrandMirror reads your homepage the way a cold buyer would. No context. No charity.",
           },
           {
             step: "02",
-            title: "Review the first signal",
-            body: "You see the snapshot, three scores, one strength, one friction point, and the next move worth fixing first.",
+            title: "Get the first signal",
+            body: "Score, friction point, strongest asset, and the one thing buyers sense before they bounce.",
           },
           {
             step: "03",
             title: "Unlock the full report",
-            body: "Pay $197 to open the complete brand diagnosis with positioning, AI visibility, visual identity, commercial impact scenarios, competitor comparison, and the implementation playbook.",
+            body: "$197 opens the complete breakdown: what works, what leaks, why buyers hesitate — and what to fix first.",
           },
         ],
       },
       fullReport: {
         label: "Full report",
-        title: "The $197 layer should feel like a real mini-product.",
+        title: "Start free. Go deeper only if the signal hits.",
         body:
-          "What the buyer unlocks is not more commentary. It is the paid diagnosis: what is working, what is broken, why the brand is not converting, and what to fix first.",
+          "The free read shows you the signal. The $197 report names the leak, the fix, and the commercial cost of doing nothing. One or the other. You pick.",
         cardLabel: "BrandMirror report — $197",
         included: "Included",
         items: [
@@ -177,10 +177,10 @@ export const siteCopy = {
         ],
       },
       offers: {
-        label: "Offer structure",
-        title: "A simple ladder: free signal, paid report, optional deeper work.",
+        label: "Pricing",
+        title: "The free read shows you the signal.",
         body:
-          "This keeps BrandMirror sellable as a standalone product while giving the buyer a clear reason to pay: sharper clarity on why the brand is or is not converting.",
+          "The $197 report names the leak, the fix, and the commercial cost of doing nothing. One or the other. You pick.",
         layer: "Standalone product layer",
         rows: [
           {
@@ -205,37 +205,41 @@ export const siteCopy = {
             detail: "Secondary upsell after value is delivered.",
           },
         ],
-        primaryCta: "Start free first read",
-        secondaryCta: "Review full report structure",
+        primaryCta: "\u25B6 UNLOCK FULL REPORT — $197",
+        secondaryCta: "See sample report \u2192",
       },
       final: {
         label: "Final cue",
         title:
-          "Start free. Then pay only if you want the hard answer on what is working, what is broken, and why buyers hesitate.",
+          "BrandMirror reads what buyers sense before they speak.",
         body:
-          "That makes the free layer believable, the paid layer sharp, and the whole product feel like a real diagnostic instead of a soft brand review.",
-        primaryCta: "Read my brand",
-        secondaryCta: "See sample report",
+          "Start with the free signal. If it lands, unlock the full diagnosis and turn the leak into a fix stack.",
+        primaryCta: "\u25B6 Read My Brand",
+        secondaryCta: "See sample report \u2192",
       },
     },
     firstRead: {
       back: "Back to BrandMirror",
-      title: "Free first read",
-      mechanicLabel: "Live mechanic",
+      title: "First signal. Free.",
+      mechanicLabel: "Live engine",
       mechanicBody:
-        "This page now uses the transferred Brand Review analysis logic to read a real website and produce the free BrandMirror layer.",
+        "Active. Enter any brand URL to begin. BrandMirror reads your homepage as a cold buyer — no context, no charity, no assumptions.",
       startLabel: "Start here",
-      startTitle: "Enter a website and let BrandMirror read the first signal.",
+      startTitle: "Drop your homepage URL. The scan takes 60 seconds.",
+      startHelper: "Drop your homepage URL. The scan takes 60 seconds.",
       startBody:
-        "The free layer shows what is working, what is breaking trust, and where the message starts losing the buyer. The full report opens only after payment.",
+        "Enter your URL. BrandMirror reads what buyers feel before they decide to leave.",
       websiteUrl: "Website URL",
       urlPlaceholder: "yourbrand.com",
-      submitIdle: "Read my brand",
+      submitIdle: "\u25B6 READ THE SIGNAL",
       submitBusy: "Reading brand...",
-      statusInitial: "Enter a website to generate the first read.",
-      statusReading: "Reading the site and pulling the strongest signals.",
+      statusInitial: "Enter a URL to begin",
+      statusReading: "Scanning homepage copy, AI visibility, visual hierarchy, offer clarity, and conversion path.",
       statusDone: "First read generated. The $197 report is ready to unlock.",
-      emptyUrl: "Enter a website URL to generate the first read.",
+      statusReady: "Ready to scan \u2192",
+      emptyUrl: "Enter a URL to begin",
+      invalidUrl: "That doesn't look like a website URL",
+      unreachableUrl: "We couldn't reach that page — try the homepage URL",
       diagnosticPreview: "Diagnostic preview",
       generatedLabel: "Generated first read",
       resultTitle: "The first read",

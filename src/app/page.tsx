@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LanguageSwitcher from "@/components/language-switcher";
+import { refundLine } from "@/lib/free-report-copy";
 import siteI18n from "@/lib/site-i18n";
 
 const heroScanRows = [
@@ -83,7 +84,7 @@ function HeroLiveScan({ cta }: { cta: string }) {
           <div
             key={row.label}
             className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
-            style={{ gridTemplateColumns: "118px minmax(150px,1fr) 52px 82px" }}
+            style={{ gridTemplateColumns: "124px minmax(128px,1fr) 74px" }}
           >
             <span className="whitespace-nowrap font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.52)]">
               {row.label}
@@ -95,16 +96,10 @@ function HeroLiveScan({ cta }: { cta: string }) {
               />
             </span>
             <span
-              className="text-right font-sans text-[2rem] font-semibold leading-none tabular-nums"
+              className="text-right font-sans text-[2.45rem] font-semibold leading-none tabular-nums"
               style={{ color: row.color }}
             >
               {row.value}
-            </span>
-            <span
-              className="text-left font-mono text-[0.48rem] uppercase tracking-[0.2em]"
-              style={{ color: row.color }}
-            >
-              {row.status}
             </span>
           </div>
         ))}
@@ -188,7 +183,7 @@ export default async function Home({
           <div className="grid flex-1 items-center gap-10 pb-4 pt-8 lg:grid-cols-[0.88fr_1.12fr] lg:pt-8">
             <div className="max-w-xl">
               <p className="section-label soft-fade-up">{copy.kicker}</p>
-              <p className="soft-fade-up mt-4 font-serif text-[clamp(4.2rem,12vw,8rem)] leading-[0.88] tracking-[-0.06em] text-[color:var(--foreground)]">
+              <p className="soft-fade-up mt-4 max-w-[44rem] font-serif text-[clamp(3.3rem,8vw,6.4rem)] leading-[0.9] tracking-[-0.06em] text-[color:var(--foreground)]">
                 BrandMirror
               </p>
               <h1 className="soft-fade-up-delay mt-6 max-w-xl font-serif text-4xl leading-[1.02] tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl lg:text-6xl">
@@ -260,13 +255,6 @@ export default async function Home({
               title={copy.how.title}
               body={copy.how.body}
             />
-            <div className="editorial-rule mt-10 space-y-5 pt-6">
-              {copy.how.notes.map((item) => (
-                <p key={item} className="text-base leading-7 text-[color:var(--foreground-soft)]">
-                  {item}
-                </p>
-              ))}
-            </div>
           </div>
 
           <div className="space-y-6">
@@ -381,6 +369,9 @@ export default async function Home({
               {copy.offers.secondaryCta}
             </Link>
           </div>
+          <p className="mt-4 text-sm font-medium text-[color:var(--foreground-soft)]">
+            {refundLine}
+          </p>
         </div>
       </section>
 
