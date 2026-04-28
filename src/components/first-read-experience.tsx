@@ -14,7 +14,6 @@ import {
   buildScopeLine,
   fullReportIncludes,
   refundLine,
-  scoreConsequence,
 } from "@/lib/free-report-copy";
 
 type SiteLocale = "en" | "es" | "ru";
@@ -218,7 +217,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     label: d.shortLabel,
     key: d.key,
     value: result[d.key] as number,
-    consequence: scoreConsequence(d.key, result[d.key] as number),
   }));
   const brandReadParagraphs = buildBrandReadParagraphs(result);
   const nextMoveParagraphs = buildNextMoveCliffhanger(result);
@@ -641,8 +639,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   key={index}
                   className="max-w-[48rem] leading-7"
                   style={{
-                    color: index === 2 ? COLOR.text : COLOR.textSoft,
-                    fontSize: "15.5px",
+                    color: "rgba(237,237,242,0.76)",
+                    fontFamily: "var(--font-sans), Inter, system-ui, sans-serif",
+                    fontSize: "16px",
+                    fontWeight: 400,
                   }}
                 >
                   {paragraph}
@@ -1057,7 +1057,7 @@ function ScannerReadout({
   band: Band;
   tagline: string;
   clock: string;
-  scoreRows: Array<{ label: string; key: string; value: number; consequence: string }>;
+  scoreRows: Array<{ label: string; key: string; value: number }>;
   isPending: boolean;
   isLive: boolean;
 }) {
@@ -1213,40 +1213,29 @@ function ScannerReadout({
             return (
               <div
                 key={row.label}
-                className="grid items-center gap-4 py-3"
+                className="grid items-center gap-5 py-4"
                 style={{
-                  gridTemplateColumns: "minmax(168px, 210px) minmax(0, 1fr) 148px",
+                  gridTemplateColumns: "minmax(132px, 180px) minmax(0, 1fr) 184px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
                       : `0.5px solid ${COLOR.lineSoft}`,
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono), ui-monospace, monospace",
-                      fontSize: "10px",
-                      letterSpacing: "0.24em",
-                      color: "rgba(237,237,242,0.55)",
-                    }}
-                  >
-                    {row.label}
-                  </div>
-                  <div
-                    className="mt-1 hidden leading-4 xl:block"
-                    style={{
-                      color: COLOR.textFaint,
-                      fontSize: "10.5px",
-                      maxWidth: 204,
-                    }}
-                  >
-                    {row.consequence}
-                  </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono), ui-monospace, monospace",
+                    fontSize: "11px",
+                    letterSpacing: "0.24em",
+                    color: "rgba(237,237,242,0.58)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {row.label}
                 </div>
                 <div
                   className="overflow-hidden rounded-full"
-                  style={{ height: 3, background: "rgba(255,255,255,0.07)" }}
+                  style={{ height: 4, background: "rgba(255,255,255,0.07)" }}
                 >
                   <div
                     style={{
@@ -1261,19 +1250,19 @@ function ScannerReadout({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "42px 94px",
+                    gridTemplateColumns: "64px 104px",
                     alignItems: "center",
-                    columnGap: 12,
+                    columnGap: 16,
                     justifyContent: "end",
                   }}
                 >
                     <span
                       style={{
-                        fontSize: "17px",
-                        fontWeight: 500,
+                        fontSize: "30px",
+                        fontWeight: 600,
                         color: rowBand.color,
                         textAlign: "right",
-                        lineHeight: 1,
+                        lineHeight: 0.9,
                       }}
                     >
                       {row.value}
@@ -1281,8 +1270,8 @@ function ScannerReadout({
                     <span
                       style={{
                         fontFamily: "var(--font-mono), ui-monospace, monospace",
-                        fontSize: "7px",
-                        letterSpacing: "0.2em",
+                        fontSize: "8px",
+                        letterSpacing: "0.22em",
                         color: rowBand.color,
                         textAlign: "left",
                         whiteSpace: "nowrap",
