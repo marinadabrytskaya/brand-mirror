@@ -4459,6 +4459,27 @@ export async function generateBrandReportPdf(
       return { text: clean, size: minSize, lineGap, font };
     };
 
+    const fitFullTextToBox = (
+      text: string,
+      width: number,
+      height: number,
+      startSize = 11.5,
+      minSize = 8.8,
+      lineGap = 5,
+      font: "Helvetica" | "Times-Roman" | "Times-Bold" = "Helvetica",
+    ) => {
+      const clean = bodyCopy(text);
+      let size = startSize;
+      while (size >= minSize) {
+        doc.font(font).fontSize(size);
+        if (doc.heightOfString(clean, { width, lineGap }) <= height) {
+          return { text: clean, size, lineGap, font };
+        }
+        size -= 0.25;
+      }
+      return { text: clean, size: minSize, lineGap, font };
+    };
+
     const drawBulletBlock = (
       heading: string,
       items: string[],
@@ -5212,22 +5233,22 @@ export async function generateBrandReportPdf(
       lineGap: scanTitle.lineGap,
     });
     drawCenteredText(displayUrl.toUpperCase(), "Helvetica", 8.2, centerX, 146, colors.mutedOnDark);
-    drawGauge(centerX, 260, 56, overallScore, bandColor(overallScore));
-    drawCenteredText(String(overallScore), "Helvetica", 38, centerX, 246, bandColor(overallScore));
-    drawCenteredText("/ 100", "Helvetica", 9.2, centerX, 298, colors.mutedOnDark);
-    drawCenteredText(getBandForScore(overallScore), "Helvetica", 10, centerX, 326, bandColor(overallScore));
+    drawGauge(centerX, 238, 50, overallScore, bandColor(overallScore));
+    drawCenteredText(String(overallScore), "Helvetica", 36, centerX, 225, bandColor(overallScore));
+    drawCenteredText("/ 100", "Helvetica", 9.2, centerX, 272, colors.mutedOnDark);
+    drawCenteredText(getBandForScore(overallScore), "Helvetica", 10, centerX, 300, bandColor(overallScore));
     const liveScanTagline = buildSignalTaglineFromScores(
       scorePages.map((item) => ({ label: item.label, score: item.score.score })),
       truncate(report.tagline || "", 120),
     );
     const liveTagline = fitTextToBox(liveScanTagline, contentWidth - 150, 38, 13.8, 11.8, 3.6, "Times-Roman");
-    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 75, 354, {
+    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 75, 332, {
       width: contentWidth - 150,
       align: "center",
       lineGap: liveTagline.lineGap,
     });
-    drawSectionTag("SCORE BREAKDOWN", contentLeft, 392, colors.mutedOnDark);
-    const scoreStartY = 408;
+    drawSectionTag("SCORE BREAKDOWN", contentLeft, 374, colors.mutedOnDark);
+    const scoreStartY = 390;
     scorePages.forEach((item, index) => {
       const rowY = scoreStartY + index * 36;
       const scoreColor = bandColor(item.score.score);
@@ -5522,7 +5543,7 @@ export async function generateBrandReportPdf(
       drawParagraph(diagnosisText.text, contentLeft, 206, 278, diagnosisText.size, diagnosisText.lineGap);
       const sidePanelX = 342;
       const sidePanelW = contentRight - sidePanelX;
-      drawPanel(sidePanelX, 206, sidePanelW, item.title === "Visual Credibility" && websiteImageSource ? 386 : 364);
+      drawPanel(sidePanelX, 206, sidePanelW, item.title === "Visual Credibility" && websiteImageSource ? 386 : 428);
       if (false && item.title === "Visual Credibility" && websiteImageSource) {
         drawSectionTag("CURRENT SURFACE", sidePanelX + 20, 230, colors.textMuted);
         drawRoundedImage(
@@ -5550,9 +5571,9 @@ export async function generateBrandReportPdf(
           width: sidePanelW - 40,
           lineGap: revealText.lineGap,
         });
-        drawSectionTag("WHAT THIS MEANS", sidePanelX + 20, 404, colors.textMuted);
-        const implicationText = fitTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 120, 11.4, 10.2, 3.8, "Helvetica");
-        drawParagraph(implicationText.text, sidePanelX + 20, 426, sidePanelW - 40, implicationText.size, implicationText.lineGap);
+        drawSectionTag("WHAT THIS MEANS", sidePanelX + 20, 390, colors.textMuted);
+        const implicationText = fitFullTextToBox(stripBrandLead(item.implication), sidePanelW - 40, 184, 11.0, 8.8, 3.6, "Helvetica");
+        drawParagraph(implicationText.text, sidePanelX + 20, 412, sidePanelW - 40, implicationText.size, implicationText.lineGap);
       }
       drawScoreMeter(contentLeft, 650, contentWidth, item.score.score);
       drawSectionTag(pdfCopy.benchmark.toUpperCase(), contentLeft, 618, colors.textOnDark);
@@ -5835,18 +5856,13 @@ export async function generateBrandReportPdf(
       3.6,
     );
     const ctaX = contentRight - 150;
-    doc.fillColor(colors.accent).font("Helvetica").fontSize(9.2).text("BOOK A SAHAR DISCOVERY CALL", ctaX - 30, 604, {
-      width: 138,
-      align: "right",
-      characterSpacing: 1.5,
-    });
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(12.8).text("calendly.com/maryna-dabrytskaya/30min", ctaX - 88, 644, {
-      width: 226,
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(16).text("Book a SAHAR Discovery Call", ctaX - 112, 624, {
+      width: 250,
       align: "right",
       link: "https://calendly.com/maryna-dabrytskaya/30min?month=2026-04",
       underline: true,
     });
-    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.2).text("30 minutes. No pitch. Clear next move.", ctaX - 64, 674, {
+    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.2).text("30 minutes. No pitch. Clear next move.", ctaX - 64, 660, {
       width: 202,
       align: "right",
     });
