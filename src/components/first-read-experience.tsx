@@ -10,6 +10,7 @@ import siteI18n from "@/lib/site-i18n";
 import {
   buildBrandReadParagraphs,
   buildExpandedSignal,
+  buildLiveScanTagline,
   buildNextMoveCliffhanger,
   buildScopeLine,
   fullReportIncludes,
@@ -50,60 +51,6 @@ function productionCode(brandName: string, score: number): string {
     Math.max(0, Math.min(999, Math.round(Number.isFinite(score) ? score : 0))),
   ).padStart(3, "0");
   return `BM-${abbr}-${year}-${serial}`;
-}
-
-function buildDiagnosticTagline(result: BrandReadResult): string {
-  const ranked = [...DIMENSIONS]
-    .map((dimension) => ({
-      key: dimension.key,
-      value: Number(result[dimension.key] ?? 0),
-    }))
-    .sort((a, b) => a.value - b.value);
-
-  const weakest = ranked.slice(0, 2).map((item) => item.key);
-  const hasAI = weakest.includes("toneCoherence");
-  const hasOffer = weakest.includes("offerSpecificity");
-  const hasPositioning = weakest.includes("positioningClarity");
-  const hasConversion = weakest.includes("conversionReadiness");
-  const hasVisual = weakest.includes("visualCredibility");
-
-  if (hasAI && hasOffer) {
-    return "The offer is under-named. AI visibility is too weak to sell it.";
-  }
-  if (hasOffer && hasPositioning) {
-    return "The page shows capability before it names what buyers can buy.";
-  }
-  if (hasAI && hasPositioning) {
-    return "AI sees fragments. Buyers still have to name the offer themselves.";
-  }
-  if (hasAI && hasConversion) {
-    return "AI cannot repeat the promise, and the CTA asks too early.";
-  }
-  if (hasOffer && hasConversion) {
-    return "The offer is vague, so the click asks for trust it has not earned.";
-  }
-  if (hasVisual && hasOffer) {
-    return "The page looks better than it sells. The offer is still missing.";
-  }
-  if (hasVisual && hasConversion) {
-    return "The page does not earn enough trust before it asks for action.";
-  }
-  if (hasAI) {
-    return "AI visibility is thin enough to flatten the brand into generic noise.";
-  }
-  if (hasOffer) {
-    return "The offer is still under-named; buyers cannot repeat it fast enough.";
-  }
-  if (hasPositioning) {
-    return "Capability is visible, but the category promise is still buried.";
-  }
-  if (hasConversion) {
-    return "Interest is present, but the page still makes action feel risky.";
-  }
-  if (hasVisual) {
-    return "The visual layer is not earning trust fast enough.";
-  }
-  return result.tagline || "The signal is present. The page is still making buyers work.";
 }
 
 // ---------------------------------------------------------------------------
@@ -589,7 +536,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             host={displayHost}
             posterScore={result.posterScore}
             band={posterBand}
-            tagline={buildDiagnosticTagline(result)}
+            tagline={buildLiveScanTagline(result)}
             clock={clock}
             scoreRows={scoreRows}
             isPending={isPending}

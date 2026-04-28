@@ -853,16 +853,16 @@ function buildTagline(
   const hasVisual = weakest.includes("visual");
 
   if (hasAI && hasOffer) {
-    return "The offer is under-named. AI visibility is too weak to sell it.";
+    return "AI can find fragments. The offer still needs language it can repeat.";
   }
   if (hasOffer && hasPositioning) {
     return "The page shows capability before it names what buyers can buy.";
   }
   if (hasAI && hasPositioning) {
-    return "AI sees fragments. Buyers still have to name the offer themselves.";
+    return "The category is visible, but AI still has to guess what the brand should own.";
   }
   if (hasAI && hasConversion) {
-    return "AI cannot repeat the promise, and the CTA asks too early.";
+    return "AI cannot repeat the promise cleanly, and the next step asks too early.";
   }
   if (hasOffer && hasConversion) {
     return "The offer is vague, so the click asks for trust it has not earned.";
@@ -874,7 +874,7 @@ function buildTagline(
     return "The page does not earn enough trust before it asks for action.";
   }
   if (hasAI) {
-    return "AI visibility is thin enough to flatten the brand into generic noise.";
+    return "The brand exists, but AI still needs cleaner signals to recommend it.";
   }
   if (hasOffer) {
     return "The offer is still under-named; buyers cannot repeat it fast enough.";

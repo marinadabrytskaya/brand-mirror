@@ -21,6 +21,101 @@ function lowerFirst(value: string) {
   return value ? `${value.charAt(0).toLowerCase()}${value.slice(1)}` : value;
 }
 
+function brandSubject(result: BrandReadResult) {
+  return cleanSentence(result.brandName, "This brand");
+}
+
+function buyerCostFor(key: DimensionKey) {
+  if (key === "toneCoherence") {
+    return "AI-assisted discovery becomes easier for cleaner competitors than for this brand";
+  }
+  if (key === "offerSpecificity") {
+    return "good buyers have to infer the offer before they can want it";
+  }
+  if (key === "conversionReadiness") {
+    return "interested visitors can leave before the next step feels safe enough";
+  }
+  if (key === "visualCredibility") {
+    return "the page asks the copy to defend trust the visual layer should already be earning";
+  }
+  return "buyers can understand the category before they understand the difference";
+}
+
+function strengthLead(key: DimensionKey, brand: string, strongest: string) {
+  if (key === "visualCredibility") {
+    return `${brand} already creates a visual expectation: ${strongest}. That matters because the first impression is doing some trust work before the copy begins.`;
+  }
+  if (key === "toneCoherence") {
+    return `${brand} is easiest to understand where the language becomes concrete: ${strongest}. That is the material AI systems and buyers can start to repeat.`;
+  }
+  if (key === "offerSpecificity") {
+    return `${brand} has an offer signal worth naming: ${strongest}. When that signal becomes explicit, the brand stops sounding like the category and starts sounding like a choice.`;
+  }
+  if (key === "conversionReadiness") {
+    return `${brand} already gives interested buyers a route forward: ${strongest}. The opportunity is to make that route feel safer and more obvious.`;
+  }
+  return `${brand} is not starting from zero. ${strongest}. The useful work now is to make that difference easier to recognize in one read.`;
+}
+
+function frictionLead(key: DimensionKey, friction: string) {
+  if (key === "toneCoherence") {
+    return `The weak point is the AI-readable layer. ${friction}. If category nouns, metadata, schema, and proof language stay too soft, external systems struggle to repeat the brand confidently.`;
+  }
+  if (key === "offerSpecificity") {
+    return `The weak point is naming. ${friction}. Buyers should not have to translate atmosphere or category language into a concrete thing they can buy.`;
+  }
+  if (key === "conversionReadiness") {
+    return `The weak point is the decision path. ${friction}. A page can create interest and still lose the click if the next action feels vague, early, or unsupported.`;
+  }
+  if (key === "visualCredibility") {
+    return `The weak point is trust speed. ${friction}. The visual layer needs to prove the promise before the buyer starts comparing alternatives.`;
+  }
+  return `The weak point is category ownership. ${friction}. A cold buyer needs to see the difference before the brand asks for attention.`;
+}
+
+export function buildLiveScanTagline(result: Pick<BrandReadResult, DimensionKey | "tagline" | "mainFriction" | "gap">) {
+  const ranked = DIMENSIONS.map((dimension) => ({
+    key: dimension.key,
+    value: safeNumber(result[dimension.key]),
+  })).sort((a, b) => a.value - b.value);
+
+  const weakest = ranked[0]?.key;
+  const second = ranked[1]?.key;
+
+  if (weakest === "toneCoherence" && second === "offerSpecificity") {
+    return "AI can find fragments. The offer still needs language it can repeat.";
+  }
+  if (weakest === "offerSpecificity" && second === "toneCoherence") {
+    return "The buyer senses value. AI still cannot name the offer cleanly.";
+  }
+  if (weakest === "offerSpecificity" && second === "conversionReadiness") {
+    return "The offer lands late, so the next step asks for trust too early.";
+  }
+  if (weakest === "conversionReadiness" && second === "offerSpecificity") {
+    return "Interest is present. The page has not made the decision feel safe.";
+  }
+  if (weakest === "visualCredibility" && second === "conversionReadiness") {
+    return "The page asks for action before the visual proof has done enough work.";
+  }
+  if (weakest === "visualCredibility") {
+    return "The promise is visible, but the visual proof is not carrying enough trust.";
+  }
+  if (weakest === "toneCoherence") {
+    return "The brand exists, but AI still needs cleaner signals to recommend it.";
+  }
+  if (weakest === "offerSpecificity") {
+    return "The value is there. The exact offer is still too hard to repeat.";
+  }
+  if (weakest === "conversionReadiness") {
+    return "The page creates interest before the next step feels earned.";
+  }
+  if (weakest === "positioningClarity") {
+    return "The category is visible. The difference still needs to arrive faster.";
+  }
+
+  return result.tagline || "The signal is present. The page is still making buyers work.";
+}
+
 export function rankedDimensions(result: BrandReadResult): RankedDimension[] {
   return DIMENSIONS.map((dimension) => ({
     key: dimension.key,
@@ -64,7 +159,7 @@ export function buildScopeLine(scanLabel: string) {
 }
 
 export function buildBrandReadParagraphs(result: BrandReadResult) {
-  const brand = cleanSentence(result.brandName, "This brand");
+  const brand = brandSubject(result);
   const strongest = cleanSentence(
     result.strongestSignal || result.strength,
     "There is already a real signal worth keeping",
@@ -73,23 +168,15 @@ export function buildBrandReadParagraphs(result: BrandReadResult) {
     result.mainFriction || result.gap,
     "The page still makes the buyer work too hard before the offer becomes clear",
   );
-  const weakest = rankedDimensions(result)[0];
+  const ranked = rankedDimensions(result);
+  const weakest = ranked[0];
+  const strongestAxis = ranked[ranked.length - 1]?.key ?? "positioningClarity";
   const consequence = scoreConsequence(weakest.key, weakest.value);
-  const buyerCost =
-    weakest.key === "toneCoherence"
-      ? "AI-assisted discovery becomes easier for cleaner competitors than for this brand"
-      : weakest.key === "offerSpecificity"
-        ? "good buyers have to infer the offer before they can want it"
-        : weakest.key === "conversionReadiness"
-          ? "interested visitors can leave before the next step feels safe enough"
-          : weakest.key === "visualCredibility"
-            ? "the page asks the copy to defend trust the visual layer should already be earning"
-            : "buyers can understand the category before they understand the difference";
 
   return [
-    `${brand} has a real advantage: ${strongest}. That signal can create commercial weight when a cold buyer can repeat it quickly.`,
-    `But the page does not yet make the buying reason unmistakable. ${friction}. The brand is creating interest before it has fully earned certainty.`,
-    `At a ${weakest.label} score of ${weakest.value}, this is not a cosmetic issue. ${consequence} In practical terms, ${buyerCost}.`,
+    strengthLead(strongestAxis, brand, strongest),
+    frictionLead(weakest.key, friction),
+    `At a ${weakest.label} score of ${weakest.value}, this is not a cosmetic issue. ${consequence} In practical terms, ${buyerCostFor(weakest.key)}.`,
   ];
 }
 
@@ -105,9 +192,22 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
   );
 
   if (kind === "strongest") {
+    const ranked = rankedDimensions(result);
+    const strongestAxis = ranked[ranked.length - 1]?.key ?? "positioningClarity";
+    const axisContext =
+      strongestAxis === "visualCredibility"
+        ? "because visual confidence is already creating a reason to stay"
+        : strongestAxis === "toneCoherence"
+          ? "because repeatable language is already giving AI systems something to hold"
+          : strongestAxis === "offerSpecificity"
+            ? "because the offer has material that can become more ownable"
+            : strongestAxis === "conversionReadiness"
+              ? "because the path forward already exists and can be sharpened"
+              : "because the category signal is already visible enough to build on";
+
     return [
-      `${brand}'s strongest commercial asset is already visible: ${strongest}.`,
-      "That matters because most brands in a category sound interchangeable until they name what they can do differently.",
+      `${brand}'s strongest signal is not generic polish. It is this: ${strongest}.`,
+      `That matters ${axisContext}. Most brands in a category sound interchangeable until the strongest signal is protected and named.`,
       "The full report turns this into the KEEP layer, so the fixes sharpen the signal instead of flattening what is already earning trust.",
     ].join("\n\n");
   }
@@ -115,7 +215,7 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
   const weakest = rankedDimensions(result)[0];
   const consequence = lowerFirst(scoreConsequence(weakest.key, weakest.value));
   return [
-    `The main friction is not a small copy problem. ${friction}.`,
+    frictionLead(weakest.key, friction),
     `That matters because ${consequence}`,
     "The full report names the exact first correction, where it belongs, and what should happen after it lands.",
   ].join("\n\n");

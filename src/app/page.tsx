@@ -75,7 +75,7 @@ function HeroLiveScan({ cta }: { cta: string }) {
       </div>
 
       <p className="mx-auto -mt-1 max-w-sm text-center font-serif text-xl italic leading-snug text-[rgba(244,245,248,0.9)]">
-        The offer is under-named. AI visibility is too thin to carry the story.
+        The buyer senses value. The offer still needs words AI can repeat.
       </p>
 
       <div className="mt-8 space-y-3">
@@ -83,9 +83,9 @@ function HeroLiveScan({ cta }: { cta: string }) {
           <div
             key={row.label}
             className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
-            style={{ gridTemplateColumns: "112px minmax(0,1fr) 116px" }}
+            style={{ gridTemplateColumns: "118px minmax(150px,1fr) 52px 82px" }}
           >
-            <span className="font-mono text-[0.62rem] uppercase tracking-[0.26em] text-[rgba(237,237,242,0.52)]">
+            <span className="whitespace-nowrap font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.52)]">
               {row.label}
             </span>
             <span className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
@@ -94,19 +94,17 @@ function HeroLiveScan({ cta }: { cta: string }) {
                 style={{ width: `${row.value}%`, background: row.color }}
               />
             </span>
-            <span className="flex items-baseline justify-end gap-3">
-              <span
-                className="font-sans text-3xl font-semibold leading-none"
-                style={{ color: row.color }}
-              >
-                {row.value}
-              </span>
-              <span
-                className="font-mono text-[0.52rem] uppercase tracking-[0.22em]"
-                style={{ color: row.color }}
-              >
-                {row.status}
-              </span>
+            <span
+              className="text-right font-sans text-[2rem] font-semibold leading-none tabular-nums"
+              style={{ color: row.color }}
+            >
+              {row.value}
+            </span>
+            <span
+              className="text-left font-mono text-[0.48rem] uppercase tracking-[0.2em]"
+              style={{ color: row.color }}
+            >
+              {row.status}
             </span>
           </div>
         ))}
