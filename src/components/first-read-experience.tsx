@@ -609,6 +609,44 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           {buildScopeLine(clock)}
         </p>
 
+        {currentUrl ? (
+          <section
+            className="mt-8 flex flex-col gap-4 rounded-2xl border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+            style={{
+              borderColor: COLOR.lineSoft,
+              background: "rgba(255,255,255,0.018)",
+            }}
+          >
+            <div>
+              <p style={{ ...metaLabel, color: COLOR.accent }}>FREE&nbsp;REPORT&nbsp;EXPORT</p>
+              <p
+                className="mt-2 leading-6"
+                style={{ color: COLOR.textMuted, fontSize: "13.5px" }}
+              >
+                Save the free first read as a shareable PDF snapshot.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadFreePdf}
+              disabled={isDownloadingFreePdf}
+              className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                borderColor: "rgba(111,224,194,0.34)",
+                color: COLOR.text,
+                fontSize: "12.5px",
+                letterSpacing: "0.18em",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontWeight: 500,
+              }}
+            >
+              {isDownloadingFreePdf
+                ? copy.freePdfBusy.toUpperCase()
+                : copy.freePdfIdle.toUpperCase()}
+            </button>
+          </section>
+        ) : null}
+
         {/* =================== Editorial anatomy =================== */}
         <section className="mt-20 grid gap-8 lg:grid-cols-[0.34fr_0.66fr]">
           <div>
@@ -966,38 +1004,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             </div>
           </div>
         </section>
-
-        {currentUrl ? (
-          <section className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p style={metaLabel}>FREE REPORT EXPORT</p>
-              <p
-                className="mt-2 leading-6"
-                style={{ color: COLOR.textMuted, fontSize: "12.5px" }}
-              >
-                Save the free first read as a shareable PDF snapshot.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadFreePdf}
-              disabled={isDownloadingFreePdf}
-              className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                borderColor: "rgba(255,255,255,0.2)",
-                color: COLOR.text,
-                fontSize: "12.5px",
-                letterSpacing: "0.18em",
-                fontFamily: "var(--font-mono), ui-monospace, monospace",
-                fontWeight: 500,
-              }}
-            >
-              {isDownloadingFreePdf
-                ? copy.freePdfBusy.toUpperCase()
-                : copy.freePdfIdle.toUpperCase()}
-            </button>
-          </section>
-        ) : null}
 
         {/* =================== Footer bar =================== */}
         <div
