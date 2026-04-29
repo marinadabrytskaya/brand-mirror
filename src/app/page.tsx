@@ -1,17 +1,49 @@
 import Link from "next/link";
 import LanguageSwitcher from "@/components/language-switcher";
-import { refundLine } from "@/lib/free-report-copy";
+import { refundLineForLocale } from "@/lib/free-report-copy";
 import siteI18n from "@/lib/site-i18n";
 
-const heroScanRows = [
-  { label: "Positioning", value: 72, status: "Stable", color: "#6FE0C2" },
-  { label: "AI Visibility", value: 54, status: "Developing", color: "#F4B63F" },
-  { label: "Visual", value: 75, status: "Stable", color: "#6FE0C2" },
-  { label: "Offer", value: 64, status: "Developing", color: "#F4B63F" },
-  { label: "Conversion", value: 72, status: "Stable", color: "#6FE0C2" },
+const heroLiveScanCopy = {
+  en: {
+    status: "Live scan",
+    title: "your first read",
+    scope: "homepage / AI visibility / offer / conversion",
+    quote: "The buyer senses value. The offer still needs words AI can repeat.",
+    badge: "Free first read",
+    rows: ["Positioning", "AI Visibility", "Visual", "Offer", "Conversion"],
+  },
+  es: {
+    status: "Escaneo en vivo",
+    title: "tu primera lectura",
+    scope: "página principal / visibilidad en IA / oferta / conversión",
+    quote: "El comprador percibe valor. La oferta aún necesita palabras que la IA pueda repetir.",
+    badge: "Primera lectura gratis",
+    rows: ["Posicionamiento", "Visibilidad en IA", "Visual", "Oferta", "Conversión"],
+  },
+  ru: {
+    status: "Живое сканирование",
+    title: "твой первый разбор",
+    scope: "главная / видимость в ИИ / предложение / конверсия",
+    quote: "Покупатель чувствует ценность. Предложению всё ещё нужны слова, которые ИИ сможет повторить.",
+    badge: "Бесплатный первый разбор",
+    rows: ["Позиционирование", "Видимость в ИИ", "Визуал", "Предложение", "Конверсия"],
+  },
+} as const;
+
+const heroScanValues = [
+  { value: 72, color: "#6FE0C2" },
+  { value: 54, color: "#F4B63F" },
+  { value: 75, color: "#6FE0C2" },
+  { value: 64, color: "#F4B63F" },
+  { value: 72, color: "#6FE0C2" },
 ];
 
-function HeroLiveScan({ cta }: { cta: string }) {
+function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru" }) {
+  const liveCopy = heroLiveScanCopy[locale];
+  const rows = heroScanValues.map((row, index) => ({
+    ...row,
+    label: liveCopy.rows[index],
+  }));
   return (
     <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(111,224,194,0.28)] bg-[#090A0D] p-5 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-7">
       <span className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-[#6FE0C2]/70" />
@@ -20,16 +52,16 @@ function HeroLiveScan({ cta }: { cta: string }) {
       <span className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-[#6FE0C2]/70" />
 
       <div className="flex items-center justify-between gap-4 font-mono text-[0.62rem] uppercase tracking-[0.32em] text-[rgba(237,237,242,0.42)]">
-        <span>Live scan</span>
+        <span>{liveCopy.status}</span>
         <span>BrandMirror</span>
       </div>
 
       <div className="mt-8 text-center">
         <p className="font-sans text-[clamp(2rem,5vw,3.7rem)] font-semibold leading-[0.9] tracking-[-0.06em] text-[#F4F5F8]">
-          your first read
+          {liveCopy.title}
         </p>
         <p className="mt-2 font-mono text-[0.62rem] uppercase tracking-[0.34em] text-[rgba(237,237,242,0.38)]">
-          homepage / AI visibility / offer / conversion
+          {liveCopy.scope}
         </p>
       </div>
 
@@ -76,11 +108,11 @@ function HeroLiveScan({ cta }: { cta: string }) {
       </div>
 
       <p className="mx-auto -mt-1 max-w-sm text-center font-serif text-xl italic leading-snug text-[rgba(244,245,248,0.9)]">
-        The buyer senses value. The offer still needs words AI can repeat.
+        {liveCopy.quote}
       </p>
 
       <div className="mt-8 space-y-3">
-        {heroScanRows.map((row) => (
+        {rows.map((row) => (
           <div
             key={row.label}
             className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
@@ -107,7 +139,7 @@ function HeroLiveScan({ cta }: { cta: string }) {
 
       <div className="mt-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.1)] px-4 py-3">
         <span className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.44)]">
-          Free first read
+          {liveCopy.badge}
         </span>
         <span className="text-sm font-medium text-[#6FE0C2]">{cta} →</span>
       </div>
@@ -156,6 +188,7 @@ export default async function Home({
   const params = await searchParams;
   const locale = siteI18n.getSiteLocale(params.lang);
   const copy = siteI18n.siteCopy[locale].landing;
+  const refundLine = refundLineForLocale(locale);
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
@@ -225,7 +258,7 @@ export default async function Home({
                 className="block transition duration-500 hover:-translate-y-1"
                 aria-label={copy.primaryCta}
               >
-                <HeroLiveScan cta={copy.primaryCta} />
+                <HeroLiveScan cta={copy.primaryCta} locale={locale} />
               </Link>
             </div>
           </div>

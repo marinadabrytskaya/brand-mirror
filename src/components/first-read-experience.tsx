@@ -14,8 +14,8 @@ import {
   buildLiveScanTagline,
   buildNextMoveCliffhanger,
   buildScopeLine,
-  fullReportIncludes,
-  refundLine,
+  fullReportIncludesForLocale,
+  refundLineForLocale,
 } from "@/lib/free-report-copy";
 
 type SiteLocale = "en" | "es" | "ru";
@@ -206,8 +206,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     key: d.key,
     value: result[d.key] as number,
   }));
-  const brandReadParagraphs = buildBrandReadParagraphs(result);
-  const nextMoveParagraphs = buildNextMoveCliffhanger(result);
+  const brandReadParagraphs = buildBrandReadParagraphs(result, locale);
+  const nextMoveParagraphs = buildNextMoveCliffhanger(result, locale);
+  const localizedFullReportIncludes = fullReportIncludesForLocale(locale);
+  const localizedRefundLine = refundLineForLocale(locale);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -689,7 +691,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               host={displayHost}
               posterScore={result.posterScore}
               band={posterBand}
-              tagline={buildLiveScanTagline(result)}
+              tagline={buildLiveScanTagline(result, locale)}
               clock={clock}
               scoreRows={scoreRows}
               isPending={isPending}
@@ -785,7 +787,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               background: "rgba(255,255,255,0.02)",
             }}
           >
-            <p style={{ ...metaLabel, color: COLOR.accent }}>CURRENT&nbsp;STATE</p>
+            <p style={{ ...metaLabel, color: COLOR.accent }}>
+              {(copy.currentStateLabel ?? copy.currentState ?? "CURRENT STATE").toUpperCase()}
+            </p>
             <div className="mt-5 space-y-5">
               {brandReadParagraphs.map((paragraph, index) => (
                 <p
@@ -892,12 +896,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           <AnatomyColumn
             label={copy.strongestSignal.toUpperCase()}
             tone="#6FE0C2"
-            body={buildExpandedSignal(result, "strongest")}
+            body={buildExpandedSignal(result, "strongest", locale)}
           />
           <AnatomyColumn
             label={copy.mainFriction.toUpperCase()}
             tone="#E8B04C"
-            body={buildExpandedSignal(result, "friction")}
+            body={buildExpandedSignal(result, "friction", locale)}
           />
           <div className="rounded-xl border p-5" style={{ borderColor: `${COLOR.line}`, background: `${COLOR.line}22` }}>
             <p style={{ ...metaLabel, color: COLOR.text }}>{copy.nextMove.toUpperCase()}</p>
@@ -931,7 +935,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             className="rounded-2xl border p-6 sm:p-8"
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
-            <p style={{ ...metaLabel, color: COLOR.accent }}>UNLOCK&nbsp;FULL&nbsp;REPORT</p>
+            <p style={{ ...metaLabel, color: COLOR.accent }}>
+              {(copy.unlockLabel ?? "UNLOCK FULL REPORT").toUpperCase()}
+            </p>
             <div className="mt-5 flex min-h-[15.5rem] flex-col justify-between">
               <div>
                 <div
@@ -945,7 +951,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     letterSpacing: "0.16em",
                   }}
                 >
-                  $197 FULL REPORT
+                  {copy.fullReportTag ?? "$197 FULL REPORT"}
                 </div>
                 <p
                   className="mt-5 max-w-md leading-[1.18]"
@@ -956,10 +962,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     fontWeight: 500,
                   }}
                 >
-                  Unlock the exact fix stack behind this scan.
+                  {copy.unlockExactFix ?? "Unlock the exact fix stack behind this scan."}
                 </p>
                 <ol className="mt-5 space-y-2">
-                  {fullReportIncludes.slice(0, 7).map((item, index) => (
+                  {localizedFullReportIncludes.slice(0, 7).map((item, index) => (
                     <li
                       key={item}
                       className="grid grid-cols-[1.6rem_1fr] gap-2 leading-6"
@@ -981,7 +987,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     fontSize: "13.5px",
                   }}
                 >
-                  {refundLine}
+                  {localizedRefundLine}
                 </p>
               </div>
               <div className="mt-8 flex flex-col gap-3">
@@ -1087,7 +1093,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             className="relative overflow-hidden rounded-2xl border p-6 sm:p-8"
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
-            <p style={{ ...metaLabel, color: COLOR.accent }}>FIX&nbsp;STACK</p>
+            <p style={{ ...metaLabel, color: COLOR.accent }}>
+              {(copy.fixStackLabel ?? "FIX STACK").toUpperCase()}
+            </p>
             <div className="mt-5 min-h-[15.5rem] space-y-4 pb-16">
               {[
                 { label: copy.fixNowLabel ?? "FIX NOW", color: "#E07A5F", count: 3 },

@@ -8,6 +8,8 @@ type RankedDimension = {
   value: number;
 };
 
+type SiteLocale = "en" | "es" | "ru";
+
 function cleanSentence(value: unknown, fallback = "") {
   const text = typeof value === "string" ? value.trim() : fallback;
   return text.replace(/\s+/g, " ").replace(/[.?!]+$/, "");
@@ -23,6 +25,33 @@ function lowerFirst(value: string) {
 
 function brandSubject(result: BrandReadResult) {
   return cleanSentence(result.brandName, "This brand");
+}
+
+function localizedDimensionLabel(key: DimensionKey, locale: SiteLocale) {
+  const labels: Record<SiteLocale, Record<DimensionKey, string>> = {
+    en: {
+      positioningClarity: "Positioning clarity",
+      toneCoherence: "AI visibility",
+      visualCredibility: "Visual credibility",
+      offerSpecificity: "Offer specificity",
+      conversionReadiness: "Conversion readiness",
+    },
+    es: {
+      positioningClarity: "claridad de posicionamiento",
+      toneCoherence: "visibilidad en IA",
+      visualCredibility: "credibilidad visual",
+      offerSpecificity: "especificidad de la oferta",
+      conversionReadiness: "preparación para convertir",
+    },
+    ru: {
+      positioningClarity: "ясности позиционирования",
+      toneCoherence: "видимости в ИИ",
+      visualCredibility: "визуальной убедительности",
+      offerSpecificity: "точности предложения",
+      conversionReadiness: "готовности к конверсии",
+    },
+  };
+  return labels[locale][key];
 }
 
 function buyerCostFor(key: DimensionKey) {
@@ -73,7 +102,10 @@ function frictionLead(key: DimensionKey, friction: string) {
   return `The weak point is category ownership. ${friction}. A cold buyer needs to see the difference before the brand asks for attention.`;
 }
 
-export function buildLiveScanTagline(result: Pick<BrandReadResult, DimensionKey | "tagline" | "mainFriction" | "gap">) {
+export function buildLiveScanTagline(
+  result: Pick<BrandReadResult, DimensionKey | "tagline" | "mainFriction" | "gap">,
+  locale: SiteLocale = "en",
+) {
   const ranked = DIMENSIONS.map((dimension) => ({
     key: dimension.key,
     value: safeNumber(result[dimension.key]),
@@ -81,6 +113,56 @@ export function buildLiveScanTagline(result: Pick<BrandReadResult, DimensionKey 
 
   const weakest = ranked[0]?.key;
   const second = ranked[1]?.key;
+
+  if (locale === "es") {
+    if (weakest === "toneCoherence" && second === "offerSpecificity") {
+      return "La IA puede encontrar fragmentos. La oferta todavía necesita lenguaje que pueda repetir.";
+    }
+    if (weakest === "offerSpecificity" && second === "toneCoherence") {
+      return "El comprador percibe valor. La IA todavía no puede nombrar la oferta con claridad.";
+    }
+    if (weakest === "offerSpecificity" && second === "conversionReadiness") {
+      return "La oferta llega tarde, así que el siguiente paso pide confianza demasiado pronto.";
+    }
+    if (weakest === "conversionReadiness") {
+      return "Hay interés. La página todavía no hace que la decisión se sienta segura.";
+    }
+    if (weakest === "visualCredibility") {
+      return "La promesa es visible, pero la prueba visual todavía no carga suficiente confianza.";
+    }
+    if (weakest === "toneCoherence") {
+      return "La marca existe, pero la IA necesita señales más limpias para recomendarla.";
+    }
+    if (weakest === "offerSpecificity") {
+      return "El valor está ahí. La oferta exacta todavía cuesta demasiado repetirla.";
+    }
+    return "La señal está presente. La página todavía hace trabajar demasiado al comprador.";
+  }
+
+  if (locale === "ru") {
+    if (weakest === "toneCoherence" && second === "offerSpecificity") {
+      return "ИИ находит фрагменты. Предложению всё ещё нужен язык, который можно повторить.";
+    }
+    if (weakest === "offerSpecificity" && second === "toneCoherence") {
+      return "Покупатель чувствует ценность. ИИ всё ещё не может ясно назвать предложение.";
+    }
+    if (weakest === "offerSpecificity" && second === "conversionReadiness") {
+      return "Предложение появляется поздно, поэтому следующий шаг слишком рано просит доверия.";
+    }
+    if (weakest === "conversionReadiness") {
+      return "Интерес есть. Страница ещё не делает решение достаточно безопасным.";
+    }
+    if (weakest === "visualCredibility") {
+      return "Обещание видно, но визуальное доказательство ещё не держит достаточно доверия.";
+    }
+    if (weakest === "toneCoherence") {
+      return "Бренд существует, но ИИ нужны более чистые сигналы, чтобы его рекомендовать.";
+    }
+    if (weakest === "offerSpecificity") {
+      return "Ценность есть. Точное предложение всё ещё слишком сложно повторить.";
+    }
+    return "Сигнал есть. Страница всё ещё заставляет покупателя слишком много работать.";
+  }
 
   if (weakest === "toneCoherence" && second === "offerSpecificity") {
     return "AI can find fragments. The offer still needs language it can repeat.";
@@ -166,7 +248,7 @@ export function buildScopeLine(scanLabel: string, locale: "en" | "es" | "ru" = "
   return `Scan conducted: ${scanLabel} | Scope: homepage copy, AI visibility, visual hierarchy, offer clarity, conversion path.`;
 }
 
-export function buildBrandReadParagraphs(result: BrandReadResult) {
+export function buildBrandReadParagraphs(result: BrandReadResult, locale: SiteLocale = "en") {
   const brand = brandSubject(result);
   const strongest = cleanSentence(
     result.strongestSignal || result.strength,
@@ -181,6 +263,22 @@ export function buildBrandReadParagraphs(result: BrandReadResult) {
   const strongestAxis = ranked[ranked.length - 1]?.key ?? "positioningClarity";
   const consequence = scoreConsequence(weakest.key, weakest.value);
 
+  if (locale === "es") {
+    return [
+      `${brand} ya tiene una señal fuerte: ${strongest}. Ahora hay que nombrarla con más claridad para que el comprador la entienda en una sola lectura.`,
+      `El punto débil está en ${localizedDimensionLabel(weakest.key, locale)}. ${friction}. Si esto queda implícito, el comprador tiene que completar demasiado antes de confiar.`,
+      `Con una puntuación de ${weakest.value} en ${localizedDimensionLabel(weakest.key, locale)}, no es un problema cosmético. Es una fuga comercial que afecta cómo se entiende, se recomienda y se compra la marca.`,
+    ];
+  }
+
+  if (locale === "ru") {
+    return [
+      `${brand} уже имеет сильный сигнал: ${strongest}. Теперь его нужно назвать яснее, чтобы покупатель понял его с первого прочтения.`,
+      `Слабое место — в ${localizedDimensionLabel(weakest.key, locale)}. ${friction}. Если это остаётся подразумеваемым, покупателю приходится слишком многое достраивать до доверия.`,
+      `При оценке ${weakest.value} по оси ${localizedDimensionLabel(weakest.key, locale)} это не косметическая проблема. Это коммерческая утечка, которая влияет на то, как бренд понимают, рекомендуют и покупают.`,
+    ];
+  }
+
   return [
     strengthLead(strongestAxis, brand, strongest),
     frictionLead(weakest.key, friction),
@@ -188,7 +286,7 @@ export function buildBrandReadParagraphs(result: BrandReadResult) {
   ];
 }
 
-export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" | "friction") {
+export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" | "friction", locale: SiteLocale = "en") {
   const brand = cleanSentence(result.brandName, "This brand");
   const strongest = cleanSentence(
     result.strongestSignal || result.strength,
@@ -202,6 +300,20 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
   if (kind === "strongest") {
     const ranked = rankedDimensions(result);
     const strongestAxis = ranked[ranked.length - 1]?.key ?? "positioningClarity";
+    if (locale === "es") {
+      return [
+        `La señal más fuerte de ${brand} no es un pulido genérico. Es esto: ${strongest}.`,
+        `Importa porque ${localizedDimensionLabel(strongestAxis, locale)} ya le da al comprador una razón para quedarse.`,
+        "El reporte completo convierte esto en la capa MANTENER, para que las correcciones afilen la señal en lugar de aplanar lo que ya está ganando confianza.",
+      ].join("\n\n");
+    }
+    if (locale === "ru") {
+      return [
+        `Самый сильный сигнал ${brand} — не общий лоск. Это вот что: ${strongest}.`,
+        `Это важно, потому что ${localizedDimensionLabel(strongestAxis, locale)} уже даёт покупателю причину остаться.`,
+        "Полный отчёт превращает это в слой ОСТАВИТЬ, чтобы исправления заостряли сигнал, а не сглаживали то, что уже зарабатывает доверие.",
+      ].join("\n\n");
+    }
     const axisContext =
       strongestAxis === "visualCredibility"
         ? "because visual confidence is already creating a reason to stay"
@@ -222,6 +334,20 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
 
   const weakest = rankedDimensions(result)[0];
   const consequence = lowerFirst(scoreConsequence(weakest.key, weakest.value));
+  if (locale === "es") {
+    return [
+      `El punto débil está en ${localizedDimensionLabel(weakest.key, locale)}. ${friction}.`,
+      "Importa porque esto reduce la confianza justo cuando el comprador debería entender la oferta y sentirse listo para avanzar.",
+      "El reporte completo nombra la primera corrección exacta, dónde colocarla y qué debe pasar después de aplicarla.",
+    ].join("\n\n");
+  }
+  if (locale === "ru") {
+    return [
+      `Слабое место — в ${localizedDimensionLabel(weakest.key, locale)}. ${friction}.`,
+      "Это важно, потому что доверие падает именно в момент, когда покупатель должен понять предложение и почувствовать готовность двигаться дальше.",
+      "Полный отчёт называет точное первое исправление, где его разместить и что должно произойти после внедрения.",
+    ].join("\n\n");
+  }
   return [
     frictionLead(weakest.key, friction),
     `That matters because ${consequence}`,
@@ -229,7 +355,7 @@ export function buildExpandedSignal(result: BrandReadResult, kind: "strongest" |
   ].join("\n\n");
 }
 
-export function buildNextMoveCliffhanger(result: BrandReadResult) {
+export function buildNextMoveCliffhanger(result: BrandReadResult, locale: SiteLocale = "en") {
   const weakestKeys = rankedDimensions(result).slice(0, 2).map((item) => item.key);
   const hasAI = weakestKeys.includes("toneCoherence");
   const hasOffer = weakestKeys.includes("offerSpecificity");
@@ -247,6 +373,46 @@ export function buildNextMoveCliffhanger(result: BrandReadResult) {
     reframe = "make the route to book, buy, enquire, or register feel obvious";
   } else if (hasVisual) {
     reframe = "move proof and hierarchy into the places where trust is currently leaking";
+  }
+
+  if (locale === "es") {
+    let localizedReframe = "hacer que la oferta sea inequívoca antes de que la página pida confianza";
+    if (hasAI && hasOffer) {
+      localizedReframe = "nombrar la oferta en un lenguaje que compradores e IA puedan repetir";
+    } else if (hasOffer && hasConversion) {
+      localizedReframe = "convertir el siguiente paso vago en una acción de compra específica";
+    } else if (hasAI) {
+      localizedReframe = "hacer que la marca sea más fácil de clasificar, citar y recomendar para la IA";
+    } else if (hasConversion) {
+      localizedReframe = "hacer que el camino para reservar, comprar, consultar o registrarse sea obvio";
+    } else if (hasVisual) {
+      localizedReframe = "mover prueba y jerarquía a los lugares donde hoy se filtra la confianza";
+    }
+    return [
+      "El problema no es el producto. Es la forma en que se anuncia.",
+      `El primer movimiento es un solo reencuadre: ${localizedReframe}. No requiere cambiar toda la marca. Requiere la frase correcta en el lugar correcto.`,
+      "La frase exacta, dónde colocarla, cómo llevarla a la página principal y a los activos legibles por IA, y qué competidores están haciendo más fácil de entender está dentro del reporte completo.",
+    ];
+  }
+
+  if (locale === "ru") {
+    let localizedReframe = "сделать предложение безошибочно ясным до того, как страница попросит доверия";
+    if (hasAI && hasOffer) {
+      localizedReframe = "назвать предложение языком, который смогут повторить и покупатели, и инструменты ИИ";
+    } else if (hasOffer && hasConversion) {
+      localizedReframe = "превратить размытый следующий шаг в конкретное покупательское действие";
+    } else if (hasAI) {
+      localizedReframe = "сделать бренд проще для классификации, цитирования и рекомендации в ИИ";
+    } else if (hasConversion) {
+      localizedReframe = "сделать путь к бронированию, покупке, заявке или регистрации очевидным";
+    } else if (hasVisual) {
+      localizedReframe = "перенести доказательства и иерархию туда, где сейчас утекает доверие";
+    }
+    return [
+      "Проблема не в продукте. Проблема в том, как он объявлен.",
+      `Первый ход — один переакцент: ${localizedReframe}. Для этого не нужен ребрендинг. Нужна правильная фраза в правильном месте.`,
+      "Точная фраза, место для неё, перенос на главную страницу и материалы, читаемые ИИ, а также то, что конкуренты объясняют проще, находятся внутри полного отчёта.",
+    ];
   }
 
   return [
@@ -269,3 +435,41 @@ export const fullReportIncludes = [
 
 export const refundLine =
   "\u2726 3 actionable findings this week — or a full refund. No questions asked.";
+
+export function fullReportIncludesForLocale(locale: SiteLocale = "en") {
+  if (locale === "es") {
+    return [
+      "Corregir ahora: el bloqueo de mayor impacto, nombrado y resuelto.",
+      "Corregir después: la prioridad secundaria con pasos de implementación.",
+      "Mantener: lo que ya gana confianza y no debe aplanarse.",
+      "3 competidores nombrados: dónde son más fáciles de encontrar, explicar o elegir.",
+      "Auditoría de visibilidad en IA: lo que la IA aún no entiende y cómo cruzar el siguiente umbral.",
+      "Estimación de impacto comercial: qué puede cambiar después de aplicar las correcciones.",
+      "Brief de marca de una página: titular más claro, línea de apoyo y dirección de llamada a la acción.",
+      "PDF compartible de 16 páginas con inteligencia competitiva y plan de implementación.",
+    ];
+  }
+  if (locale === "ru") {
+    return [
+      "Исправить сейчас: самый важный блокер, названный и решённый.",
+      "Исправить следом: вторичный приоритет с шагами внедрения.",
+      "Оставить: то, что уже зарабатывает доверие и не должно быть сглажено.",
+      "3 названных конкурента: где их проще найти, объяснить или выбрать.",
+      "Аудит видимости в ИИ: что инструменты ИИ пока не понимают и как пройти следующий порог.",
+      "Оценка коммерческого эффекта: что может измениться после внедрения исправлений.",
+      "Одностраничный бренд-бриф: более точный заголовок, поддерживающая строка и направление призыва к действию.",
+      "PDF на 16 страниц, которым удобно делиться, с конкурентной разведкой и планом внедрения.",
+    ];
+  }
+  return fullReportIncludes;
+}
+
+export function refundLineForLocale(locale: SiteLocale = "en") {
+  if (locale === "es") {
+    return "\u2726 3 hallazgos accionables esta semana, o reembolso completo. Sin preguntas.";
+  }
+  if (locale === "ru") {
+    return "\u2726 3 практичных вывода на этой неделе или полный возврат. Без вопросов.";
+  }
+  return refundLine;
+}

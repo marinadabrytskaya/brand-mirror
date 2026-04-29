@@ -19,8 +19,8 @@ import {
   buildLiveScanTagline,
   buildNextMoveCliffhanger,
   buildScopeLine,
-  fullReportIncludes,
-  refundLine,
+  fullReportIncludesForLocale,
+  refundLineForLocale,
 } from "@/lib/free-report-copy";
 
 export const runtime = "nodejs";
@@ -463,6 +463,7 @@ async function renderBrandReadPdf(
   result: BrandReadResult,
   url: string,
   websiteCaptureDataUrl?: string,
+  language: "en" | "es" | "ru" = "en",
 ) {
   const pdf = await PDFDocument.create();
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
@@ -490,8 +491,10 @@ async function renderBrandReadPdf(
     normalizedTitle.includes(compactBrand) || compactBrand.includes(normalizedTitle)
       ? "Free brand read"
       : safeTitle;
-  const brandReadParagraphs = buildBrandReadParagraphs(copyResult);
-  const nextMoveParagraphs = buildNextMoveCliffhanger(copyResult);
+  const brandReadParagraphs = buildBrandReadParagraphs(copyResult, language);
+  const nextMoveParagraphs = buildNextMoveCliffhanger(copyResult, language);
+  const localizedFullReportIncludes = fullReportIncludesForLocale(language);
+  const localizedRefundLine = refundLineForLocale(language);
 
   const addPage = () => {
     const page = pdf.addPage([PAGE.width, PAGE.height]);
@@ -805,8 +808,8 @@ async function renderBrandReadPdf(
   const signalCardHeight = 296;
   const signalY = 90;
   [
-    { label: "Strongest signal", body: buildExpandedSignal(copyResult, "strongest"), color: COLORS.accent },
-    { label: "Main friction", body: buildExpandedSignal(copyResult, "friction"), color: COLORS.warn },
+    { label: language === "es" ? "Señal más fuerte" : language === "ru" ? "Самый сильный сигнал" : "Strongest signal", body: buildExpandedSignal(copyResult, "strongest", language), color: COLORS.accent },
+    { label: language === "es" ? "Fricción principal" : language === "ru" ? "Главная точка трения" : "Main friction", body: buildExpandedSignal(copyResult, "friction", language), color: COLORS.warn },
   ].forEach((card, index) => {
     const x = PAGE.marginX + index * (signalWidth + 20);
     page2.drawRectangle({
@@ -931,7 +934,7 @@ async function renderBrandReadPdf(
   const includesColumnGap = 22;
   const includesColumnWidth = (contentWidth - 36 - includesColumnGap) / 2;
   let unlockY = teaserY + teaserHeight - 92;
-  fullReportIncludes.slice(0, 7).forEach((item, index) => {
+  localizedFullReportIncludes.slice(0, 7).forEach((item, index) => {
     const column = index < 4 ? 0 : 1;
     const itemX = PAGE.marginX + 18 + column * (includesColumnWidth + includesColumnGap);
     if (index === 4) {
@@ -990,7 +993,7 @@ async function renderBrandReadPdf(
   );
   const guaranteeX = PAGE.marginX + 18 + includesColumnWidth + includesColumnGap;
   drawLabel(page3, "Guarantee", guaranteeX, teaserY + 50, COLORS.accent);
-  const guaranteeFit = fitBodyText(refundLine, sans, includesColumnWidth, 34, 9.2, 8.4, 1.24);
+  const guaranteeFit = fitBodyText(localizedRefundLine, sans, includesColumnWidth, 34, 9.2, 8.4, 1.24);
   let guaranteeY = teaserY + 30;
   guaranteeFit.lines.forEach((line) => {
     page3.drawText(line, {
@@ -1142,6 +1145,7 @@ export async function POST(request: Request) {
       payload.result,
       payload.url,
       websiteCapture?.dataUrl,
+      language,
     );
 
     return new Response(new Uint8Array(pdf), {

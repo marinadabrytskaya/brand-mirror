@@ -73,10 +73,6 @@ function ListBlock({
   );
 }
 
-function SurfaceMethodLabel() {
-  return <p className="section-label">Website evidence</p>;
-}
-
 function ScreenshotCallout({
   index,
   zone,
@@ -84,6 +80,7 @@ function ScreenshotCallout({
   body,
   x,
   y,
+  locale = "en",
 }: {
   index: number;
   zone: "hero-promise" | "proof-cta";
@@ -91,8 +88,14 @@ function ScreenshotCallout({
   body: string;
   x: number;
   y: number;
+  locale?: SiteLocale;
 }) {
-  const zoneLabel = zone === "hero-promise" ? "Hero promise" : "Proof + CTA";
+  const zoneLabels = {
+    en: { hero: "Hero promise", proof: "Proof + CTA" },
+    es: { hero: "Promesa principal", proof: "Prueba + llamada" },
+    ru: { hero: "Главное обещание", proof: "Доказательство + призыв" },
+  }[locale];
+  const zoneLabel = zone === "hero-promise" ? zoneLabels.hero : zoneLabels.proof;
   const alignClass =
     zone === "hero-promise"
       ? "items-start"
@@ -353,17 +356,33 @@ function ReportCoverCard({
   whatItDoes,
   snapshot,
   reportId,
+  locale,
 }: {
   brandName: string;
   whatItDoes: string;
   snapshot: string;
   reportId: string;
+  locale: SiteLocale;
 }) {
+  const coverCopy = {
+    en: {
+      label: "BrandMirror report",
+      meta: "A diagnostic read of what the brand signals and what to fix next",
+    },
+    es: {
+      label: "Reporte BrandMirror",
+      meta: "Una lectura diagnóstica de lo que la marca señala y qué corregir después",
+    },
+    ru: {
+      label: "Отчёт BrandMirror",
+      meta: "Диагностический разбор того, что сигналит бренд и что исправить дальше",
+    },
+  }[locale];
   const isLongName = brandName.length > 24;
   return (
     <section className="pb-10">
       <div className="ink-panel report-cover-card rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
-        <p className="section-label text-[rgba(237,237,242,0.6)]">BrandMirror report</p>
+        <p className="section-label text-[rgba(237,237,242,0.6)]">{coverCopy.label}</p>
         <h2
           className="mt-5 font-serif leading-[0.92] tracking-[-0.06em] text-[#F4F5F8]"
           style={{
@@ -382,7 +401,7 @@ function ReportCoverCard({
           {snapshot}
         </p>
         <div className="report-cover-meta mt-8 flex flex-col gap-3 pt-5 text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.5)] sm:flex-row sm:items-center sm:justify-between">
-          <span>A diagnostic read of what the brand signals and what to fix next</span>
+          <span>{coverCopy.meta}</span>
           <span>{reportId}</span>
         </div>
       </div>
@@ -393,47 +412,94 @@ function ReportCoverCard({
 function HowWeReadBrandsBlock({
   brandName,
   genre,
+  locale,
 }: {
   brandName: string;
   genre: string;
+  locale: SiteLocale;
 }) {
+  const blockCopy = {
+    en: {
+      label: "How We Read Brands",
+      title: "Most brand audits give you a checklist. We give you a verdict.",
+      paragraphs: [
+        "Every brand is telling a story whether it means to or not. The colours, the words, the offer, the website — all of it is sending a signal before a buyer has made a conscious decision.",
+        "BrandMirror reads that signal the way a sharp audience reads a film in the first ten minutes: what lands, what feels off, and what makes someone stay or leave.",
+        "We reverse-engineer that first decision and turn it into a score, a genre, a fix stack, and a set of next moves.",
+      ],
+      genreLabel: "The genre",
+      genrePrefix: "Every brand has a genre — the narrative logic an audience uses to make sense of it. Right now",
+      genreMiddle: "is reading as",
+      dimensions: [
+        "Positioning Clarity — can someone explain the offer without your help?",
+        "AI Visibility — can AI tools find, read, and recommend your brand?",
+        "Visual Credibility — does the surface match the price being asked?",
+        "Offer Specificity — does the proposition arrive fast enough to buy?",
+        "Conversion Readiness — is there a clear next step when the buyer is ready?",
+      ],
+    },
+    es: {
+      label: "Cómo leemos marcas",
+      title: "La mayoría de auditorías de marca te dan una lista. Nosotros te damos un veredicto.",
+      paragraphs: [
+        "Cada marca está contando una historia, quiera o no. Los colores, las palabras, la oferta, el sitio: todo envía una señal antes de que el comprador tome una decisión consciente.",
+        "BrandMirror lee esa señal como una audiencia exigente lee una película en los primeros diez minutos: qué aterriza, qué se siente raro y qué hace que alguien se quede o se vaya.",
+        "Desarmamos esa primera decisión y la convertimos en una puntuación, un género, una pila de correcciones y un conjunto de próximos movimientos.",
+      ],
+      genreLabel: "El género",
+      genrePrefix: "Cada marca tiene un género: la lógica narrativa que una audiencia usa para entenderla. Ahora mismo",
+      genreMiddle: "se lee como",
+      dimensions: [
+        "Claridad de posicionamiento — ¿alguien puede explicar la oferta sin tu ayuda?",
+        "Visibilidad en IA — ¿las herramientas de IA pueden encontrar, leer y recomendar tu marca?",
+        "Credibilidad visual — ¿la superficie coincide con el precio que se pide?",
+        "Especificidad de la oferta — ¿la propuesta llega lo bastante rápido para comprar?",
+        "Preparación para convertir — ¿hay un siguiente paso claro cuando el comprador está listo?",
+      ],
+    },
+    ru: {
+      label: "Как мы читаем бренды",
+      title: "Большинство аудитов бренда дают чеклист. Мы даём вердикт.",
+      paragraphs: [
+        "Каждый бренд рассказывает историю, даже если не собирался. Цвета, слова, предложение, сайт — всё это отправляет сигнал до того, как покупатель принял осознанное решение.",
+        "BrandMirror читает этот сигнал так, как внимательная аудитория читает фильм в первые десять минут: что сработало, что кажется неверным и что заставляет человека остаться или уйти.",
+        "Мы разбираем это первое решение и превращаем его в оценку, жанр, список исправлений и набор следующих шагов.",
+      ],
+      genreLabel: "Жанр",
+      genrePrefix: "У каждого бренда есть жанр — повествовательная логика, через которую аудитория его понимает. Сейчас",
+      genreMiddle: "считывается как",
+      dimensions: [
+        "Ясность позиционирования — может ли человек объяснить предложение без вашей помощи?",
+        "Видимость в ИИ — могут ли инструменты ИИ найти, прочитать и рекомендовать ваш бренд?",
+        "Визуальная убедительность — соответствует ли поверхность заявленной цене?",
+        "Точность предложения — появляется ли предложение достаточно быстро, чтобы его купить?",
+        "Готовность к конверсии — есть ли ясный следующий шаг, когда покупатель готов?",
+      ],
+    },
+  }[locale];
   return (
     <section className="pb-10">
       <div className="ink-panel report-story-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
-        <p className="section-label">How We Read Brands</p>
+        <p className="section-label">{blockCopy.label}</p>
         <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-[0.98] tracking-[-0.05em] text-[#F4F5F8]">
-          Most brand audits give you a checklist. We give you a verdict.
+          {blockCopy.title}
         </h2>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-5 text-base leading-7 text-[rgba(237,237,242,0.76)]">
-            <p>
-              Every brand is telling a story whether it means to or not. The
-              colours, the words, the offer, the website — all of it is
-              sending a signal before a buyer has made a conscious decision.
-            </p>
-            <p>
-              BrandMirror reads that signal the way a sharp audience reads a
-              film in the first ten minutes: what lands, what feels off, and
-              what makes someone stay or leave.
-            </p>
-            <p>
-              We reverse-engineer that first decision and turn it into a score,
-              a genre, a fix stack, and a set of next moves.
-            </p>
+            {blockCopy.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
           <div className="report-story-side rounded-[1.6rem] p-5">
-            <p className="section-label">The genre</p>
+            <p className="section-label">{blockCopy.genreLabel}</p>
             <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
-              Every brand has a genre — the narrative logic an audience uses to
-              make sense of it. Right now {brandName} is reading as{" "}
+              {blockCopy.genrePrefix} {brandName} {blockCopy.genreMiddle}{" "}
               <span className="text-[#F4F5F8]">{genre}</span>.
             </p>
             <div className="editorial-rule mt-5 space-y-4 border-[rgba(237,237,242,0.12)] pt-5 text-sm leading-7 text-[rgba(237,237,242,0.68)]">
-              <p>Positioning Clarity — can someone explain the offer without your help?</p>
-              <p>AI Visibility — can AI tools find, read, and recommend your brand?</p>
-              <p>Visual Credibility — does the surface match the price being asked?</p>
-              <p>Offer Specificity — does the proposition arrive fast enough to buy?</p>
-              <p>Conversion Readiness — is there a clear next step when the buyer is ready?</p>
+              {blockCopy.dimensions.map((dimension) => (
+                <p key={dimension}>{dimension}</p>
+              ))}
             </div>
           </div>
         </div>
@@ -447,24 +513,46 @@ function ScoreDashboardBlock({
   scoreBand,
   scoreModifier,
   scorecard,
+  locale,
 }: {
   posterScore: number;
   scoreBand: string;
   scoreModifier: string;
   scorecard: { label: string; score: number; note: string }[];
+  locale: SiteLocale;
 }) {
   const overallBand = bandFor(posterScore);
+  const scoreCopy = {
+    en: {
+      label: "Score dashboard",
+      readiness: "Overall brand readiness",
+      reveal: "What the scores reveal",
+      body: "Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Developing, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.",
+    },
+    es: {
+      label: "Panel de puntuaciones",
+      readiness: "Preparación general de la marca",
+      reveal: "Qué revelan las puntuaciones",
+      body: "Cada eje se puntúa de 0 a 100 en cinco niveles: sin señal, frágil, en desarrollo, estable y líder. El color de cada puntuación refleja en qué nivel se encuentra ahora esa señal.",
+    },
+    ru: {
+      label: "Панель оценок",
+      readiness: "Общая готовность бренда",
+      reveal: "Что показывают оценки",
+      body: "Каждая ось оценивается от 0 до 100 по пяти уровням: без сигнала, хрупко, развивается, стабильно и лидирует. Цвет каждой оценки показывает, на каком уровне сейчас находится этот сигнал.",
+    },
+  }[locale];
   return (
     <section className="pb-10">
       <div className="ink-panel report-score-shell rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
-        <p className="section-label text-[rgba(237,237,242,0.6)]">Score dashboard</p>
+        <p className="section-label text-[rgba(237,237,242,0.6)]">{scoreCopy.label}</p>
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="report-score-core rounded-[1.8rem] p-8 text-center">
             <p className="font-serif text-[clamp(4rem,10vw,6.4rem)] leading-none tracking-[-0.07em] text-[#F4F5F8]">
               {posterScore}/100
             </p>
             <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
-              Overall brand readiness
+              {scoreCopy.readiness}
             </p>
             <p
               className="mt-5 text-xs uppercase tracking-[0.24em]"
@@ -478,14 +566,14 @@ function ScoreDashboardBlock({
           </div>
           <div className="flex flex-col justify-between gap-5">
             <div>
-              <p className="section-label text-[rgba(237,237,242,0.56)]">What the scores reveal</p>
+              <p className="section-label text-[rgba(237,237,242,0.56)]">{scoreCopy.reveal}</p>
               <h3 className="mt-4 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] text-[#F4F5F8]">
                 {scoreModifier}
               </h3>
             </div>
             <div className="editorial-rule border-[rgba(237,237,242,0.12)] pt-5">
               <p className="max-w-xl text-sm leading-7 text-[rgba(237,237,242,0.7)]">
-                Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Developing, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.
+                {scoreCopy.body}
               </p>
             </div>
           </div>
@@ -595,6 +683,86 @@ export function FullReportExperience({
       campaignAngles: "Campaign direction",
       action7: "Next 7 days",
       action30: "Next 30 days",
+      brandMyth: "Brand myth",
+      brandMythTitle: "The legend this brand is already trying to tell",
+      verbalImageTitle: "What the name, hero line, and first-screen tone are teaching people to expect",
+      nameSignal: "Name signal",
+      headlineSignal: "Headline signal",
+      firstScreenTone: "First-screen tone",
+      risk: "Risk",
+      verdict: "Verdict",
+      roleMatch: "Role match",
+      correction: "Correction",
+      archetypeTestsTitle: "Which archetypal tests the brand is still failing",
+      namingFitTitle: "Whether the name is helping the sale or making the homepage do extra work",
+      headlineCorrectionTitle: "How the first line has to change to close the gap faster",
+      currentProblem: "Current problem",
+      correctionLogic: "Correction logic",
+      rewrittenDirection: "Rewritten direction",
+      knownForTitle: "The answer to ‘what is this brand actually known for?’",
+      industryFitTitle: "Category expectation versus the role this brand is trying to play",
+      expectedArchetype: "Expected archetype",
+      aestheticDirections: "Aesthetic directions",
+      aestheticDirectionsTitle: "The aesthetic lanes this brand can credibly own",
+      direction: "Direction",
+      culturalAssociations: "Cultural associations",
+      filmsAndEras: "Films and eras",
+      artAndMusic: "Art and music",
+      film: "Film",
+      era: "Era",
+      art: "Art",
+      music: "Music",
+      visualCodes: "Visual codes",
+      visualCodesTitle: "What the brand should look like in detail",
+      palette: "Palette",
+      textures: "Textures",
+      symbols: "Symbols",
+      forms: "Forms",
+      visualEvidenceStrip: "Visual evidence strip",
+      visualEvidenceTitle: "The first screen, isolated into the two moments that matter most",
+      visualEvidenceBody: "Instead of scattering the report across too many visuals, this pulls focus back to the homepage itself: the promise the buyer sees first, and the decision zone where trust either lands or drops.",
+      heroFrame: "Hero frame",
+      heroPromise: "Hero promise",
+      decisionFrame: "Decision frame",
+      proofCtaZone: "Proof and CTA zone",
+      beforeAfterHeroFrame: "Before / after hero frame",
+      beforeAfterHeroTitle: "The current promise versus the sharper version this brand wants",
+      beforeAfterHeroBody: "This is where the report shifts from diagnosis into a more directed visual strategy: what the hero is doing now, and what a clearer commercial version could feel like without losing atmosphere.",
+      websiteCapture: "Website capture",
+      websiteCaptureTitle: "The live homepage surface this diagnosis is based on",
+      websiteCaptureBody: "One clean capture is enough here. The goal is not to pile on visuals, but to tie the diagnosis back to the real page without repeating the same evidence in three different ways.",
+      websiteEvidence: "Website evidence",
+      openSurface: "Open surface",
+      noLivePreview: "No live preview available yet for this surface.",
+      positioningRead: "Positioning read",
+      positioningReadTitle: "What the offer is saying",
+      visualIdentity: "Visual identity",
+      visualIdentityTitle: "What the visual system implies",
+      aboveTheFold: "Above the fold",
+      aboveTheFoldTitle: "What happens in the first screen",
+      commercialRead: "Commercial read",
+      commercialReadTitle: "What is helping or slowing the next step",
+      frictionMapTitle: "Where the page is losing certainty",
+      trustGapsTitle: "What still needs to be proven",
+      offerOpportunities: "Offer opportunities",
+      offerOpportunitiesTitle: "Where the commercial story can get sharper",
+      positioningStrategyTitle: "How the brand should be framed",
+      messagingStrategyTitle: "What the communication must do",
+      offerStrategyTitle: "How the offer should feel easier to buy",
+      rewriteSuggestions: "Rewrite suggestions",
+      heroLine: "Hero line",
+      subheadline: "Subheadline",
+      cta: "CTA",
+      action30Title: "Your roadmap for the next 30 days",
+      whatComesNext: "What comes next",
+      whatComesNextTitle: "Three ways to use this diagnosis",
+      nextUseCases: [
+        "Do it yourself — use the fix stack and action plan as your roadmap.",
+        "BrandMirror Reviewed — guided walkthrough of the diagnosis and next moves.",
+        "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
+      ],
+      strategicContinuation: "Strategic continuation",
+      strategicContinuationTitle: "What this strategy should extend into next",
     },
     es: {
       whatItDoes: "Lo que parece hacer la empresa",
@@ -620,25 +788,25 @@ export function FullReportExperience({
       audienceMismatchLabel: "Desajuste de audiencia",
       audienceMismatchTitle: "Dónde el mensaje está fallando al comprador",
       fixLabel: "Qué corregir primero",
-      fixTitle: "Las primeras correcciones con mayor upside",
+      fixTitle: "Las primeras correcciones con mayor ventaja",
       audienceRead: "Lectura de audiencia",
       audienceTitle: "Quiénes son y qué todavía necesitan oír",
-      tone: "Tone of voice",
+      tone: "Tono de voz",
       looking: "Qué están buscando",
       feel: "Qué necesitan sentir",
       hear: "Qué necesitan oír",
       strategic: "Dirección estratégica",
       strategicTitle: "Qué necesita aclarar mejor esta marca",
       frameLabel: "Marco estratégico",
-      frameTitle: "Lo que este reporte está forzando",
+      frameTitle: "Lo que este reporte obliga a aclarar",
       archetype: "Lectura de arquetipo",
       knownFor: "Por qué debería ser conocida esta marca",
       industryFit: "Encaje con la categoría",
       expectationGap: "Brecha de expectativas",
       verbalImage: "Imagen verbal",
-      namingFit: "Encaje del naming",
-      headlineCorrection: "Lógica de corrección del headline",
-      tests: "Tests arquetípicos",
+      namingFit: "Encaje del nombre",
+      headlineCorrection: "Lógica de corrección del titular",
+      tests: "Pruebas arquetípicas",
       trustGaps: "Brechas de confianza",
       frictionMap: "Mapa de fricción",
       positioningMoves: "Estrategia de posicionamiento",
@@ -650,11 +818,91 @@ export function FullReportExperience({
       campaignAngles: "Dirección de campaña",
       action7: "Próximos 7 días",
       action30: "Próximos 30 días",
+      brandMyth: "Mito de marca",
+      brandMythTitle: "La leyenda que esta marca ya intenta contar",
+      verbalImageTitle: "Lo que el nombre, la frase principal y el tono del primer pantallazo enseñan a esperar",
+      nameSignal: "Señal del nombre",
+      headlineSignal: "Señal del titular",
+      firstScreenTone: "Tono del primer pantallazo",
+      risk: "Riesgo",
+      verdict: "Veredicto",
+      roleMatch: "Encaje con el rol",
+      correction: "Corrección",
+      archetypeTestsTitle: "Qué pruebas arquetípicas la marca todavía no supera",
+      namingFitTitle: "Si el nombre ayuda a vender o hace que la página principal trabaje de más",
+      headlineCorrectionTitle: "Cómo debe cambiar la primera frase para cerrar la brecha más rápido",
+      currentProblem: "Problema actual",
+      correctionLogic: "Lógica de corrección",
+      rewrittenDirection: "Dirección reescrita",
+      knownForTitle: "La respuesta a “por qué se conoce realmente esta marca”",
+      industryFitTitle: "Expectativa de la categoría frente al rol que esta marca intenta ocupar",
+      expectedArchetype: "Arquetipo esperado",
+      aestheticDirections: "Direcciones estéticas",
+      aestheticDirectionsTitle: "Los carriles estéticos que esta marca puede poseer con credibilidad",
+      direction: "Dirección",
+      culturalAssociations: "Asociaciones culturales",
+      filmsAndEras: "Películas y épocas",
+      artAndMusic: "Arte y música",
+      film: "Película",
+      era: "Época",
+      art: "Arte",
+      music: "Música",
+      visualCodes: "Códigos visuales",
+      visualCodesTitle: "Cómo debería verse la marca en detalle",
+      palette: "Paleta",
+      textures: "Texturas",
+      symbols: "Símbolos",
+      forms: "Formas",
+      visualEvidenceStrip: "Tira de evidencia visual",
+      visualEvidenceTitle: "El primer pantallazo, aislado en los dos momentos que más importan",
+      visualEvidenceBody: "En lugar de dispersar el reporte en demasiados elementos visuales, esto devuelve el foco a la página principal: la promesa que el comprador ve primero y la zona de decisión donde la confianza aterriza o cae.",
+      heroFrame: "Marco principal",
+      heroPromise: "Promesa principal",
+      decisionFrame: "Marco de decisión",
+      proofCtaZone: "Zona de prueba y llamada",
+      beforeAfterHeroFrame: "Antes / después del marco principal",
+      beforeAfterHeroTitle: "La promesa actual frente a la versión más precisa que esta marca necesita",
+      beforeAfterHeroBody: "Aquí el reporte pasa del diagnóstico a una estrategia visual más dirigida: qué hace ahora el primer pantallazo y cómo podría sentirse una versión comercial más clara sin perder atmósfera.",
+      websiteCapture: "Captura del sitio",
+      websiteCaptureTitle: "La superficie real de la página principal en la que se basa este diagnóstico",
+      websiteCaptureBody: "Una captura limpia es suficiente aquí. El objetivo no es acumular visuales, sino conectar el diagnóstico con la página real sin repetir la misma evidencia de tres maneras.",
+      websiteEvidence: "Evidencia del sitio",
+      openSurface: "Abrir superficie",
+      noLivePreview: "Todavía no hay vista previa en vivo para esta superficie.",
+      positioningRead: "Lectura de posicionamiento",
+      positioningReadTitle: "Qué está diciendo la oferta",
+      visualIdentity: "Identidad visual",
+      visualIdentityTitle: "Qué implica el sistema visual",
+      aboveTheFold: "Primer pantallazo",
+      aboveTheFoldTitle: "Qué ocurre en el primer pantallazo",
+      commercialRead: "Lectura comercial",
+      commercialReadTitle: "Qué ayuda o frena el siguiente paso",
+      frictionMapTitle: "Dónde la página pierde certeza",
+      trustGapsTitle: "Lo que todavía necesita demostrarse",
+      offerOpportunities: "Oportunidades de oferta",
+      offerOpportunitiesTitle: "Dónde la historia comercial puede volverse más precisa",
+      positioningStrategyTitle: "Cómo debería enmarcarse la marca",
+      messagingStrategyTitle: "Qué debe hacer la comunicación",
+      offerStrategyTitle: "Cómo hacer que la oferta se sienta más fácil de comprar",
+      rewriteSuggestions: "Sugerencias de reescritura",
+      heroLine: "Frase principal",
+      subheadline: "Subtítulo",
+      cta: "Llamada a la acción",
+      action30Title: "Tu hoja de ruta para los próximos 30 días",
+      whatComesNext: "Qué viene después",
+      whatComesNextTitle: "Tres formas de usar este diagnóstico",
+      nextUseCases: [
+        "Hazlo tú: usa la pila de correcciones y el plan de acción como hoja de ruta.",
+        "BrandMirror revisado: recorrido guiado por el diagnóstico y los próximos movimientos.",
+        "Trabaja con Sahar: convierte el diagnóstico en una reconstrucción completa de marca y sitio web.",
+      ],
+      strategicContinuation: "Continuación estratégica",
+      strategicContinuationTitle: "En qué debería extenderse esta estrategia después",
     },
     ru: {
       whatItDoes: "Чем, похоже, занимается компания",
       snapshot: "Снимок",
-      signalsLabel: "Что он сигналит",
+      signalsLabel: "Что он сообщает",
       signalsTitle: "Как бренд считывается прямо сейчас",
       missingLabel: "Чего не хватает",
       missingTitle: "Что сайт всё ещё не проясняет достаточно быстро",
@@ -665,20 +913,20 @@ export function FullReportExperience({
       amplifyLabel: "Что усилить",
       amplifyTitle: "Что уже помогает бренду",
       dropLabel: "Что убрать",
-      dropTitle: "Что ослабляет это чтение",
+      dropTitle: "Что ослабляет этот разбор",
       worksLabel: "Что работает",
       worksTitle: "Что уже работает",
       brokenLabel: "Что сломано",
       brokenTitle: "Что стоит доверия",
       convertLabel: "Почему не конвертирует",
       convertTitle: "Почему страница не закрывает этот разрыв",
-      audienceMismatchLabel: "Audience mismatch",
+      audienceMismatchLabel: "Несовпадение с аудиторией",
       audienceMismatchTitle: "Где сообщение не попадает в покупателя",
       fixLabel: "Что исправить первым",
-      fixTitle: "Первые исправления с самым большим upside",
-      audienceRead: "Чтение аудитории",
+      fixTitle: "Первые исправления с самым большим эффектом",
+      audienceRead: "Разбор аудитории",
       audienceTitle: "Кто они и что им всё ещё нужно услышать",
-      tone: "Tone of voice",
+      tone: "Тон голоса",
       looking: "Что они ищут",
       feel: "Что им нужно почувствовать",
       hear: "Что им нужно услышать",
@@ -688,12 +936,12 @@ export function FullReportExperience({
       frameTitle: "К чему подталкивает этот отчёт",
       archetype: "Архетипный разбор",
       knownFor: "Чем этот бренд должен быть известен",
-      industryFit: "Fit с категорией",
+      industryFit: "Соответствие категории",
       expectationGap: "Разрыв ожиданий",
-      verbalImage: "Verbal image",
-      namingFit: "Naming fit",
-      headlineCorrection: "Логика коррекции headline",
-      tests: "Архетипические тесты",
+      verbalImage: "Вербальный образ",
+      namingFit: "Соответствие названия",
+      headlineCorrection: "Логика коррекции заголовка",
+      tests: "Архетипические проверки",
       trustGaps: "Разрывы доверия",
       frictionMap: "Карта трения",
       positioningMoves: "Стратегия позиционирования",
@@ -705,6 +953,86 @@ export function FullReportExperience({
       campaignAngles: "Направление кампании",
       action7: "Следующие 7 дней",
       action30: "Следующие 30 дней",
+      brandMyth: "Миф бренда",
+      brandMythTitle: "Легенда, которую этот бренд уже пытается рассказать",
+      verbalImageTitle: "Чему название, первая фраза и тон первого экрана учат людей ожидать",
+      nameSignal: "Сигнал названия",
+      headlineSignal: "Сигнал заголовка",
+      firstScreenTone: "Тон первого экрана",
+      risk: "Риск",
+      verdict: "Вердикт",
+      roleMatch: "Соответствие роли",
+      correction: "Коррекция",
+      archetypeTestsTitle: "Какие архетипические проверки бренд всё ещё не проходит",
+      namingFitTitle: "Помогает ли название продаже или заставляет главную страницу работать за него",
+      headlineCorrectionTitle: "Как должна измениться первая строка, чтобы быстрее закрыть разрыв",
+      currentProblem: "Текущая проблема",
+      correctionLogic: "Логика коррекции",
+      rewrittenDirection: "Переписанное направление",
+      knownForTitle: "Ответ на вопрос: чем этот бренд на самом деле должен быть известен",
+      industryFitTitle: "Ожидание категории против роли, которую пытается занять бренд",
+      expectedArchetype: "Ожидаемый архетип",
+      aestheticDirections: "Эстетические направления",
+      aestheticDirectionsTitle: "Эстетические линии, которые этот бренд может убедительно занять",
+      direction: "Направление",
+      culturalAssociations: "Культурные ассоциации",
+      filmsAndEras: "Фильмы и эпохи",
+      artAndMusic: "Искусство и музыка",
+      film: "Фильм",
+      era: "Эпоха",
+      art: "Искусство",
+      music: "Музыка",
+      visualCodes: "Визуальные коды",
+      visualCodesTitle: "Как бренд должен выглядеть в деталях",
+      palette: "Палитра",
+      textures: "Текстуры",
+      symbols: "Символы",
+      forms: "Формы",
+      visualEvidenceStrip: "Лента визуальных доказательств",
+      visualEvidenceTitle: "Первый экран, разделённый на два самых важных момента",
+      visualEvidenceBody: "Вместо того чтобы распылять отчёт на слишком много визуалов, этот блок возвращает фокус к самой главной странице: обещанию, которое покупатель видит первым, и зоне решения, где доверие либо закрепляется, либо падает.",
+      heroFrame: "Главный кадр",
+      heroPromise: "Главное обещание",
+      decisionFrame: "Кадр решения",
+      proofCtaZone: "Зона доказательства и призыва",
+      beforeAfterHeroFrame: "До / после главного кадра",
+      beforeAfterHeroTitle: "Текущее обещание против более точной версии, которая нужна бренду",
+      beforeAfterHeroBody: "Здесь отчёт переходит от диагностики к более направленной визуальной стратегии: что главный экран делает сейчас и какой могла бы быть более ясная коммерческая версия без потери атмосферы.",
+      websiteCapture: "Снимок сайта",
+      websiteCaptureTitle: "Живая поверхность главной страницы, на которой основан диагноз",
+      websiteCaptureBody: "Одного чистого снимка здесь достаточно. Цель не в том, чтобы нагромождать визуалы, а в том, чтобы связать диагноз с реальной страницей без повтора одного и того же доказательства тремя способами.",
+      websiteEvidence: "Доказательство с сайта",
+      openSurface: "Открыть поверхность",
+      noLivePreview: "Для этой поверхности пока нет живого превью.",
+      positioningRead: "Разбор позиционирования",
+      positioningReadTitle: "Что говорит предложение",
+      visualIdentity: "Визуальная идентичность",
+      visualIdentityTitle: "Что подразумевает визуальная система",
+      aboveTheFold: "Первый экран",
+      aboveTheFoldTitle: "Что происходит на первом экране",
+      commercialRead: "Коммерческий разбор",
+      commercialReadTitle: "Что помогает или замедляет следующий шаг",
+      frictionMapTitle: "Где страница теряет определённость",
+      trustGapsTitle: "Что всё ещё нужно доказать",
+      offerOpportunities: "Возможности предложения",
+      offerOpportunitiesTitle: "Где коммерческая история может стать точнее",
+      positioningStrategyTitle: "Как нужно рамкировать бренд",
+      messagingStrategyTitle: "Что должна сделать коммуникация",
+      offerStrategyTitle: "Как сделать предложение проще для покупки",
+      rewriteSuggestions: "Предложения по переписыванию",
+      heroLine: "Главная строка",
+      subheadline: "Подзаголовок",
+      cta: "Призыв к действию",
+      action30Title: "Дорожная карта на следующие 30 дней",
+      whatComesNext: "Что дальше",
+      whatComesNextTitle: "Три способа использовать этот диагноз",
+      nextUseCases: [
+        "Сделать самостоятельно — использовать список исправлений и план действий как дорожную карту.",
+        "Разбор с BrandMirror — пройти диагноз и следующие шаги с сопровождением.",
+        "Работать с Sahar — превратить диагноз в полную перестройку бренда и сайта.",
+      ],
+      strategicContinuation: "Стратегическое продолжение",
+      strategicContinuationTitle: "Куда этой стратегии нужно расшириться дальше",
     },
   }[locale];
   const scoreLabels: Record<string, string> =
@@ -719,12 +1047,77 @@ export function FullReportExperience({
       : locale === "ru"
         ? {
             "Positioning clarity": "Ясность позиционирования",
-            "AI visibility": "AI-видимость",
+            "AI visibility": "Видимость в ИИ",
             "Visual credibility": "Визуальная убедительность",
-            "Offer specificity": "Точность оффера",
+            "Offer specificity": "Точность предложения",
             "Conversion readiness": "Готовность к конверсии",
           }
         : {};
+  const previewCopy = {
+    en: {
+      websiteFallback: "full report preview",
+      scores: [
+        { label: "Clarity", value: "72", note: "Offer lands too slowly." },
+        { label: "Trust", value: "68", note: "Proof is arriving too late." },
+      ],
+      working: "Working",
+      broken: "Broken",
+      fixFirst: "Fix first",
+      workingTitle: "What already holds",
+      brokenTitle: "What is costing trust",
+      workingFallback: "The brand already has authority.",
+      brokenFallback: "The CTA arrives too early.",
+      premiumSignal: "premium signal",
+      trustGap: "trust gap",
+      sharpenPromise: "sharpen the promise",
+      fallbackMarkers: [
+        { label: "Working", title: "Premium signal", note: "The brand already feels controlled and credible." },
+        { label: "Broken", title: "Offer clarity", note: "The buyer still has to infer too much." },
+      ],
+    },
+    es: {
+      websiteFallback: "vista previa del reporte completo",
+      scores: [
+        { label: "Claridad", value: "72", note: "La oferta aterriza demasiado despacio." },
+        { label: "Confianza", value: "68", note: "La prueba llega demasiado tarde." },
+      ],
+      working: "Funciona",
+      broken: "Roto",
+      fixFirst: "Corregir primero",
+      workingTitle: "Lo que ya se sostiene",
+      brokenTitle: "Lo que cuesta confianza",
+      workingFallback: "La marca ya tiene autoridad.",
+      brokenFallback: "La llamada a la acción llega demasiado pronto.",
+      premiumSignal: "señal de alto nivel",
+      trustGap: "brecha de confianza",
+      sharpenPromise: "afinar la promesa",
+      fallbackMarkers: [
+        { label: "Funciona", title: "Señal de alto nivel", note: "La marca ya se siente controlada y creíble." },
+        { label: "Roto", title: "Claridad de la oferta", note: "El comprador todavía tiene que inferir demasiado." },
+      ],
+    },
+    ru: {
+      websiteFallback: "превью полного отчёта",
+      scores: [
+        { label: "Ясность", value: "72", note: "Предложение раскрывается слишком медленно." },
+        { label: "Доверие", value: "68", note: "Доказательство приходит слишком поздно." },
+      ],
+      working: "Работает",
+      broken: "Сломано",
+      fixFirst: "Исправить первым",
+      workingTitle: "Что уже держится",
+      brokenTitle: "Что стоит доверия",
+      workingFallback: "У бренда уже есть авторитет.",
+      brokenFallback: "Призыв к действию появляется слишком рано.",
+      premiumSignal: "премиальный сигнал",
+      trustGap: "разрыв доверия",
+      sharpenPromise: "заострить обещание",
+      fallbackMarkers: [
+        { label: "Работает", title: "Премиальный сигнал", note: "Бренд уже ощущается собранным и достоверным." },
+        { label: "Сломано", title: "Ясность предложения", note: "Покупателю всё ещё приходится слишком многое додумывать." },
+      ],
+    },
+  }[locale];
   const searchParams = useSearchParams();
   const [url, setUrl] = useState(searchParams.get("url") || initialUrl || "");
   const [report, setReport] = useState<BrandReport | null>(null);
@@ -945,7 +1338,7 @@ export function FullReportExperience({
             </p>
             <DiagnosticEvidenceBoard
               brandName={report?.brandName || "BrandMirror"}
-              websiteLabel={report?.url || "full report preview"}
+              websiteLabel={report?.url || previewCopy.websiteFallback}
               eyebrow={copy.reportEyebrow}
               headline={report?.title || copy.reportHeadline}
               subheadline={
@@ -960,58 +1353,45 @@ export function FullReportExperience({
                       value: String(row.score),
                       note: row.note,
                     }))
-                  : [
-                      { label: "Clarity", value: "72", note: "Offer lands too slowly." },
-                      { label: "Trust", value: "68", note: "Proof is arriving too late." },
-                    ]
+                  : previewCopy.scores
               }
               markers={
                 report
                   ? [
                       {
                         id: "working",
-                        label: "Working",
-                        title: "What already holds",
-                        note: report.whatWorks[0] || "The brand already has authority.",
+                        label: previewCopy.working,
+                        title: previewCopy.workingTitle,
+                        note: report.whatWorks[0] || previewCopy.workingFallback,
                         x: 76,
                         y: 14,
                       },
                       {
                         id: "broken",
-                        label: "Broken",
-                        title: "What is costing trust",
-                        note: report.whatsBroken[0] || "The CTA arrives too early.",
+                        label: previewCopy.broken,
+                        title: previewCopy.brokenTitle,
+                        note: report.whatsBroken[0] || previewCopy.brokenFallback,
                         x: 76,
                         y: 62,
                       },
                     ]
                   : [
-                      {
-                        id: "working",
-                        label: "Working",
-                        title: "Premium signal",
-                        note: "The brand already feels controlled and credible.",
-                        x: 76,
-                        y: 14,
-                      },
-                      {
-                        id: "broken",
-                        label: "Broken",
-                        title: "Offer clarity",
-                        note: "The buyer still has to infer too much.",
-                        x: 76,
-                        y: 62,
-                      },
+                      { id: "working", ...previewCopy.fallbackMarkers[0], x: 76, y: 14 },
+                      { id: "broken", ...previewCopy.fallbackMarkers[1], x: 76, y: 62 },
                     ]
               }
               verdicts={
                 report
                   ? [
-                      `Working: ${report.whatWorks[0] || "premium signal"}`,
-                      `Broken: ${report.whatsBroken[0] || "trust gap"}`,
-                      `Fix first: ${report.priorityFixes.fixNow[0] || "sharpen the promise"}`,
+                      `${previewCopy.working}: ${report.whatWorks[0] || previewCopy.premiumSignal}`,
+                      `${previewCopy.broken}: ${report.whatsBroken[0] || previewCopy.trustGap}`,
+                      `${previewCopy.fixFirst}: ${report.priorityFixes.fixNow[0] || previewCopy.sharpenPromise}`,
                     ]
-                  : ["Working: premium signal", "Broken: trust gap", "Fix first: sharpen the promise"]
+                  : [
+                      `${previewCopy.working}: ${previewCopy.premiumSignal}`,
+                      `${previewCopy.broken}: ${previewCopy.trustGap}`,
+                      `${previewCopy.fixFirst}: ${previewCopy.sharpenPromise}`,
+                    ]
               }
               compact
               className={`${report ? "brandmirror-reveal brandmirror-reveal-delay" : ""} homepage-board mx-auto max-w-[33rem]`}
@@ -1045,11 +1425,13 @@ export function FullReportExperience({
               whatItDoes={report.whatItDoes}
               snapshot={report.snapshot}
               reportId={reportId}
+              locale={locale}
             />
 
             <HowWeReadBrandsBlock
               brandName={report.brandName}
               genre={report.genre}
+              locale={locale}
             />
 
             <ScoreDashboardBlock
@@ -1057,6 +1439,7 @@ export function FullReportExperience({
               scoreBand={report.scoreBand}
               scoreModifier={report.scoreModifier}
               scorecard={report.scorecard}
+              locale={locale}
             />
 
             <section className="grid gap-10 pb-10 lg:grid-cols-[0.95fr_1.05fr]">
@@ -1249,16 +1632,20 @@ export function FullReportExperience({
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.archetype}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  {report.archetypeRead.primary} with a secondary pull toward {report.archetypeRead.secondary}
+                  {locale === "es"
+                    ? `${report.archetypeRead.primary} con una atracción secundaria hacia ${report.archetypeRead.secondary}`
+                    : locale === "ru"
+                      ? `${report.archetypeRead.primary} со вторичным тяготением к ${report.archetypeRead.secondary}`
+                      : `${report.archetypeRead.primary} with a secondary pull toward ${report.archetypeRead.secondary}`}
                 </h2>
                 <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.archetypeRead.rationale}
                 </p>
               </div>
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(237,237,242,0.6)]">Brand myth</p>
+                <p className="section-label text-[rgba(237,237,242,0.6)]">{labels.brandMyth}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  The legend this brand is already trying to tell
+                  {labels.brandMythTitle}
                 </h2>
                 <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.brandMyth}
@@ -1270,14 +1657,14 @@ export function FullReportExperience({
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.verbalImage}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  What the name, hero line, and first-screen tone are teaching people to expect
+                  {labels.verbalImageTitle}
                 </h2>
                 <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
-                    ["Name signal", report.verbalImage.nameSignal],
-                    ["Headline signal", report.verbalImage.headlineSignal],
-                    ["First-screen tone", report.verbalImage.firstScreenTone],
-                    ["Risk", report.verbalImage.risk],
+                    [labels.nameSignal, report.verbalImage.nameSignal],
+                    [labels.headlineSignal, report.verbalImage.headlineSignal],
+                    [labels.firstScreenTone, report.verbalImage.firstScreenTone],
+                    [labels.risk, report.verbalImage.risk],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
@@ -1293,7 +1680,7 @@ export function FullReportExperience({
 
               <ListBlock
                 label={labels.tests}
-                title="Which archetypal tests the brand is still failing"
+                title={labels.archetypeTestsTitle}
                 items={report.archetypeTests.map((item) => `${item.name}: ${item.verdict}`)}
               />
             </section>
@@ -1302,14 +1689,14 @@ export function FullReportExperience({
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.namingFit}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  Whether the name is helping the sale or making the homepage do extra work
+                  {labels.namingFitTitle}
                 </h2>
                 <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
-                    ["Verdict", report.namingFit.verdict],
-                    ["Role match", report.namingFit.roleMatch],
-                    ["Risk", report.namingFit.risk],
-                    ["Correction", report.namingFit.correction],
+                    [labels.verdict, report.namingFit.verdict],
+                    [labels.roleMatch, report.namingFit.roleMatch],
+                    [labels.risk, report.namingFit.risk],
+                    [labels.correction, report.namingFit.correction],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
@@ -1326,13 +1713,13 @@ export function FullReportExperience({
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.6)]">{labels.headlineCorrection}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  How the first line has to change to close the gap faster
+                  {labels.headlineCorrectionTitle}
                 </h2>
                 <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
-                    ["Current problem", report.headlineCorrection.currentProblem],
-                    ["Correction logic", report.headlineCorrection.correctionLogic],
-                    ["Rewritten direction", report.headlineCorrection.rewrittenDirection],
+                    [labels.currentProblem, report.headlineCorrection.currentProblem],
+                    [labels.correctionLogic, report.headlineCorrection.correctionLogic],
+                    [labels.rewrittenDirection, report.headlineCorrection.rewrittenDirection],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
@@ -1350,16 +1737,16 @@ export function FullReportExperience({
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ReportSection
                 label={labels.knownFor}
-                title="The answer to ‘what is this brand actually known for?’"
+                title={labels.knownForTitle}
                 body={report.brandKnownFor}
               />
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.industryFit}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  Category expectation versus the role this brand is trying to play
+                  {labels.industryFitTitle}
                 </h2>
                 <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
-                  Expected archetype: {report.industryFit.expectedArchetype}
+                  {labels.expectedArchetype}: {report.industryFit.expectedArchetype}
                 </p>
                 <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   <p className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">
@@ -1382,9 +1769,9 @@ export function FullReportExperience({
 
             <section className="pb-10">
               <div className="editorial-rule pt-8">
-                <p className="section-label">Aesthetic directions</p>
+                <p className="section-label">{labels.aestheticDirections}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
-                  The aesthetic lanes this brand can credibly own
+                  {labels.aestheticDirectionsTitle}
                 </h2>
               </div>
 
@@ -1394,7 +1781,7 @@ export function FullReportExperience({
                     key={direction.name}
                     className="ink-panel rounded-[1.8rem] border border-[rgba(237,237,242,0.14)] p-6"
                   >
-                    <p className="section-label text-[rgba(237,237,242,0.58)]">Direction</p>
+                    <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.direction}</p>
                     <h3 className="mt-4 font-serif text-3xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                       {direction.name}
                     </h3>
@@ -1408,53 +1795,51 @@ export function FullReportExperience({
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ListBlock
-                label="Cultural associations"
-                title="Films and eras"
+                label={labels.culturalAssociations}
+                title={labels.filmsAndEras}
                 items={[
-                  ...report.culturalAssociations.films.map((item) => `Film: ${item}`),
-                  ...report.culturalAssociations.eras.map((item) => `Era: ${item}`),
+                  ...report.culturalAssociations.films.map((item) => `${labels.film}: ${item}`),
+                  ...report.culturalAssociations.eras.map((item) => `${labels.era}: ${item}`),
                 ]}
               />
               <ListBlock
-                label="Cultural associations"
-                title="Art and music"
+                label={labels.culturalAssociations}
+                title={labels.artAndMusic}
                 items={[
-                  ...report.culturalAssociations.art.map((item) => `Art: ${item}`),
-                  ...report.culturalAssociations.music.map((item) => `Music: ${item}`),
+                  ...report.culturalAssociations.art.map((item) => `${labels.art}: ${item}`),
+                  ...report.culturalAssociations.music.map((item) => `${labels.music}: ${item}`),
                 ]}
               />
             </section>
 
             <section className="pb-10">
               <ListBlock
-                label="Visual codes"
-                title="What the brand should look like in detail"
+                label={labels.visualCodes}
+                title={labels.visualCodesTitle}
                 items={[
-                  `Palette: ${report.visualCodes.palette.join(", ")}`,
-                  `Textures: ${report.visualCodes.textures.join(", ")}`,
-                  `Symbols: ${report.visualCodes.symbols.join(", ")}`,
-                  `Forms: ${report.visualCodes.forms.join(", ")}`,
+                  `${labels.palette}: ${report.visualCodes.palette.join(", ")}`,
+                  `${labels.textures}: ${report.visualCodes.textures.join(", ")}`,
+                  `${labels.symbols}: ${report.visualCodes.symbols.join(", ")}`,
+                  `${labels.forms}: ${report.visualCodes.forms.join(", ")}`,
                 ]}
               />
             </section>
 
             <section className="pb-10">
               <div className="editorial-rule pt-8">
-                <p className="section-label">Visual evidence strip</p>
+                <p className="section-label">{labels.visualEvidenceStrip}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
-                  The first screen, isolated into the two moments that matter most
+                  {labels.visualEvidenceTitle}
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--foreground-soft)]">
-                  Instead of scattering the report across too many visuals, this
-                  pulls focus back to the homepage itself: the promise the buyer
-                  sees first, and the decision zone where trust either lands or drops.
+                  {labels.visualEvidenceBody}
                 </p>
               </div>
 
               <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <VisualCropCard
-                  label="Hero frame"
-                  title={heroCallout?.title || "Hero promise"}
+                  label={labels.heroFrame}
+                  title={heroCallout?.title || labels.heroPromise}
                   body={heroCallout?.body || report.aboveTheFold}
                   imageUrl={featuredSurface?.imageUrl}
                   focusX={heroCallout?.x || 18}
@@ -1462,8 +1847,8 @@ export function FullReportExperience({
                   aspectClass="aspect-[6/5]"
                 />
                 <VisualCropCard
-                  label="Decision frame"
-                  title={proofCallout?.title || "Proof and CTA zone"}
+                  label={labels.decisionFrame}
+                  title={proofCallout?.title || labels.proofCtaZone}
                   body={proofCallout?.body || report.conversionRead}
                   imageUrl={featuredSurface?.imageUrl}
                   focusX={proofCallout?.x || 62}
@@ -1476,15 +1861,12 @@ export function FullReportExperience({
             {beforeFrame && afterFrame ? (
             <section className="pb-10">
               <div className="editorial-rule pt-8">
-                <p className="section-label">Before / after hero frame</p>
+                <p className="section-label">{labels.beforeAfterHeroFrame}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
-                  The current promise versus the sharper version this brand wants
+                  {labels.beforeAfterHeroTitle}
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--foreground-soft)]">
-                  This is where the report shifts from diagnosis into a more
-                  directed visual strategy: what the hero is doing now, and what
-                  a clearer commercial version could feel like without losing
-                  atmosphere.
+                  {labels.beforeAfterHeroBody}
                 </p>
               </div>
 
@@ -1561,14 +1943,12 @@ export function FullReportExperience({
 
             <section className="pb-10">
               <div className="editorial-rule pt-8">
-                <p className="section-label">Website capture</p>
+                <p className="section-label">{labels.websiteCapture}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
-                  The live homepage surface this diagnosis is based on
+                  {labels.websiteCaptureTitle}
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--foreground-soft)]">
-                  One clean capture is enough here. The goal is not to pile on
-                  visuals, but to tie the diagnosis back to the real page without
-                  repeating the same evidence in three different ways.
+                  {labels.websiteCaptureBody}
                 </p>
               </div>
 
@@ -1576,7 +1956,7 @@ export function FullReportExperience({
                 <div className="mt-8">
 	                  <div className="ink-panel overflow-hidden rounded-[2rem] border border-[rgba(237,237,242,0.14)]">
 	                    <div className="border-b border-[rgba(237,237,242,0.12)] px-5 py-4 sm:px-6">
-                      <SurfaceMethodLabel />
+                      <p className="section-label">{labels.websiteEvidence}</p>
                       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
 	                          <h3 className="font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
@@ -1593,7 +1973,7 @@ export function FullReportExperience({
                             rel="noreferrer"
                             className="inline-flex text-sm uppercase tracking-[0.18em] text-[color:var(--accent)]"
                           >
-                            Open surface
+                            {labels.openSurface}
                           </a>
                         ) : null}
                       </div>
@@ -1610,7 +1990,7 @@ export function FullReportExperience({
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center px-6 text-center text-sm leading-6 text-[color:var(--foreground-soft)]">
-                            No live preview available yet for this surface.
+                            {labels.noLivePreview}
                           </div>
                         )}
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,12,10,0.08),rgba(15,12,10,0.12)_35%,rgba(15,12,10,0.22))]" />
@@ -1623,6 +2003,7 @@ export function FullReportExperience({
                             body={callout.body}
                             x={callout.x}
                             y={callout.y}
+                            locale={locale}
                           />
                         ))}
                       </div>
@@ -1634,23 +2015,23 @@ export function FullReportExperience({
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ReportSection
-                label="Positioning read"
-                title="What the offer is saying"
+                label={labels.positioningRead}
+                title={labels.positioningReadTitle}
                 body={report.positioningRead}
               />
               <ReportSection
-                label="Visual identity"
-                title="What the visual system implies"
+                label={labels.visualIdentity}
+                title={labels.visualIdentityTitle}
                 body={report.visualIdentityRead}
               />
               <ReportSection
-                label="Above the fold"
-                title="What happens in the first screen"
+                label={labels.aboveTheFold}
+                title={labels.aboveTheFoldTitle}
                 body={report.aboveTheFold}
               />
               <ReportSection
-                label="Commercial read"
-                title="What is helping or slowing the next step"
+                label={labels.commercialRead}
+                title={labels.commercialReadTitle}
                 body={report.conversionRead}
               />
             </section>
@@ -1658,59 +2039,59 @@ export function FullReportExperience({
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.6)]">
-                  Mixed signals
+                  {labels.mixedSignalsLabel}
                 </p>
                 <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.mixedSignals}
                 </p>
               </div>
               <ListBlock
-                label="Friction map"
-                title="Where the page is losing certainty"
+                label={labels.frictionMap}
+                title={labels.frictionMapTitle}
                 items={report.frictionMap}
               />
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ListBlock
-                label="Trust gaps"
-                title="What still needs to be proven"
+                label={labels.trustGaps}
+                title={labels.trustGapsTitle}
                 items={report.trustGaps}
               />
               <ListBlock
-                label="Offer opportunities"
-                title="Where the commercial story can get sharper"
+                label={labels.offerOpportunities}
+                title={labels.offerOpportunitiesTitle}
                 items={report.offerOpportunities}
               />
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-3">
               <ListBlock
-                label="Positioning strategy"
-                title="How the brand should be framed"
+                label={labels.positioningMoves}
+                title={labels.positioningStrategyTitle}
                 items={report.positioningMoves}
               />
               <ListBlock
-                label="Messaging strategy"
-                title="What the communication must do"
+                label={labels.messagingPriorities}
+                title={labels.messagingStrategyTitle}
                 items={report.messagingPriorities}
               />
               <ListBlock
-                label="Offer strategy"
-                title="How the offer should feel easier to buy"
+                label={labels.offerStrategy}
+                title={labels.offerStrategyTitle}
                 items={report.offerStrategy}
               />
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
-                <p className="section-label">Priority fix stack</p>
+                <p className="section-label">{labels.fixLabel}</p>
                 <div className="editorial-rule mt-5 space-y-5 border-[rgba(237,237,242,0.12)] pt-5">
                   {(
                     [
-                      ["Fix now", report.priorityFixes.fixNow, "#E07A5F"],
-                      ["Fix next", report.priorityFixes.fixNext, "#E8B04C"],
-                      ["Keep", report.priorityFixes.keep, "#6FE0C2"],
+                      [labels.fixNow, report.priorityFixes.fixNow, "#E07A5F"],
+                      [labels.fixNext, report.priorityFixes.fixNext, "#E8B04C"],
+                      [labels.keep, report.priorityFixes.keep, "#6FE0C2"],
                     ] as Array<[string, string[], string]>
                   ).map(([label, items, color]) => (
                     <div key={label}>
@@ -1734,13 +2115,13 @@ export function FullReportExperience({
 
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.6)]">
-                  Rewrite suggestions
+                  {labels.rewriteSuggestions}
                 </p>
                 <div className="editorial-rule mt-5 space-y-5 pt-5">
                   {[
-                    ["Hero line", report.rewriteSuggestions.heroLine],
-                    ["Subheadline", report.rewriteSuggestions.subheadline],
-                    ["CTA", report.rewriteSuggestions.cta],
+                    [labels.heroLine, report.rewriteSuggestions.heroLine],
+                    [labels.subheadline, report.rewriteSuggestions.subheadline],
+                    [labels.cta, report.rewriteSuggestions.cta],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
@@ -1757,20 +2138,18 @@ export function FullReportExperience({
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
               <ListBlock
-                label="30-day action plan"
-                title="Your roadmap for the next 30 days"
+                label={labels.action30}
+                title={labels.action30Title}
                 items={report.actionPlan.next30Days}
               />
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(237,237,242,0.6)]">What comes next</p>
+                <p className="section-label text-[rgba(237,237,242,0.6)]">{labels.whatComesNext}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  Three ways to use this diagnosis
+                  {labels.whatComesNextTitle}
                 </h2>
                 <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
-                    "Do it yourself — use the fix stack and action plan as your roadmap.",
-                    "BrandMirror Reviewed — guided walkthrough of the diagnosis and next moves.",
-                    "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
+                    ...labels.nextUseCases,
                   ].map((item) => (
                     <p key={item} className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                       {item}
@@ -1782,9 +2161,9 @@ export function FullReportExperience({
 
             <section className="pb-12">
               <div className="editorial-rule pt-8">
-                <p className="section-label">Strategic continuation</p>
+                <p className="section-label">{labels.strategicContinuation}</p>
                 <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
-                  What this strategy should extend into next
+                  {labels.strategicContinuationTitle}
                 </h2>
                 <p className="mt-5 max-w-3xl text-base leading-7 text-[rgba(237,237,242,0.72)]">
                   {report.strategicNextMove}
