@@ -180,29 +180,29 @@ export const siteCopy = {
         label: "Pricing",
         title: "The free read shows you the signal.",
         body:
-          "The $197 report names the leak, the fix, and the commercial cost of doing nothing. One or the other. You pick.",
-        layer: "Standalone product layer",
+          "The $197 report turns that signal into a full commercial diagnosis: what is working, what is leaking trust, what to fix first, and what the upside looks like when the brand becomes easier to understand, recommend, and choose.",
+        layer: "Diagnostic layer",
         rows: [
           {
             name: "Free First Read",
             price: "$0",
             summary:
-              "A fast outside read of the homepage: scanner readout, 5 scores, first diagnosis, strongest signal, main friction, and locked next-step teasers.",
-            detail: "Best as the try-before-you-buy layer.",
+              "A fast outside read of the homepage: first-screen signal, 5 scores, strongest asset, main friction, and the first reason buyers may hesitate.",
+            detail: "Best for seeing whether the diagnosis feels specific before you pay.",
           },
           {
             name: "BrandMirror Report",
             price: "$197",
             summary:
-              "The full paid report: first read, score dashboard, signal read, website surface, 5 deep dives, archetype + poster, fix stack, and 30-day plan.",
-            detail: "Best for founders and premium service brands that need clear next actions.",
+              "The paid diagnosis: score dashboard, website evidence, 5 commercial deep dives, AI visibility read, competitor intelligence, commercial impact, priority fix stack, one-page brand brief, and implementation playbook.",
+            detail: "Best for founders and premium service brands that need to know what to fix, why it matters, and what to do next.",
           },
           {
             name: "Sahar Follow-Through",
             price: "Optional",
             summary:
-              "If the report surfaces deeper issues, Sahar can help apply the diagnosis through messaging, website, or brand strategy work.",
-            detail: "Secondary upsell after value is delivered.",
+              "If you want help implementing the fixes, Sahar can sharpen the positioning, visibility signals, offer clarity, messaging, proof, CTA path, website structure, and broader brand strategy.",
+            detail: "Best when you want the diagnosis turned into visible changes, not just a report.",
           },
         ],
         primaryCta: "\u25B6 UNLOCK FULL REPORT — $197",
@@ -535,29 +535,29 @@ export const siteCopy = {
         label: "Estructura de oferta",
         title: "Una escalera simple: señal gratis, reporte pagado y trabajo más profundo opcional.",
         body:
-        "Esto mantiene a BrandMirror vendible como producto independiente y le da al comprador una razón clara para pagar: claridad más fuerte sobre por qué la marca convierte o no.",
-        layer: "Capa de producto independiente",
+          "El reporte de $197 convierte esa señal en un diagnóstico comercial completo: qué funciona, dónde se fuga la confianza, qué corregir primero y qué mejora cuando la marca se vuelve más fácil de entender, recomendar y elegir.",
+        layer: "Capa de diagnóstico",
         rows: [
           {
             name: "Primera lectura gratis",
             price: "$0",
             summary:
-              "Una lectura externa rápida de la página principal: lectura del escáner, 5 puntuaciones, primer diagnóstico, señal más fuerte, fricción principal y avances bloqueados del siguiente paso.",
-            detail: "Ideal como capa de prueba antes de comprar.",
+              "Una lectura externa rápida de la página principal: señal del primer pantallazo, 5 puntuaciones, activo más fuerte, fricción principal y la primera razón por la que un comprador puede dudar.",
+            detail: "Ideal para comprobar si el diagnóstico se siente específico antes de pagar.",
           },
           {
             name: "Reporte BrandMirror",
             price: "$197",
             summary:
-              "El reporte pagado completo: primera lectura, panel de puntuaciones, lectura de señales, superficie del sitio, 5 análisis profundos, arquetipo y póster, prioridades de corrección y plan de 30 días.",
-            detail: "Ideal para fundadores y marcas de servicios de alto nivel que necesitan próximos pasos claros.",
+              "El diagnóstico pagado: panel de puntuaciones, evidencia del sitio, 5 análisis comerciales profundos, lectura de visibilidad en IA, inteligencia competitiva, impacto comercial, prioridades de corrección, brief de marca de una página y playbook de implementación.",
+            detail: "Ideal para fundadores y marcas de servicios premium que necesitan saber qué corregir, por qué importa y qué hacer después.",
           },
           {
             name: "Continuación con Sahar",
             price: "Opcional",
             summary:
-              "Si el reporte muestra problemas más profundos, Sahar puede aplicar el diagnóstico en el mensaje, el sitio web o la estrategia de marca.",
-            detail: "Venta adicional secundaria después de entregar valor.",
+              "Si quieres ayuda para implementar las correcciones, Sahar puede afinar el posicionamiento, señales de visibilidad, claridad de oferta, mensaje, prueba, ruta de CTA, estructura del sitio y estrategia de marca más amplia.",
+            detail: "Ideal cuando quieres convertir el diagnóstico en cambios visibles, no solo en un reporte.",
           },
         ],
         primaryCta: "Empezar primera lectura gratis",
@@ -954,29 +954,29 @@ export const siteCopy = {
         label: "Структура предложения",
         title: "Простая лестница: бесплатный сигнал, платный отчёт, опционально более глубокая работа.",
         body:
-          "Так BrandMirror остаётся самостоятельным продуктом и одновременно даёт покупателю ясную причину платить: более точное понимание, почему бренд конвертирует или нет.",
-        layer: "Слой самостоятельного продукта",
+          "Отчёт за $197 превращает этот сигнал в полноценный коммерческий диагноз: что работает, где утекает доверие, что исправить первым и что меняется, когда бренд становится проще понять, рекомендовать и выбрать.",
+        layer: "Диагностический слой",
         rows: [
           {
             name: "Бесплатный первый разбор",
             price: "$0",
             summary:
-              "Быстрый внешний взгляд на главную страницу: показания сканера, 5 оценок, первый диагноз, самый сильный сигнал, главная точка трения и закрытые подсказки следующего шага.",
-            detail: "Лучше всего как пробный слой перед покупкой.",
+              "Быстрый внешний взгляд на главную страницу: сигнал первого экрана, 5 оценок, самый сильный актив, главная точка трения и первая причина, по которой покупатель может сомневаться.",
+            detail: "Лучше всего, чтобы понять, насколько конкретным будет диагноз, до оплаты.",
           },
           {
             name: "Отчёт BrandMirror",
             price: "$197",
             summary:
-              "Полный платный отчёт: первый разбор, панель оценок, разбор сигналов, поверхность сайта, 5 глубоких разборов, архетип и постер, список исправлений и план на 30 дней.",
-            detail: "Лучше всего для основателей и премиальных сервисных брендов, которым нужны ясные следующие шаги.",
+              "Платный диагноз: панель оценок, доказательства с сайта, 5 глубоких коммерческих разборов, AI visibility, конкурентная разведка, коммерческий эффект, стек приоритетных правок, бренд-бриф на одну страницу и плейбук внедрения.",
+            detail: "Лучше всего для основателей и премиальных сервисных брендов, которым нужно понять, что исправлять, почему это важно и что делать дальше.",
           },
           {
             name: "Сопровождение Sahar",
             price: "Опционально",
             summary:
-              "Если отчёт показывает более глубокие проблемы, Sahar может помочь применить диагноз через сообщение, сайт или бренд-стратегию.",
-            detail: "Вторичное предложение после того, как ценность уже доставлена.",
+              "Если нужна помощь с внедрением правок, Sahar может усилить позиционирование, visibility-сигналы, ясность оффера, сообщение, proof, CTA-путь, структуру сайта и более широкую бренд-стратегию.",
+            detail: "Лучше всего, когда нужно превратить диагноз в видимые изменения, а не просто получить отчёт.",
           },
         ],
         primaryCta: "Начать бесплатный первый разбор",
