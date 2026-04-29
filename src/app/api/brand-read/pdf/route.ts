@@ -109,10 +109,26 @@ function buildDiagnosticTagline(result: BrandReadResult) {
   return "The signal is present. The page is still making buyers work.";
 }
 
+function sanitizePdfText(value: string) {
+  return value
+    .replace(/\u2726/g, "*")
+    .replace(/\u25b6/g, ">")
+    .replace(/\u2192/g, "->")
+    .replace(/\u2190/g, "<-")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/\u2022/g, "-")
+    .replace(/\u00d7/g, "x")
+    .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff\u20ac]/g, "");
+}
+
 function safeText(value: unknown, fallback = "") {
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return sanitizePdfText(value);
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
-  return fallback;
+  return sanitizePdfText(fallback);
 }
 
 function safeNumber(value: unknown, fallback = 0) {
@@ -175,7 +191,7 @@ function hexToRgbColor(value: string) {
 }
 
 function wrapText(text: string, font: PDFFont, size: number, width: number) {
-  const words = (text || "").trim().split(/\s+/).filter(Boolean);
+  const words = safeText(text).trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
 
   const lines: string[] = [];
@@ -1072,13 +1088,48 @@ async function renderBrandReadPdf(
   return Buffer.from(await pdf.save());
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json().catch(() => ({}))) as {
+async function parseRequestBody(request: Request): Promise<{
+  url?: string;
+  language?: string;
+  result?: BrandReadResult;
+}> {
+  const contentType = request.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return (await request.json().catch(() => ({}))) as {
       url?: string;
       language?: string;
       result?: BrandReadResult;
     };
+  }
+
+  if (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  ) {
+    const form = await request.formData().catch(() => null);
+    if (!form) return {};
+
+    const rawUrl = form.get("url");
+    const rawLanguage = form.get("language");
+    const rawResult = form.get("result");
+
+    return {
+      url: typeof rawUrl === "string" ? rawUrl : undefined,
+      language: typeof rawLanguage === "string" ? rawLanguage : undefined,
+      result:
+        typeof rawResult === "string" && rawResult.trim()
+          ? (JSON.parse(rawResult) as BrandReadResult)
+          : undefined,
+    };
+  }
+
+  return {};
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await parseRequestBody(request);
     const language = getSiteLocale(body.language);
     const payload =
       body.result && body.url

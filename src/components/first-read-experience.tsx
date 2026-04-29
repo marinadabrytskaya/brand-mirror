@@ -175,7 +175,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
-  const [isDownloadingFreePdf, setIsDownloadingFreePdf] = useState(false);
   const [isTestingFullPdf, setIsTestingFullPdf] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -183,13 +182,14 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   useEffect(() => {
     const render = () => setClock(formatLocalClock());
     render();
-    const id = window.setInterval(render, 30_000);
+    const id = window.setInterval(render, 1_000);
     return () => window.clearInterval(id);
   }, []);
 
   const posterBand = bandFor(result.posterScore);
+  const dimensionLabels = copy.dimensionLabels ?? {};
   const scoreRows = DIMENSIONS.map((d) => ({
-    label: d.shortLabel,
+    label: dimensionLabels[d.key] ?? d.shortLabel,
     key: d.key,
     value: result[d.key] as number,
   }));
@@ -253,6 +253,15 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   }
 
   const normalizedPreviewUrl = normalizeUrl(url);
+  const hasUrlInput = url.trim().length > 0;
+  const hasResult = Boolean(currentUrl);
+  const scannerMode = isPending
+    ? "scanning"
+    : currentUrl
+      ? "live"
+      : normalizedPreviewUrl.ok
+        ? "ready"
+        : "idle";
   const reportSourceUrl = currentUrl || (normalizedPreviewUrl.ok ? normalizedPreviewUrl.url : url.trim());
   const prodCode = reportSourceUrl ? productionCode(result.brandName, reportSourceUrl) : "BM-READY";
   const displayHost = (() => {
@@ -262,7 +271,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     } catch {
       /* fall through */
     }
-    return `${(result.brandName || "brand").toLowerCase().replace(/\s+/g, "")}.com`;
+    return copy.scanner?.enterUrl ?? "ENTER URL";
   })();
 
   const reportHref = siteI18n.withLang(
@@ -280,39 +289,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
-  }
-
-  async function handleDownloadFreePdf() {
-    if (!currentUrl) return;
-    setError("");
-    setIsDownloadingFreePdf(true);
-    try {
-      const response = await fetch("/api/brand-read/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: currentUrl, language: locale, result }),
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(
-          payload.detail || payload.error || "Unable to export the free PDF right now.",
-        );
-      }
-
-      const filename = `${(result.brandName || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-first-read.pdf`;
-      await downloadPdfFromResponse(response, filename);
-    } catch (downloadError) {
-      setError(
-        downloadError instanceof Error
-          ? downloadError.message
-          : "Unable to export the free PDF right now.",
-      );
-    } finally {
-      setIsDownloadingFreePdf(false);
-    }
   }
 
   async function handleTestFullPdf() {
@@ -432,7 +408,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           {/* ---------- LEFT: URL entry as terminal card ---------- */}
           <form
             onSubmit={handleSubmit}
-            className="rounded-2xl border p-6 sm:p-7"
+            className={`brandmirror-scan-entry rounded-2xl border p-6 sm:p-7 ${
+              scannerMode === "idle" && !hasUrlInput ? "brandmirror-scan-entry-idle" : ""
+            }`}
             style={{
               borderColor: COLOR.line,
               background: "rgba(255,255,255,0.015)",
@@ -461,8 +439,19 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             </label>
 
             <div
-              className="mt-3 flex items-center gap-3 border-b pb-2"
-              style={{ borderColor: "rgba(255,255,255,0.22)" }}
+              className={`brandmirror-url-field mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
+                scannerMode === "idle" && !hasUrlInput
+                  ? "brandmirror-url-field-idle"
+                  : scannerMode === "ready"
+                    ? "brandmirror-url-field-ready"
+                    : scannerMode === "scanning"
+                      ? "brandmirror-url-field-scanning"
+                      : ""
+              }`}
+              style={{
+                borderColor: normalizedPreviewUrl.ok ? "rgba(111,224,194,0.55)" : "rgba(255,255,255,0.16)",
+                background: "rgba(255,255,255,0.018)",
+              }}
             >
               <span
                 aria-hidden
@@ -483,7 +472,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder={copy.urlPlaceholder}
-                className="flex-1 bg-transparent outline-none"
+                className="min-w-0 flex-1 bg-transparent outline-none"
                 style={{
                   fontFamily: "var(--font-mono), ui-monospace, monospace",
                   fontSize: "15px",
@@ -510,7 +499,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               <button
                 type="submit"
                 disabled={isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                className={`brandmirror-read-button inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${
+                  scannerMode === "idle" || scannerMode === "ready" ? "brandmirror-read-button-idle" : ""
+                }`}
                 style={{
                   background: "#6FE0C2",
                   color: "#07070A",
@@ -582,18 +573,23 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           </form>
 
           {/* ---------- RIGHT: scanner readout ---------- */}
-          <ScannerReadout
-            brandName={result.brandName}
-            host={displayHost}
-            posterScore={result.posterScore}
-            band={posterBand}
-            tagline={buildLiveScanTagline(result)}
-            clock={clock}
-            scoreRows={scoreRows}
-            isPending={isPending}
-            isLive={Boolean(currentUrl)}
-          />
+            <ScannerReadout
+              brandName={result.brandName}
+              host={displayHost}
+              posterScore={result.posterScore}
+              band={posterBand}
+              tagline={buildLiveScanTagline(result)}
+              clock={clock}
+              scoreRows={scoreRows}
+              isPending={isPending}
+              isLive={Boolean(currentUrl)}
+              mode={scannerMode}
+              copy={copy}
+            />
         </section>
+
+        {hasResult ? (
+          <>
         <p
           className="mt-4 text-center"
           style={{
@@ -604,7 +600,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           }}
           suppressHydrationWarning
         >
-          {buildScopeLine(clock)}
+          {buildScopeLine(clock, locale)}
         </p>
 
         {currentUrl ? (
@@ -616,39 +612,42 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             }}
           >
             <div>
-              <p style={{ ...metaLabel, color: COLOR.accent }}>FREE&nbsp;REPORT&nbsp;EXPORT</p>
+              <p style={{ ...metaLabel, color: COLOR.accent }}>
+                {(copy.freePdfLabel ?? "FREE REPORT EXPORT").toUpperCase()}
+              </p>
               <p
                 className="mt-2 leading-6"
                 style={{ color: COLOR.textMuted, fontSize: "13.5px" }}
               >
-                Save the free first read as a shareable PDF snapshot.
+                {copy.freePdfBody ?? "Save the free first read as a shareable PDF snapshot."}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleDownloadFreePdf}
-              disabled={isDownloadingFreePdf}
-              className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                borderColor: "rgba(111,224,194,0.34)",
-                color: COLOR.text,
-                fontSize: "12.5px",
-                letterSpacing: "0.18em",
-                fontFamily: "var(--font-mono), ui-monospace, monospace",
-                fontWeight: 500,
-              }}
-            >
-              {isDownloadingFreePdf
-                ? copy.freePdfBusy.toUpperCase()
-                : copy.freePdfIdle.toUpperCase()}
-            </button>
+            <form action="/api/brand-read/pdf" method="post">
+              <input type="hidden" name="url" value={currentUrl} />
+              <input type="hidden" name="language" value={locale} />
+              <input type="hidden" name="result" value={JSON.stringify(result)} />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
+                style={{
+                  borderColor: "rgba(111,224,194,0.34)",
+                  color: COLOR.text,
+                  fontSize: "12.5px",
+                  letterSpacing: "0.18em",
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontWeight: 500,
+                }}
+              >
+                {copy.freePdfIdle.toUpperCase()}
+              </button>
+            </form>
           </section>
         ) : null}
 
         {/* =================== Editorial anatomy =================== */}
         <section className="mt-20 grid gap-8 lg:grid-cols-[0.34fr_0.66fr]">
           <div>
-            <p style={metaLabel}>BRAND&nbsp;READ</p>
+            <p style={metaLabel}>{(copy.brandReadLabel ?? "BRAND READ").toUpperCase()}</p>
             <h3
               className="mt-4 leading-[1.05] tracking-[-0.02em]"
               style={{
@@ -658,14 +657,14 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 fontWeight: 500,
               }}
             >
-              The symptom is visible. The commercial cost needs naming.
+              {copy.brandReadTitle ?? "The symptom is visible. The commercial cost needs naming."}
             </h3>
             <p
               className="mt-5 max-w-md leading-7"
               style={{ color: COLOR.textSoft, fontSize: "15px" }}
             >
-              The free read surfaces the signal. The full report names what
-              it&apos;s costing you — and what to fix first.
+              {copy.brandReadBody ??
+                "The free read surfaces the signal. The full report names what it's costing you — and what to fix first."}
             </p>
           </div>
           <div
@@ -703,7 +702,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         {/* =================== How to read the scan — legend =================== */}
         <section className="mt-12 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <p style={metaLabel}>HOW&nbsp;TO&nbsp;READ&nbsp;THE&nbsp;SCAN</p>
+            <p style={metaLabel}>{(copy.scanLegendLabel ?? "HOW TO READ THE SCAN").toUpperCase()}</p>
             <h3
               className="mt-4 leading-[1.08] tracking-[-0.02em]"
               style={{
@@ -713,15 +712,14 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 color: COLOR.text,
               }}
             >
-              Five indicator tiers. Five dimensions of the signal.
+              {copy.scanLegendTitle ?? "Five indicator tiers. Five dimensions of the signal."}
             </h3>
             <p
               className="mt-5 max-w-md leading-7"
               style={{ color: COLOR.textSoft, fontSize: "14.5px" }}
             >
-              Each dimension is scored 0&ndash;100 and placed into one of five
-              tiers. The colour tells you how alive that signal is right now,
-              not just whether it is red or green.
+              {copy.scanLegendBody ??
+                "Each dimension is scored 0–100 and placed into one of five tiers. The colour tells you how alive that signal is right now."}
             </p>
           </div>
 
@@ -747,7 +745,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       fontWeight: 500,
                     }}
                   >
-                    {b.label}
+                    {copy.bandLabels?.[b.key] ?? b.label}
                   </span>
                   <span
                     style={{
@@ -766,7 +764,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   className="mt-3 leading-6"
                   style={{ color: COLOR.textSoft, fontSize: "13.5px" }}
                 >
-                  {b.blurb}
+                  {copy.bandBlurbs?.[b.key] ?? b.blurb}
                 </p>
               </div>
             ))}
@@ -934,9 +932,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             <p style={{ ...metaLabel, color: COLOR.accent }}>FIX&nbsp;STACK</p>
             <div className="mt-5 min-h-[15.5rem] space-y-4 pb-16">
               {[
-                { label: "FIX NOW", color: "#E07A5F", count: 3 },
-                { label: "FIX NEXT", color: "#E8B04C", count: 3 },
-                { label: "KEEP", color: "#6FE0C2", count: 3 },
+                { label: copy.fixNowLabel ?? "FIX NOW", color: "#E07A5F", count: 3 },
+                { label: copy.fixNextLabel ?? "FIX NEXT", color: "#E8B04C", count: 3 },
+                { label: copy.keepLabel ?? "KEEP", color: "#6FE0C2", count: 3 },
               ].map((band) => (
                 <div key={band.label} className="flex items-center gap-4">
                   <div
@@ -963,7 +961,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               className="mt-6 leading-6"
               style={{ color: COLOR.textMuted, fontSize: "13px" }}
             >
-              What to fix first, what can wait, and what is already earning trust — prioritised by commercial impact.
+            {copy.fixStackBody ??
+              "What to fix first, what can wait, and what is already earning trust — prioritised by commercial impact."}
             </p>
             <div
               className="absolute inset-x-0 bottom-0 border-t px-6 py-5 sm:px-8"
@@ -974,9 +973,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>INCLUDED&nbsp;IN&nbsp;FULL&nbsp;REPORT</p>
+                  <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>
+                    {(copy.includedInFullReport ?? "INCLUDED IN FULL REPORT").toUpperCase()}
+                  </p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
-                    Fix Now, Fix Next, and Keep — prioritized by commercial impact.
+                    {copy.fixStackIncluded ??
+                      "Fix Now, Fix Next, and Keep — prioritized by commercial impact."}
                   </p>
                   <a
                     href="https://brandmirror.app"
@@ -1019,9 +1021,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             color: COLOR.textFaint,
           }}
         >
-          <span>POWERED&nbsp;BY&nbsp;SAHAR</span>
+          <span>{(copy.poweredBy ?? "POWERED BY SAHAR").toUpperCase()}</span>
           <span>{prodCode}</span>
         </div>
+          </>
+        ) : null}
       </div>
 
       {/* Small global keyframe for the button pending dot. Kept inline so the
@@ -1061,6 +1065,8 @@ function ScannerReadout({
   scoreRows,
   isPending,
   isLive,
+  mode,
+  copy,
 }: {
   brandName: string;
   host: string;
@@ -1071,21 +1077,50 @@ function ScannerReadout({
   scoreRows: Array<{ label: string; key: string; value: number }>;
   isPending: boolean;
   isLive: boolean;
+  mode: "idle" | "ready" | "scanning" | "live";
+  copy?: any;
 }) {
+  const scannerCopy = copy?.scanner ?? {};
+  const localizedBandLabels = copy?.bandLabels ?? {};
+  const terminalLines = scannerCopy.terminal ?? [
+    "Scanning homepage copy...",
+    "Reading AI signal structure...",
+    "Mapping conversion path...",
+    "Analyzing visual hierarchy...",
+  ];
+  const labelForBand = (item: Band) => localizedBandLabels[item.key] ?? item.label;
+  const showLiveScores = mode === "live";
+  const showScanMotion = mode === "scanning";
+  const idleColor = mode === "idle" ? "#6FE0C2" : "#D8C5E0";
+  const activeBand = showLiveScores ? band : bandFor(showScanMotion ? 47 : 0);
   const pct = Math.max(0, Math.min(100, Math.round(posterScore)));
   // Semi-circle arc from (30,130) to (230,130), r=100. Arc length = π·r ≈ 314.16.
   const arcLen = Math.PI * 100;
-  const fill = (pct / 100) * arcLen;
+  const displayPct = showLiveScores ? pct : showScanMotion ? 47 : null;
+  const fill = ((displayPct ?? 18) / 100) * arcLen;
+  const displayName = showLiveScores
+    ? (brandName || "brand").toLowerCase()
+    : showScanMotion
+      ? scannerCopy.readingSignal ?? "reading signal"
+      : mode === "ready"
+        ? scannerCopy.readyToScan ?? "ready to scan"
+        : scannerCopy.firstSignal ?? "first signal";
+  const displaySubline =
+    showLiveScores || mode === "ready" || showScanMotion
+      ? host
+      : scannerCopy.enterUrl ?? "ENTER URL";
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border p-6 sm:p-8"
+      className={`brandmirror-readout-panel relative overflow-hidden rounded-2xl border p-6 sm:p-8 ${
+        mode === "idle" ? "brandmirror-readout-idle" : mode === "ready" ? "brandmirror-readout-ready" : ""
+      } ${mode === "scanning" ? "brandmirror-readout-scanning" : ""}`}
       style={{
         borderColor: COLOR.line,
         background: "rgba(255,255,255,0.015)",
       }}
     >
-      <CornerMarks color={band.color} />
+      <CornerMarks color={showLiveScores ? band.color : idleColor} />
 
       {/* Tiny status strip, reminiscent of a device readout */}
       <div
@@ -1099,10 +1134,24 @@ function ScannerReadout({
         }}
       >
         <span>
-          {isLive ? "LIVE SCAN" : "SAMPLE READOUT"}
+          {isLive
+            ? scannerCopy.liveScan ?? "LIVE SCAN"
+            : mode === "scanning"
+              ? scannerCopy.scanning ?? "SCANNING"
+              : scannerCopy.awaitingSignal ?? "AWAITING SIGNAL"}
         </span>
         <span suppressHydrationWarning>{clock}</span>
       </div>
+
+      {mode === "scanning" ? (
+        <div className="brandmirror-scan-terminal" aria-hidden>
+          {terminalLines.map((line, index) => (
+            <span key={line} style={{ animationDelay: `${index * 180}ms` }}>
+              &gt; {line}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       {/* Brand name */}
       <div className="mt-10 text-center">
@@ -1111,13 +1160,13 @@ function ScannerReadout({
           style={{
             color: COLOR.text,
             fontWeight: 500,
-            fontSize: (brandName || "").length > 20
+            fontSize: displayName.length > 20
               ? "clamp(1.6rem, 3.5vw, 2.2rem)"
               : "clamp(2.6rem, 5.5vw, 3.5rem)",
             wordBreak: "break-word",
           }}
         >
-          {(brandName || "brand").toLowerCase()}
+          {displayName}
         </div>
         <div
           className="mt-3"
@@ -1129,7 +1178,7 @@ function ScannerReadout({
             textTransform: "uppercase",
           }}
         >
-          {host}
+          {displaySubline}
         </div>
       </div>
 
@@ -1140,7 +1189,7 @@ function ScannerReadout({
           width="260"
           height="160"
           role="img"
-          aria-label={`Brand readiness ${pct} of 100, ${band.label.toLowerCase()}`}
+          aria-label={`Brand readiness ${pct} of 100, ${labelForBand(band).toLowerCase()}`}
         >
           <path
             d="M 30 130 A 100 100 0 0 1 230 130"
@@ -1152,10 +1201,11 @@ function ScannerReadout({
           <path
             d="M 30 130 A 100 100 0 0 1 230 130"
             fill="none"
-            stroke={band.color}
+            stroke={showLiveScores ? band.color : idleColor}
             strokeWidth={13}
             strokeLinecap="round"
             strokeDasharray={`${fill} ${arcLen + 100}`}
+            className={showLiveScores ? "" : "brandmirror-gauge-probe"}
             style={{ transition: "stroke-dasharray 700ms ease, stroke 700ms ease" }}
           />
           <text
@@ -1164,10 +1214,10 @@ function ScannerReadout({
             textAnchor="middle"
             fontSize="64"
             fontWeight={500}
-            fill={band.color}
+            fill={showLiveScores ? band.color : idleColor}
             style={{ fontFamily: "var(--font-sans), Inter, system-ui, sans-serif" }}
           >
-            {pct}
+            {displayPct ?? "\u2014\u2014"}
           </text>
           <text
             x="130"
@@ -1190,16 +1240,22 @@ function ScannerReadout({
             fontFamily: "var(--font-mono), ui-monospace, monospace",
             fontSize: "13px",
             letterSpacing: "0.38em",
-            color: band.color,
+            color: showLiveScores ? band.color : idleColor,
             fontWeight: 500,
           }}
         >
-          {isPending ? "SCANNING\u2026" : band.label}
+          {isPending
+            ? scannerCopy.scanningStatus ?? "SCANNING\u2026"
+            : showLiveScores
+              ? labelForBand(band)
+              : mode === "ready"
+                ? scannerCopy.ready ?? "READY"
+                : scannerCopy.awaitingSignal ?? "AWAITING SIGNAL"}
         </span>
       </div>
 
       {/* Opening verdict / pull quote */}
-      {tagline ? (
+      {showLiveScores && tagline ? (
         <p
           className="mx-auto mt-6 max-w-md text-center leading-[1.45]"
           style={{
@@ -1216,11 +1272,12 @@ function ScannerReadout({
       {/* Sub-scores */}
       <div className="mt-8">
         <div style={{ ...metaLabel, marginBottom: 12 }}>
-          SCORE&nbsp;BREAKDOWN
+          {scannerCopy.scoreBreakdown ?? "SCORE BREAKDOWN"}
         </div>
         <div className="grid gap-0">
           {scoreRows.map((row, idx) => {
-            const rowBand = bandFor(row.value);
+            const rowBand = showLiveScores ? bandFor(row.value) : activeBand;
+            const ghostWidth = showScanMotion ? `${38 + idx * 4}%` : mode === "ready" ? "24%" : "14%";
             return (
               <div
                 key={row.label}
@@ -1245,16 +1302,21 @@ function ScannerReadout({
                   {row.label}
                 </div>
                 <div
-                  className="overflow-hidden rounded-full"
+                  className={`overflow-hidden rounded-full ${
+                    showLiveScores ? "" : "brandmirror-scorebar-idle"
+                  }`}
                   style={{ height: 4, background: "rgba(255,255,255,0.07)" }}
                 >
                   <div
                     style={{
                       height: "100%",
-                      width: `${Math.max(0, Math.min(100, row.value))}%`,
+                      width: showLiveScores
+                        ? `${Math.max(0, Math.min(100, row.value))}%`
+                        : ghostWidth,
                       background: rowBand.color,
                       borderRadius: 999,
                       transition: "width 700ms ease, background 700ms ease",
+                      opacity: showLiveScores ? 1 : 0.65,
                     }}
                   />
                 </div>
@@ -1276,7 +1338,7 @@ function ScannerReadout({
                       lineHeight: 0.9,
                     }}
                   >
-                    {row.value}
+                    {showLiveScores ? row.value : "\u2014"}
                   </span>
                   <span
                     style={{
@@ -1287,7 +1349,7 @@ function ScannerReadout({
                       lineHeight: 1.1,
                     }}
                   >
-                    {rowBand.label}
+                    {showLiveScores ? labelForBand(rowBand) : ""}
                   </span>
                 </span>
               </div>
@@ -1298,10 +1360,12 @@ function ScannerReadout({
 
       {/* Band legend */}
       <div className="mt-6">
-        <div style={{ ...metaLabel, fontSize: 9.5 }}>INDICATOR&nbsp;SCALE</div>
+        <div style={{ ...metaLabel, fontSize: 9.5 }}>
+          {scannerCopy.indicatorScale ?? "INDICATOR SCALE"}
+        </div>
         <div className="mt-2 grid grid-cols-5 gap-1.5">
           {BANDS.map((item) => {
-            const active = pct >= item.lo && pct <= item.hi;
+            const active = showLiveScores && pct >= item.lo && pct <= item.hi;
             return (
               <div
                 key={item.label}
@@ -1334,7 +1398,7 @@ function ScannerReadout({
                     marginTop: 2,
                   }}
                 >
-                  {item.label}
+                  {labelForBand(item)}
                 </div>
               </div>
             );
