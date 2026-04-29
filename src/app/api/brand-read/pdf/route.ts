@@ -6,6 +6,7 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
+import { normalizeCustomerEmail } from "@/lib/customer-email";
 import {
   type BrandReadResult,
   generateBrandRead,
@@ -22,6 +23,7 @@ import {
   fullReportIncludesForLocale,
   refundLineForLocale,
 } from "@/lib/free-report-copy";
+import { sendBrandReadEmail } from "@/lib/report-email";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -464,6 +466,7 @@ async function renderBrandReadPdf(
   url: string,
   websiteCaptureDataUrl?: string,
   language: "en" | "es" | "ru" = "en",
+  fullReportUrl = "https://brandmirror.app/first-read#unlock-full-report",
 ) {
   const pdf = await PDFDocument.create();
   const sans = await pdf.embedFont(StandardFonts.Helvetica);
@@ -961,7 +964,7 @@ async function renderBrandReadPdf(
     });
     unlockY = itemY - 7;
   });
-  const linkText = "brandmirror.app";
+  const linkText = "Unlock the full report - $197";
   const linkY = teaserY + 24;
   page3.drawText("$197", {
     x: PAGE.marginX + 18,
@@ -989,7 +992,7 @@ async function renderBrandReadPdf(
     linkY - 2,
     sansBold.widthOfTextAtSize(linkText, 12.5),
     16,
-    "https://brandmirror.app",
+    fullReportUrl,
   );
   const guaranteeX = PAGE.marginX + 18 + includesColumnWidth + includesColumnGap;
   drawLabel(page3, "Guarantee", guaranteeX, teaserY + 50, COLORS.accent);
@@ -1095,6 +1098,8 @@ async function parseRequestBody(request: Request): Promise<{
   url?: string;
   language?: string;
   result?: BrandReadResult;
+  email?: string;
+  delivery?: "download" | "email";
 }> {
   const contentType = request.headers.get("content-type") || "";
 
@@ -1103,6 +1108,8 @@ async function parseRequestBody(request: Request): Promise<{
       url?: string;
       language?: string;
       result?: BrandReadResult;
+      email?: string;
+      delivery?: "download" | "email";
     };
   }
 
@@ -1116,6 +1123,8 @@ async function parseRequestBody(request: Request): Promise<{
     const rawUrl = form.get("url");
     const rawLanguage = form.get("language");
     const rawResult = form.get("result");
+    const rawEmail = form.get("email");
+    const rawDelivery = form.get("delivery");
 
     return {
       url: typeof rawUrl === "string" ? rawUrl : undefined,
@@ -1124,6 +1133,8 @@ async function parseRequestBody(request: Request): Promise<{
         typeof rawResult === "string" && rawResult.trim()
           ? (JSON.parse(rawResult) as BrandReadResult)
           : undefined,
+      email: typeof rawEmail === "string" ? rawEmail : undefined,
+      delivery: rawDelivery === "email" ? "email" : undefined,
     };
   }
 
@@ -1134,10 +1145,18 @@ export async function POST(request: Request) {
   try {
     const body = await parseRequestBody(request);
     const language = getSiteLocale(body.language);
+    const email = normalizeCustomerEmail(body.email);
     const payload =
       body.result && body.url
         ? { url: body.url, result: body.result }
         : await generateBrandRead(body.url || "", language);
+
+    const origin = new URL(request.url).origin;
+    const fullReportUrl = new URL("/first-read", origin);
+    fullReportUrl.searchParams.set("url", payload.url);
+    if (email) fullReportUrl.searchParams.set("email", email);
+    fullReportUrl.searchParams.set("lang", language);
+    fullReportUrl.hash = "unlock-full-report";
 
     const websiteCapture = await captureWebsiteSurface(payload.url).catch(() => null);
 
@@ -1146,7 +1165,35 @@ export async function POST(request: Request) {
       payload.url,
       websiteCapture?.dataUrl,
       language,
+      fullReportUrl.toString(),
     );
+
+    if (body.delivery === "email") {
+      if (!email) {
+        return Response.json(
+          {
+            error: "Email is required before sending the PDF.",
+            detail: "Enter a valid email address to receive your BrandMirror PDF.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const delivery = await sendBrandReadEmail({
+        to: email,
+        result: payload.result,
+        locale: language,
+        pdf,
+        fullReportUrl: fullReportUrl.toString(),
+      });
+
+      return Response.json({
+        ok: delivery.status !== "failed",
+        delivery,
+      }, {
+        status: delivery.status === "failed" ? 502 : 200,
+      });
+    }
 
     return new Response(new Uint8Array(pdf), {
       headers: {

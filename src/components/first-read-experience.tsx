@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { type BrandReadResult } from "@/lib/brand-read";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -180,10 +181,12 @@ const terminalText: React.CSSProperties = {
 
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
   const copy = siteI18n.siteCopy[locale].firstRead;
-  const [url, setUrl] = useState("");
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [url, setUrl] = useState(() => searchParams.get("url") || "");
+  const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [promoCode, setPromoCode] = useState("");
   const [status, setStatus] = useState<string>(copy.statusInitial);
+  const [pdfEmailStatus, setPdfEmailStatus] = useState("");
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
@@ -229,6 +232,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
 
     setError("");
+    setPdfEmailStatus("");
     setStatus(copy.statusReading);
 
     startTransition(async () => {
@@ -255,6 +259,41 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         setCurrentUrl(payload.url);
         setResult(payload.result);
         setStatus(copy.statusDone);
+
+        setPdfEmailStatus(copy.pdfEmailSending ?? "Sending your PDF to email...");
+        const pdfDeliveryResponse = await fetch("/api/brand-read/pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: payload.url,
+            language: locale,
+            result: payload.result,
+            email: checkedEmail,
+            delivery: "email",
+          }),
+        });
+        const pdfDelivery = (await pdfDeliveryResponse.json().catch(() => null)) as {
+          delivery?: { status?: string; reason?: string; error?: string };
+          detail?: string;
+          error?: string;
+        } | null;
+
+        if (!pdfDeliveryResponse.ok) {
+          setPdfEmailStatus(
+            pdfDelivery?.detail ||
+              pdfDelivery?.error ||
+              copy.pdfEmailFailed ||
+              "The report is ready, but the email could not be sent.",
+          );
+        } else if (pdfDelivery?.delivery?.status === "sent") {
+          setPdfEmailStatus(copy.pdfEmailSent ?? "PDF sent to your email.");
+        } else if (pdfDelivery?.delivery?.status === "skipped") {
+          setPdfEmailStatus(copy.pdfEmailSkipped ?? "PDF email is not configured yet; use the download button below.");
+        } else {
+          setPdfEmailStatus(copy.pdfEmailFailed ?? "The report is ready, but the email could not be sent.");
+        }
       } catch (requestError) {
         const message =
           requestError instanceof Error
@@ -671,6 +710,21 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               </p>
             ) : null}
 
+            {pdfEmailStatus ? (
+              <p
+                className="mt-4"
+                style={{
+                  color: pdfEmailStatus.toLowerCase().includes("not configured") ? COLOR.textMuted : "#6FE0C2",
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "11px",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {pdfEmailStatus}
+              </p>
+            ) : null}
+
             <div
               className="mt-8 border-t pt-6"
               style={{ borderColor: COLOR.lineSoft }}
@@ -738,6 +792,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             <form action="/api/brand-read/pdf" method="post">
               <input type="hidden" name="url" value={currentUrl} />
               <input type="hidden" name="language" value={locale} />
+              <input type="hidden" name="email" value={email} />
               <input type="hidden" name="result" value={JSON.stringify(result)} />
               <button
                 type="submit"
@@ -929,7 +984,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         />
 
         {/* =================== Locked teasers =================== */}
-        <section className="mt-12 grid gap-6 sm:grid-cols-2">
+        <section id="unlock-full-report" className="mt-12 grid gap-6 sm:grid-cols-2">
           {/* Unlock full report */}
           <div
             className="rounded-2xl border p-6 sm:p-8"
