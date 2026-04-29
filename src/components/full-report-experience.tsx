@@ -688,6 +688,17 @@ function buildPdfAlignedScorePages(report: BrandReport) {
   }));
 }
 
+function getReportFixFirst(report: BrandReport) {
+  return (
+    report.priorityFixes?.fixNow?.find((item) => item.trim().length > 0) ||
+    report.whatToDoNext ||
+    report.strategicNextMove ||
+    report.headlineCorrection?.rewrittenDirection ||
+    report.rewriteSuggestions?.heroLine ||
+    ""
+  );
+}
+
 function PdfAlignedReportSections({
   report,
   labels,
@@ -1905,7 +1916,7 @@ export function FullReportExperience({
                   ? [
                       `${previewCopy.working}: ${report.whatWorks[0] || previewCopy.premiumSignal}`,
                       `${previewCopy.broken}: ${report.whatsBroken[0] || previewCopy.trustGap}`,
-                      `${previewCopy.fixFirst}: ${report.priorityFixes.fixNow[0] || previewCopy.sharpenPromise}`,
+                      `${previewCopy.fixFirst}: ${getReportFixFirst(report) || previewCopy.sharpenPromise}`,
                     ]
                   : [
                       `${previewCopy.working}: ${previewCopy.premiumSignal}`,
