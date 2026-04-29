@@ -614,6 +614,526 @@ function ScoreDashboardBlock({
   );
 }
 
+function getCanonicalOverallScore(report: BrandReport) {
+  const scores = report.scorecard.map((item) => item.score);
+  return Math.round(
+    scores.reduce((sum, score) => sum + score, 0) / Math.max(scores.length, 1),
+  );
+}
+
+function getScoreByLabel(report: BrandReport, label: string, fallbackScore: number) {
+  return (
+    report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase()) ?? {
+      label,
+      score: fallbackScore,
+      note: "",
+    }
+  );
+}
+
+function firstSentence(text = "", fallback = "") {
+  const cleaned = (text || fallback || "").trim();
+  return cleaned.match(/[^.!?]+[.!?]/)?.[0]?.trim() || cleaned;
+}
+
+function buildPdfAlignedScorePages(report: BrandReport) {
+  const overallScore = getCanonicalOverallScore(report);
+  const aiVisibilityRead = /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
+    ? report.toneCheck
+    : [
+        report.toneCheck,
+        "AI visibility also depends on clear category nouns, metadata, schema, FAQ support, and consistent naming across the page.",
+      ].filter(Boolean).join(" ");
+
+  return [
+    {
+      label: "Positioning clarity",
+      title: "Positioning Clarity",
+      diagnosis: report.positioningRead,
+      quote: report.whatsBroken[0] || report.aboveTheFold,
+      implication: report.headlineCorrection.currentProblem,
+    },
+    {
+      label: "AI visibility",
+      title: "AI Visibility",
+      diagnosis: aiVisibilityRead,
+      quote: report.audienceMismatch[1] || aiVisibilityRead,
+      implication: report.verbalImage.firstScreenTone,
+    },
+    {
+      label: "Visual credibility",
+      title: "Visual Credibility",
+      diagnosis: report.visualIdentityRead,
+      quote: report.whatWorks[0] || report.visualIdentityRead,
+      implication: report.mixedSignals,
+    },
+    {
+      label: "Offer specificity",
+      title: "Offer Specificity",
+      diagnosis: report.aboveTheFold,
+      quote: report.namingFit.correction,
+      implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
+    },
+    {
+      label: "Conversion readiness",
+      title: "Conversion Readiness",
+      diagnosis: report.conversionRead,
+      quote: report.whyNotConverting[1] || report.conversionRead,
+      implication:
+        "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
+    },
+  ].map((item) => ({
+    ...item,
+    score: getScoreByLabel(report, item.label, overallScore),
+  }));
+}
+
+function PdfAlignedReportSections({
+  report,
+  labels,
+  locale,
+  featuredSurface,
+  heroCallout,
+  proofCallout,
+  scoreLabels,
+}: {
+  report: BrandReport;
+  labels: Record<string, string | string[]>;
+  locale: SiteLocale;
+  featuredSurface?: BrandReport["surfaceCaptures"][number];
+  heroCallout?: BrandReport["screenshotCallouts"][number];
+  proofCallout?: BrandReport["screenshotCallouts"][number];
+  scoreLabels: Record<string, string>;
+}) {
+  const copy = {
+    en: {
+      firstRead: "First read",
+      firstReadTitle: "What the company does, what it signals, and how the page lands before trust is earned",
+      firstDiagnosis: "First diagnosis",
+      currentState: "Current state",
+      measure: "What we measure",
+      measureTitle: "The five commercial signals behind the score",
+      measureIntro:
+        "The PDF is the source of truth: the same five axes, the same scores, and the same diagnosis order now drive this page.",
+      signalRead: "Signal read",
+      signalTitle: "What is missing and where the signal starts to drift",
+      surface: "Website surface",
+      surfaceTitle: "The live homepage surface behind the diagnosis",
+      axisDeepDives: "Axis deep dives",
+      axisTitle: "What each score means and what it is costing",
+      whatScoreTells: "What the score tells us",
+      revealingLine: "Revealing line",
+      whatThisMeans: "What this means",
+      benchmark: "Benchmark",
+      commercial: "Commercial impact",
+      commercialTitle: "Current signal, after the fixes, and likely commercial lift",
+      commercialNote:
+        "This is not a revenue promise. It is a directional read of what changes when the homepage becomes easier to understand, trust, recommend, and act on.",
+      currentSignal: "Current signal",
+      afterFixes: "After core fixes",
+      commercialLift: "Commercial lift",
+      competitors: "Competitor intelligence",
+      competitorsTitle: "Three peers the buyer may compare against",
+      recommendations: "Recommendations",
+      recommendationsTitle: "The highest-leverage fixes from the PDF",
+      priority: "Priority fix stack",
+      priorityTitle: "The editing order before the 30-day implementation map",
+      brief: "One page brand brief",
+      implementation: "Implementation playbook",
+      implementationTitle: "How to execute the priority stack without repeating it",
+      now: "Now",
+      next: "Next",
+      then: "Then",
+      days1: "Days 1-7",
+      days2: "Days 8-21",
+      days3: "Days 22-30",
+    },
+    es: {
+      firstRead: "Primera lectura",
+      firstReadTitle: "Qué hace la empresa, qué señala y cómo aterriza la página antes de ganar confianza",
+      firstDiagnosis: "Primer diagnóstico",
+      currentState: "Estado actual",
+      measure: "Qué medimos",
+      measureTitle: "Las cinco señales comerciales detrás de la puntuación",
+      measureIntro:
+        "El PDF es la fuente de verdad: los mismos cinco ejes, las mismas puntuaciones y el mismo orden de diagnóstico ahora controlan esta página.",
+      signalRead: "Lectura de señal",
+      signalTitle: "Qué falta y dónde empieza a desviarse la señal",
+      surface: "Superficie del sitio",
+      surfaceTitle: "La superficie real de la página principal detrás del diagnóstico",
+      axisDeepDives: "Lecturas por eje",
+      axisTitle: "Qué significa cada puntuación y qué está costando",
+      whatScoreTells: "Qué nos dice la puntuación",
+      revealingLine: "Línea reveladora",
+      whatThisMeans: "Qué significa",
+      benchmark: "Referencia",
+      commercial: "Impacto comercial",
+      commercialTitle: "Señal actual, después de los arreglos y posible mejora comercial",
+      commercialNote:
+        "No es una promesa de ingresos. Es una lectura direccional de lo que cambia cuando la página es más fácil de entender, confiar, recomendar y accionar.",
+      currentSignal: "Señal actual",
+      afterFixes: "Después de los arreglos clave",
+      commercialLift: "Mejora comercial",
+      competitors: "Inteligencia competitiva",
+      competitorsTitle: "Tres pares contra los que el comprador puede comparar",
+      recommendations: "Recomendaciones",
+      recommendationsTitle: "Los arreglos de mayor apalancamiento del PDF",
+      priority: "Pila de prioridades",
+      priorityTitle: "El orden de edición antes del mapa de implementación de 30 días",
+      brief: "Brief de marca de una página",
+      implementation: "Playbook de implementación",
+      implementationTitle: "Cómo ejecutar la pila prioritaria sin repetirla",
+      now: "Ahora",
+      next: "Después",
+      then: "Luego",
+      days1: "Días 1-7",
+      days2: "Días 8-21",
+      days3: "Días 22-30",
+    },
+    ru: {
+      firstRead: "Первое считывание",
+      firstReadTitle: "Что делает компания, что она сигналит и как страница воспринимается до появления доверия",
+      firstDiagnosis: "Первый диагноз",
+      currentState: "Текущее состояние",
+      measure: "Что мы измеряем",
+      measureTitle: "Пять коммерческих сигналов, из которых складывается оценка",
+      measureIntro:
+        "PDF теперь источник правды: те же пять осей, те же оценки и тот же порядок диагностики управляют этой страницей.",
+      signalRead: "Считывание сигнала",
+      signalTitle: "Чего не хватает и где сигнал начинает расходиться",
+      surface: "Поверхность сайта",
+      surfaceTitle: "Живая главная страница, на которой основан диагноз",
+      axisDeepDives: "Разбор по осям",
+      axisTitle: "Что означает каждая оценка и во что это обходится",
+      whatScoreTells: "Что показывает оценка",
+      revealingLine: "Показательная строка",
+      whatThisMeans: "Что это значит",
+      benchmark: "Ориентир",
+      commercial: "Коммерческий эффект",
+      commercialTitle: "Текущий сигнал, эффект после правок и вероятный коммерческий рост",
+      commercialNote:
+        "Это не обещание выручки. Это направленный разбор того, что меняется, когда главная страница становится понятнее, убедительнее, проще для рекомендации и действия.",
+      currentSignal: "Текущий сигнал",
+      afterFixes: "После ключевых правок",
+      commercialLift: "Коммерческий рост",
+      competitors: "Конкурентная разведка",
+      competitorsTitle: "Три игрока, с которыми покупатель может сравнить бренд",
+      recommendations: "Рекомендации",
+      recommendationsTitle: "Самые сильные правки из PDF",
+      priority: "Стек приоритетных правок",
+      priorityTitle: "Порядок редактирования до 30-дневной карты внедрения",
+      brief: "Бренд-бриф на одну страницу",
+      implementation: "Плейбук внедрения",
+      implementationTitle: "Как выполнить стек приоритетов без повторов",
+      now: "Сейчас",
+      next: "Дальше",
+      then: "Затем",
+      days1: "Дни 1-7",
+      days2: "Дни 8-21",
+      days3: "Дни 22-30",
+    },
+  }[locale];
+
+  const overallScore = getCanonicalOverallScore(report);
+  const scorePages = buildPdfAlignedScorePages(report);
+  const scoreAverage = scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
+  const currentSignalSummary =
+    scoreAverage < 65
+      ? "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand."
+      : scoreAverage < 78
+        ? "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough."
+        : "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.";
+  const recommendationRows = [
+    {
+      title: scoreLabels["AI visibility"] || "AI Visibility",
+      score: getScoreByLabel(report, "AI visibility", overallScore).score,
+      body:
+        "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
+      fix:
+        "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
+    },
+    {
+      title: scoreLabels["Offer specificity"] || "Offer Clarity",
+      score: getScoreByLabel(report, "Offer specificity", overallScore).score,
+      body:
+        "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
+      fix:
+        "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
+    },
+    {
+      title: scoreLabels["Conversion readiness"] || "Conversion Logic",
+      score: getScoreByLabel(report, "Conversion readiness", overallScore).score,
+      body:
+        "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
+      fix:
+        "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
+    },
+  ];
+  const sprintNow = [
+    "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
+    "Choose the primary conversion event and make the CTA explicit.",
+    "Remove vague mood copy that does not explain what is being sold.",
+  ];
+  const sprintNext = [
+    "Add exact category nouns to the H1, title tag, meta description, and schema.",
+    "Tighten section hierarchy so each block earns trust before asking for action.",
+    "Turn broad service language into 2-3 concrete use cases or deliverables.",
+  ];
+  const sprintThen = [
+    "Turn the sharpened message into service pages, proof blocks, and sales assets.",
+    "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+    "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
+  ];
+
+  return (
+    <>
+      <section className="grid gap-8 pb-10 lg:grid-cols-[0.95fr_1.05fr]">
+        <ReportSection
+          label={copy.firstRead}
+          title={copy.firstReadTitle}
+          body={report.whatItDoes}
+        />
+        <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+          <p className="section-label text-[rgba(237,237,242,0.58)]">{copy.firstDiagnosis}</p>
+          <p className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+            {report.snapshot}
+          </p>
+          <div className="editorial-rule mt-6 border-[rgba(237,237,242,0.12)] pt-6">
+            <p className="section-label text-[rgba(237,237,242,0.58)]">{copy.currentState}</p>
+            <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
+              {report.whatItSignals}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-10">
+        <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+          <p className="section-label text-[rgba(237,237,242,0.58)]">{copy.measure}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+            {copy.measureTitle}
+          </h2>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-[rgba(237,237,242,0.74)]">
+            {copy.measureIntro}
+          </p>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {scorePages.map((item) => {
+              const band = bandFor(item.score.score);
+              return (
+                <article key={item.label} className="rounded-[1.35rem] border border-[rgba(237,237,242,0.12)] bg-[rgba(237,237,242,0.045)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
+                    {scoreLabels[item.label] || item.title}
+                  </p>
+                  <p className="mt-3 font-serif text-5xl leading-none tracking-[-0.06em]" style={{ color: band.color }}>
+                    {item.score.score}
+                  </p>
+                  <p className="mt-2 text-xs leading-6 text-[rgba(237,237,242,0.68)]">
+                    {item.score.note || firstSentence(item.diagnosis)}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-8 pb-10 lg:grid-cols-2">
+        <ReportSection label={copy.signalRead} title={copy.signalTitle} body={report.whatIsMissing} />
+        <ReportSection label={labels.mixedSignalsLabel} title={labels.mixedSignalsTitle} body={report.mixedSignals} />
+      </section>
+
+      <section className="pb-10">
+        <div className="editorial-rule pt-8">
+          <p className="section-label">{copy.surface}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
+            {copy.surfaceTitle}
+          </h2>
+        </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <VisualCropCard
+            label={labels.heroFrame}
+            title={heroCallout?.title || labels.heroPromise}
+            body={heroCallout?.body || report.aboveTheFold}
+            imageUrl={featuredSurface?.imageUrl}
+            focusX={heroCallout?.x || 18}
+            focusY={heroCallout?.y || 18}
+            aspectClass="aspect-[6/5]"
+          />
+          <VisualCropCard
+            label={labels.decisionFrame}
+            title={proofCallout?.title || labels.proofCtaZone}
+            body={proofCallout?.body || report.conversionRead}
+            imageUrl={featuredSurface?.imageUrl}
+            focusX={proofCallout?.x || 62}
+            focusY={proofCallout?.y || 62}
+            aspectClass="aspect-[6/5]"
+          />
+        </div>
+      </section>
+
+      <section className="pb-10">
+        <div className="editorial-rule pt-8">
+          <p className="section-label">{copy.axisDeepDives}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
+            {copy.axisTitle}
+          </h2>
+        </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {scorePages.map((item) => {
+            const band = bandFor(item.score.score);
+            return (
+              <article key={`deep-${item.label}`} className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <div className="flex items-start justify-between gap-5">
+                  <div>
+                    <p className="section-label text-[rgba(237,237,242,0.58)]">{scoreLabels[item.label] || item.title}</p>
+                    <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+                      {copy.whatScoreTells}
+                    </h3>
+                  </div>
+                  <p className="font-serif text-6xl leading-none tracking-[-0.06em]" style={{ color: band.color }}>
+                    {item.score.score}
+                  </p>
+                </div>
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">{item.diagnosis}</p>
+                <div className="editorial-rule mt-6 grid gap-5 border-[rgba(237,237,242,0.12)] pt-6 md:grid-cols-2">
+                  <div>
+                    <p className="section-label text-[rgba(237,237,242,0.56)]">{copy.revealingLine}</p>
+                    <p className="mt-3 text-sm leading-7 text-[rgba(237,237,242,0.74)]">{firstSentence(item.quote)}</p>
+                  </div>
+                  <div>
+                    <p className="section-label text-[rgba(237,237,242,0.56)]">{copy.whatThisMeans}</p>
+                    <p className="mt-3 text-sm leading-7 text-[rgba(237,237,242,0.74)]">{item.implication}</p>
+                  </div>
+                </div>
+                <p className="mt-5 text-xs uppercase tracking-[0.18em]" style={{ color: band.color }}>
+                  {copy.benchmark}: {band.label}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-8 pb-10 lg:grid-cols-3">
+        <ReportSection label={copy.commercial} title={copy.currentSignal} body={currentSignalSummary} />
+        <ReportSection label={copy.afterFixes} title={copy.commercialTitle} body={copy.commercialNote} />
+        <ReportSection label={copy.commercialLift} title={labels.strategicTitle} body={report.strategicDirection} />
+      </section>
+
+      {report.competitiveLandscape?.competitors?.length ? (
+        <section className="pb-10">
+          <div className="editorial-rule pt-8">
+            <p className="section-label">{copy.competitors}</p>
+            <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
+              {copy.competitorsTitle}
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {report.competitiveLandscape.competitors.slice(0, 3).map((competitor) => (
+              <article key={competitor.url} className="ink-panel rounded-[1.8rem] border border-[rgba(237,237,242,0.14)] p-6">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{competitor.url.replace(/^https?:\/\//, "")}</p>
+                <h3 className="mt-4 font-serif text-3xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+                  {competitor.name}
+                </h3>
+                <p className="mt-4 text-sm leading-7 text-[rgba(237,237,242,0.72)]">
+                  {competitor.strengths[0] || competitor.snapshot}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="pb-10">
+        <div className="editorial-rule pt-8">
+          <p className="section-label">{copy.recommendations}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
+            {copy.recommendationsTitle}
+          </h2>
+        </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          {recommendationRows.map((row) => {
+            const band = bandFor(row.score);
+            return (
+              <article key={row.title} className="ink-panel rounded-[1.8rem] border border-[rgba(237,237,242,0.14)] p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="font-serif text-3xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">{row.title}</h3>
+                  <p className="font-serif text-5xl leading-none tracking-[-0.06em]" style={{ color: band.color }}>
+                    {row.score}
+                  </p>
+                </div>
+                <p className="mt-5 text-sm leading-7 text-[rgba(237,237,242,0.72)]">{row.body}</p>
+                <p className="mt-5 text-sm leading-7 text-[#F4F5F8]">{row.fix}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-8 pb-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+          <p className="section-label">{copy.priority}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+            {copy.priorityTitle}
+          </h2>
+          <div className="editorial-rule mt-6 space-y-6 border-[rgba(237,237,242,0.12)] pt-6">
+            {[
+              [labels.fixNow, report.priorityFixes.fixNow, "#E07A5F"],
+              [labels.fixNext, report.priorityFixes.fixNext, "#E8B04C"],
+              [labels.keep, report.priorityFixes.keep, "#6FE0C2"],
+            ].map(([label, items, color]) => (
+              <div key={label as string}>
+                <p className="text-sm uppercase tracking-[0.18em]" style={{ color: color as string }}>
+                  {label as string}
+                </p>
+                <div className="mt-3 space-y-3">
+                  {(items as string[]).slice(0, 2).map((item) => (
+                    <p key={item} className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">{item}</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+          <p className="section-label">{copy.brief}</p>
+          <div className="editorial-rule mt-6 space-y-5 border-[rgba(237,237,242,0.12)] pt-6">
+            <p className="text-base leading-7 text-[#F4F5F8]">{report.rewriteSuggestions.heroLine}</p>
+            <p className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">{report.rewriteSuggestions.subheadline}</p>
+            <p className="text-sm uppercase tracking-[0.18em] text-[color:var(--accent)]">{report.rewriteSuggestions.cta}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-12">
+        <div className="editorial-rule pt-8">
+          <p className="section-label">{copy.implementation}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
+            {copy.implementationTitle}
+          </h2>
+        </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          {[
+            [copy.now, copy.days1, sprintNow, "#E07A5F"],
+            [copy.next, copy.days2, sprintNext, "#E8B04C"],
+            [copy.then, copy.days3, sprintThen, "#6FE0C2"],
+          ].map(([title, days, items, color]) => (
+            <article key={title as string} className="ink-panel rounded-[1.8rem] border border-[rgba(237,237,242,0.14)] p-6">
+              <p className="section-label" style={{ color: color as string }}>{days as string}</p>
+              <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">{title as string}</h3>
+              <div className="editorial-rule mt-5 space-y-3 border-[rgba(237,237,242,0.12)] pt-5">
+                {(items as string[]).map((item) => (
+                  <p key={item} className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">{item}</p>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function FullReportExperience({
   locale,
   initialUrl = "",
@@ -1435,13 +1955,25 @@ export function FullReportExperience({
             />
 
             <ScoreDashboardBlock
-              posterScore={report.posterScore}
-              scoreBand={report.scoreBand}
+              posterScore={getCanonicalOverallScore(report)}
+              scoreBand={bandFor(getCanonicalOverallScore(report)).label}
               scoreModifier={report.scoreModifier}
               scorecard={report.scorecard}
               locale={locale}
             />
 
+            <PdfAlignedReportSections
+              report={report}
+              labels={labels}
+              locale={locale}
+              featuredSurface={featuredSurface}
+              heroCallout={heroCallout}
+              proofCallout={proofCallout}
+              scoreLabels={scoreLabels}
+            />
+
+            {false ? (
+            <>
             <section className="grid gap-10 pb-10 lg:grid-cols-[0.95fr_1.05fr]">
               <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.whatItDoes}</p>
@@ -2170,6 +2702,8 @@ export function FullReportExperience({
                 </p>
               </div>
             </section>
+            </>
+            ) : null}
           </div>
         ) : null}
       </div>
