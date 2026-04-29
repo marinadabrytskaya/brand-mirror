@@ -48,6 +48,275 @@ button {
   background: rgba(123, 154, 161, 0.22);
 }
 
+.brandmirror-scan-entry,
+.brandmirror-readout-panel,
+.brandmirror-url-field,
+.brandmirror-read-button {
+  position: relative;
+}
+
+.brandmirror-scan-entry-idle::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 42%, rgba(111, 224, 194, 0.18), transparent 26%),
+    linear-gradient(135deg, rgba(111, 224, 194, 0.13), transparent 34%, rgba(212, 196, 220, 0.08));
+  opacity: 0.36;
+  filter: blur(10px);
+  animation: brandmirrorIdleBreath 4.8s ease-in-out infinite;
+}
+
+.brandmirror-url-field {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.brandmirror-url-field-idle,
+.brandmirror-url-field-ready {
+  box-shadow:
+    0 0 0 1px rgba(111, 224, 194, 0.08),
+    0 0 24px rgba(111, 224, 194, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.brandmirror-url-field-idle::after {
+  content: "";
+  position: absolute;
+  left: 2.45rem;
+  top: 50%;
+  width: 0.55rem;
+  height: 1.18rem;
+  border-radius: 2px;
+  background: #6fe0c2;
+  box-shadow: 0 0 18px rgba(111, 224, 194, 0.85);
+  transform: translateY(-50%);
+  animation: brandmirrorCursorPulse 1.25s steps(2, start) infinite;
+  pointer-events: none;
+}
+
+.brandmirror-url-field-ready {
+  background:
+    radial-gradient(circle at left, rgba(111, 224, 194, 0.08), transparent 42%),
+    rgba(255, 255, 255, 0.024) !important;
+}
+
+.brandmirror-url-field-scanning {
+  background:
+    linear-gradient(90deg, transparent, rgba(111, 224, 194, 0.08), transparent),
+    rgba(255, 255, 255, 0.018) !important;
+  background-size: 220% 100%;
+  animation: brandmirrorScanSweep 1.35s linear infinite;
+}
+
+.brandmirror-read-button-idle {
+  box-shadow:
+    0 0 0 1px rgba(111, 224, 194, 0.2),
+    0 0 30px rgba(111, 224, 194, 0.3),
+    0 16px 42px rgba(111, 224, 194, 0.18);
+  animation: brandmirrorButtonPulse 3.4s ease-in-out infinite;
+}
+
+.brandmirror-read-button-idle:hover {
+  box-shadow:
+    0 0 0 1px rgba(111, 224, 194, 0.34),
+    0 0 44px rgba(111, 224, 194, 0.42),
+    0 18px 52px rgba(111, 224, 194, 0.22);
+}
+
+.brandmirror-readout-idle::before,
+.brandmirror-readout-ready::before,
+.brandmirror-readout-scanning::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(111, 224, 194, 0.09), transparent 25%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.018) 0,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  animation: brandmirrorReadoutNoise 6s steps(3, end) infinite;
+}
+
+.brandmirror-readout-ready::before {
+  opacity: 0.3;
+}
+
+.brandmirror-readout-scanning::before {
+  opacity: 0.38;
+  animation:
+    brandmirrorReadoutNoise 2.4s steps(3, end) infinite,
+    brandmirrorPanelPulse 1.2s ease-in-out infinite;
+}
+
+.brandmirror-scorebar-idle {
+  position: relative;
+}
+
+.brandmirror-scorebar-idle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(111, 224, 194, 0.26), transparent);
+  transform: translateX(-120%);
+  animation: brandmirrorBarProbe 3.2s ease-in-out infinite;
+}
+
+.brandmirror-gauge-probe {
+  animation: brandmirrorGaugeProbe 3.6s ease-in-out infinite;
+}
+
+.brandmirror-scan-terminal {
+  position: absolute;
+  left: 1.5rem;
+  top: 3.25rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.34rem;
+  width: min(22rem, calc(100% - 3rem));
+  padding: 1rem;
+  border: 1px solid rgba(111, 224, 194, 0.18);
+  border-radius: 0.9rem;
+  background: rgba(7, 7, 10, 0.78);
+  box-shadow: 0 0 28px rgba(111, 224, 194, 0.12);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: rgba(111, 224, 194, 0.86);
+}
+
+.brandmirror-scan-terminal span {
+  opacity: 0;
+  transform: translateY(5px);
+  animation: brandmirrorTerminalLine 720ms ease forwards;
+}
+
+@keyframes brandmirrorIdleBreath {
+  0%,
+  100% {
+    opacity: 0.26;
+    transform: scale(0.995);
+  }
+
+  50% {
+    opacity: 0.52;
+    transform: scale(1.005);
+  }
+}
+
+@keyframes brandmirrorCursorPulse {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0.18;
+  }
+}
+
+@keyframes brandmirrorButtonPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes brandmirrorScanSweep {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes brandmirrorReadoutNoise {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes brandmirrorPanelPulse {
+  0%,
+  100% {
+    opacity: 0.26;
+  }
+
+  50% {
+    opacity: 0.44;
+  }
+}
+
+@keyframes brandmirrorBarProbe {
+  0%,
+  62% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes brandmirrorGaugeProbe {
+  0%,
+  100% {
+    opacity: 0.42;
+    stroke-dashoffset: 18;
+  }
+
+  48% {
+    opacity: 0.86;
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes brandmirrorTerminalLine {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandmirror-scan-entry-idle::before,
+  .brandmirror-url-field-idle::after,
+  .brandmirror-url-field-scanning,
+  .brandmirror-read-button-idle,
+  .brandmirror-readout-idle::before,
+  .brandmirror-readout-ready::before,
+  .brandmirror-readout-scanning::before,
+  .brandmirror-gauge-probe,
+  .brandmirror-scorebar-idle::after,
+  .brandmirror-scan-terminal span {
+    animation: none !important;
+  }
+}
+
 .page-shell {
   position: relative;
   overflow: clip;
@@ -69,18 +338,18 @@ button {
 }
 
 .report-shell {
-  --background: #0a0e16;
-  --background-strong: #121826;
-  --surface: rgba(108, 130, 170, 0.14);
-  --surface-strong: rgba(14, 18, 28, 0.94);
-  --foreground: #f2f4f8;
-  --foreground-soft: rgba(217, 226, 241, 0.72);
-  --line: rgba(178, 194, 226, 0.12);
-  --line-strong: rgba(178, 194, 226, 0.24);
-  --accent: #a8bddf;
-  --accent-soft: rgba(168, 189, 223, 0.18);
+  --background: #07070a;
+  --background-strong: #090a0d;
+  --surface: rgba(111, 224, 194, 0.08);
+  --surface-strong: rgba(9, 10, 13, 0.96);
+  --foreground: #f4f5f8;
+  --foreground-soft: rgba(237, 237, 242, 0.72);
+  --line: rgba(237, 237, 242, 0.1);
+  --line-strong: rgba(111, 224, 194, 0.28);
+  --accent: #6fe0c2;
+  --accent-soft: rgba(111, 224, 194, 0.16);
   --moss: #7b9aa1;
-  --shadow: 0 34px 96px rgba(4, 7, 13, 0.44);
+  --shadow: 0 34px 110px rgba(0, 0, 0, 0.44);
 }
 
 .page-shell::before {
@@ -105,8 +374,8 @@ button {
 .report-shell::before {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.012), rgba(255, 255, 255, 0.012)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='rgba(184,201,232,0.035)' stroke-width='1'%3E%3Cpath d='M0 90h180M90 0v180'/%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.28;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='rgba(111,224,194,0.05)' stroke-width='1'%3E%3Cpath d='M0 90h180M90 0v180'/%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.32;
   mix-blend-mode: screen;
 }
 
@@ -133,7 +402,7 @@ button {
   background:
     linear-gradient(180deg, rgba(27, 24, 21, 0.94), rgba(17, 15, 13, 0.96)),
     radial-gradient(circle at top, rgba(136, 117, 77, 0.15), transparent 32%);
-  color: #f3ecdf;
+  color: #F4F5F8;
   box-shadow: 0 30px 90px rgba(16, 14, 12, 0.28);
 }
 
@@ -360,18 +629,37 @@ button {
 
 .report-shell .grain-panel {
   background:
-    linear-gradient(160deg, rgba(26, 32, 46, 0.96), rgba(13, 16, 25, 0.96)),
-    radial-gradient(circle at top right, rgba(168, 189, 223, 0.16), transparent 34%);
-  border-color: rgba(189, 203, 231, 0.12);
-  box-shadow: 0 32px 88px rgba(4, 7, 13, 0.4);
+    linear-gradient(160deg, rgba(11, 13, 18, 0.98), rgba(7, 7, 10, 0.98)),
+    radial-gradient(circle at top right, rgba(111, 224, 194, 0.12), transparent 34%);
+  border-color: rgba(111, 224, 194, 0.18);
+  box-shadow: var(--shadow);
 }
 
 .report-shell .ink-panel {
+  position: relative;
   background:
-    linear-gradient(180deg, rgba(16, 19, 29, 0.98), rgba(9, 12, 20, 0.98)),
-    radial-gradient(circle at top, rgba(168, 189, 223, 0.12), transparent 32%);
+    linear-gradient(180deg, rgba(12, 13, 17, 0.98), rgba(7, 7, 10, 0.98)),
+    radial-gradient(circle at top, rgba(111, 224, 194, 0.1), transparent 34%);
   color: #f4f5f8;
-  box-shadow: 0 36px 96px rgba(4, 7, 13, 0.46);
+  border-color: rgba(111, 224, 194, 0.18) !important;
+  box-shadow: var(--shadow);
+}
+
+.report-shell .ink-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(111, 224, 194, 0.06), transparent 18%, transparent 82%, rgba(111, 224, 194, 0.035)),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.014) 0,
+      rgba(255, 255, 255, 0.014) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  opacity: 0.3;
 }
 
 .report-shell .diagnostic-board {
@@ -432,35 +720,35 @@ button {
 
 .report-cover-card {
   background:
-    linear-gradient(180deg, rgba(12, 15, 23, 0.98), rgba(8, 10, 17, 0.98)),
-    radial-gradient(circle at top right, rgba(168, 189, 223, 0.14), transparent 30%);
+    linear-gradient(180deg, rgba(10, 11, 15, 0.98), rgba(7, 7, 10, 0.98)),
+    radial-gradient(circle at top right, rgba(111, 224, 194, 0.12), transparent 30%);
 }
 
 .report-cover-meta {
-  border-top: 1px solid rgba(243, 236, 223, 0.12);
+  border-top: 1px solid rgba(111, 224, 194, 0.12);
 }
 
 .report-story-panel {
   background:
-    linear-gradient(155deg, rgba(18, 23, 35, 0.98), rgba(10, 13, 21, 0.98)),
-    radial-gradient(circle at top right, rgba(137, 167, 201, 0.16), transparent 32%);
+    linear-gradient(155deg, rgba(12, 14, 18, 0.98), rgba(7, 7, 10, 0.98)),
+    radial-gradient(circle at top right, rgba(111, 224, 194, 0.11), transparent 32%);
 }
 
 .report-story-side {
-  border: 1px solid rgba(243, 236, 223, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(111, 224, 194, 0.14);
+  background: rgba(111, 224, 194, 0.04);
 }
 
 .report-score-shell {
   background:
-    linear-gradient(180deg, rgba(11, 14, 22, 0.98), rgba(7, 9, 15, 0.98)),
-    radial-gradient(circle at top, rgba(168, 189, 223, 0.14), transparent 34%);
+    linear-gradient(180deg, rgba(10, 11, 15, 0.98), rgba(7, 7, 10, 0.98)),
+    radial-gradient(circle at top, rgba(111, 224, 194, 0.12), transparent 34%);
 }
 
 .report-score-core {
-  border: 1px solid rgba(243, 236, 223, 0.12);
+  border: 1px solid rgba(111, 224, 194, 0.16);
   background:
-    linear-gradient(180deg, rgba(131, 151, 190, 0.18), rgba(16, 20, 31, 0.62)),
+    linear-gradient(180deg, rgba(111, 224, 194, 0.12), rgba(10, 12, 16, 0.72)),
     radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 38%);
 }
 
@@ -469,7 +757,7 @@ button {
 }
 
 .report-score-tile {
-  border: 1px solid rgba(243, 236, 223, 0.1);
+  border: 1px solid rgba(237, 237, 242, 0.1);
   background: rgba(15, 18, 26, 0.72);
 }
 

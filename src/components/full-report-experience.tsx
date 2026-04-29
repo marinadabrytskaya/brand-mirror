@@ -32,12 +32,12 @@ function ReportSection({
   body: string;
 }) {
   return (
-    <article className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-      <p className="section-label text-[rgba(243,236,223,0.58)]">{label}</p>
-      <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+    <article className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+      <p className="section-label text-[rgba(237,237,242,0.58)]">{label}</p>
+      <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
         {title}
       </h3>
-      <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+      <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
         {body}
       </p>
     </article>
@@ -54,16 +54,16 @@ function ListBlock({
   items: string[];
 }) {
   return (
-    <article className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-      <p className="section-label text-[rgba(243,236,223,0.58)]">{label}</p>
-      <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+    <article className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+      <p className="section-label text-[rgba(237,237,242,0.58)]">{label}</p>
+      <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
         {title}
       </h3>
-      <div className="editorial-rule mt-5 space-y-4 border-[rgba(243,236,223,0.12)] pt-5">
+      <div className="editorial-rule mt-5 space-y-4 border-[rgba(237,237,242,0.12)] pt-5">
         {items.map((item) => (
           <p
             key={item}
-            className="border-b border-[rgba(243,236,223,0.12)] pb-4 text-sm leading-7 text-[rgba(243,236,223,0.72)] last:border-b-0 last:pb-0"
+            className="border-b border-[rgba(237,237,242,0.12)] pb-4 text-sm leading-7 text-[rgba(237,237,242,0.72)] last:border-b-0 last:pb-0"
           >
             {item}
           </p>
@@ -114,17 +114,17 @@ function ScreenshotCallout({
       }}
     >
       <div className={`flex gap-3 ${stackClass} ${alignClass}`}>
-        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[rgba(246,239,226,0.3)] bg-[rgba(17,15,13,0.86)] text-[11px] font-medium text-[#f6efe2] shadow-[0_12px_26px_rgba(8,6,4,0.2)]">
+        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[rgba(237,237,242,0.3)] bg-[rgba(17,15,13,0.86)] text-[11px] font-medium text-[#F4F5F8] shadow-[0_12px_26px_rgba(8,6,4,0.2)]">
           0{index + 1}
         </span>
         <div className={`flex flex-col gap-2 ${alignClass}`}>
-          <span className="h-8 w-px bg-[linear-gradient(180deg,rgba(246,239,226,0.62),rgba(246,239,226,0.12))]" />
-          <div className="overflow-hidden rounded-[1rem] border border-[rgba(246,239,226,0.14)] bg-[rgba(18,16,13,0.84)] px-3 py-2.5 text-[#f6efe2] shadow-[0_18px_40px_rgba(10,8,6,0.24)] backdrop-blur-md">
-            <p className="text-[9px] uppercase tracking-[0.16em] text-[rgba(246,239,226,0.56)]">
+          <span className="h-8 w-px bg-[linear-gradient(180deg,rgba(237,237,242,0.62),rgba(237,237,242,0.12))]" />
+          <div className="overflow-hidden rounded-[1rem] border border-[rgba(237,237,242,0.14)] bg-[rgba(18,16,13,0.84)] px-3 py-2.5 text-[#F4F5F8] shadow-[0_18px_40px_rgba(10,8,6,0.24)] backdrop-blur-md">
+            <p className="text-[9px] uppercase tracking-[0.16em] text-[rgba(237,237,242,0.56)]">
               {zoneLabel}
             </p>
             <h4
-              className="mt-1.5 font-serif text-lg leading-[1.02] tracking-[-0.03em] text-[#f6efe2]"
+              className="mt-1.5 font-serif text-lg leading-[1.02] tracking-[-0.03em] text-[#F4F5F8]"
               style={{
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
@@ -135,7 +135,7 @@ function ScreenshotCallout({
               {title}
             </h4>
             <p
-              className="mt-1.5 text-[11px] leading-5 text-[rgba(246,239,226,0.74)]"
+              className="mt-1.5 text-[11px] leading-5 text-[rgba(237,237,242,0.74)]"
               style={{
                 display: "-webkit-box",
                 WebkitLineClamp: 5,
@@ -172,7 +172,7 @@ function VisualCropCard({
   clampBody?: boolean;
 }) {
   return (
-    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(243,236,223,0.14)]">
+    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(237,237,242,0.14)]">
       <div className={`${aspectClass} bg-[color:var(--background-strong)]`}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -190,12 +190,12 @@ function VisualCropCard({
         )}
       </div>
       <div className="p-5">
-        <p className="section-label text-[rgba(243,236,223,0.58)]">{label}</p>
-        <h3 className="mt-3 font-serif text-3xl leading-tight tracking-[-0.03em] text-[#f6efe2]">
+        <p className="section-label text-[rgba(237,237,242,0.58)]">{label}</p>
+        <h3 className="mt-3 font-serif text-3xl leading-tight tracking-[-0.03em] text-[#F4F5F8]">
           {title}
         </h3>
         <p
-          className="mt-3 text-sm leading-6 text-[rgba(243,236,223,0.72)]"
+          className="mt-3 text-sm leading-6 text-[rgba(237,237,242,0.72)]"
           style={
             clampBody
               ? {
@@ -230,7 +230,7 @@ function HeroRewriteMockup({
   note: string;
 }) {
   return (
-    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(243,236,223,0.14)]">
+    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(237,237,242,0.14)]">
       <div
         className="relative aspect-[5/4] overflow-hidden"
         style={{
@@ -240,21 +240,21 @@ function HeroRewriteMockup({
         }}
       >
         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(10,8,6,0.82),rgba(10,8,6,0.28)_56%,rgba(10,8,6,0.14))]" />
-        <div className="relative flex h-full flex-col justify-between p-6 text-[#f6efe2] sm:p-7">
+        <div className="relative flex h-full flex-col justify-between p-6 text-[#F4F5F8] sm:p-7">
           <div>
-            <p className="section-label text-[rgba(243,236,223,0.64)]">{eyebrow}</p>
-            <h3 className="mt-4 max-w-md font-serif text-4xl leading-[0.95] tracking-[-0.05em] text-[#f6efe2]">
+            <p className="section-label text-[rgba(237,237,242,0.64)]">{eyebrow}</p>
+            <h3 className="mt-4 max-w-md font-serif text-4xl leading-[0.95] tracking-[-0.05em] text-[#F4F5F8]">
               {headline}
             </h3>
-            <p className="mt-4 max-w-md text-sm leading-7 text-[rgba(243,236,223,0.78)]">
+            <p className="mt-4 max-w-md text-sm leading-7 text-[rgba(237,237,242,0.78)]">
               {subheadline}
             </p>
           </div>
           <div className="space-y-4">
-            <span className="inline-flex rounded-full border border-[rgba(243,236,223,0.22)] px-4 py-2 text-xs uppercase tracking-[0.18em] text-[rgba(243,236,223,0.72)]">
+            <span className="inline-flex rounded-full border border-[rgba(237,237,242,0.22)] px-4 py-2 text-xs uppercase tracking-[0.18em] text-[rgba(237,237,242,0.72)]">
               {cta}
             </span>
-            <p className="max-w-md text-sm leading-7 text-[rgba(243,236,223,0.72)]">{note}</p>
+            <p className="max-w-md text-sm leading-7 text-[rgba(237,237,242,0.72)]">{note}</p>
           </div>
         </div>
       </div>
@@ -280,7 +280,7 @@ function PosterLensCard({
   posterScore: number;
 }) {
   return (
-    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(243,236,223,0.14)]">
+    <article className="ink-panel overflow-hidden rounded-[1.8rem] border border-[rgba(237,237,242,0.14)]">
       <div
         className="relative aspect-[4/5] overflow-hidden"
         style={{
@@ -290,31 +290,31 @@ function PosterLensCard({
         }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_40%)]" />
-        <div className="absolute inset-0 flex flex-col justify-between p-6 text-[#f6efe2]">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-[rgba(243,236,223,0.62)]">
+        <div className="absolute inset-0 flex flex-col justify-between p-6 text-[#F4F5F8]">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.62)]">
             A Sahar production
           </p>
           <div>
-            <h3 className="max-w-sm font-serif text-[3.45rem] leading-[0.9] tracking-[-0.06em] text-[#f6efe2]">
+            <h3 className="max-w-sm font-serif text-[3.45rem] leading-[0.9] tracking-[-0.06em] text-[#F4F5F8]">
               {brandName}
             </h3>
-            <p className="mt-4 max-w-sm font-serif text-[1.48rem] italic leading-[1.08] text-[rgba(243,236,223,0.9)]">
+            <p className="mt-4 max-w-sm font-serif text-[1.48rem] italic leading-[1.08] text-[rgba(237,237,242,0.9)]">
               {tagline}
             </p>
-            <p className="mt-5 text-[10px] uppercase tracking-[0.26em] text-[rgba(243,236,223,0.5)]">
+            <p className="mt-5 text-[10px] uppercase tracking-[0.26em] text-[rgba(237,237,242,0.5)]">
               {genre}
             </p>
           </div>
           <div className="space-y-3">
             <div className="space-y-2">
-              <p className="text-base uppercase tracking-[0.14em] text-[rgba(243,236,223,0.92)]">
+              <p className="text-base uppercase tracking-[0.14em] text-[rgba(237,237,242,0.92)]">
                 RATED {posterScore} · {scoreBand}
               </p>
-              <p className="max-w-sm text-sm leading-6 text-[rgba(243,236,223,0.76)]">
+              <p className="max-w-sm text-sm leading-6 text-[rgba(237,237,242,0.76)]">
                 {scoreModifier}
               </p>
             </div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[rgba(243,236,223,0.54)]">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[rgba(237,237,242,0.54)]">
               brandmirror.app
             </p>
           </div>
@@ -362,10 +362,10 @@ function ReportCoverCard({
   const isLongName = brandName.length > 24;
   return (
     <section className="pb-10">
-      <div className="ink-panel report-cover-card rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-7 sm:p-10">
-        <p className="section-label text-[rgba(243,236,223,0.6)]">BrandMirror report</p>
+      <div className="ink-panel report-cover-card rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
+        <p className="section-label text-[rgba(237,237,242,0.6)]">BrandMirror report</p>
         <h2
-          className="mt-5 font-serif leading-[0.92] tracking-[-0.06em] text-[#f6efe2]"
+          className="mt-5 font-serif leading-[0.92] tracking-[-0.06em] text-[#F4F5F8]"
           style={{
             fontSize: isLongName ? "clamp(2rem, 5vw, 3.6rem)" : "clamp(3.4rem, 8vw, 6.4rem)",
             wordBreak: "break-word",
@@ -374,14 +374,14 @@ function ReportCoverCard({
           {brandName}
         </h2>
         {whatItDoes ? (
-          <p className="mt-4 max-w-3xl text-base leading-7 text-[rgba(243,236,223,0.58)]">
+          <p className="mt-4 max-w-3xl text-base leading-7 text-[rgba(237,237,242,0.58)]">
             {whatItDoes}
           </p>
         ) : null}
-        <p className="mt-6 max-w-3xl text-lg leading-8 text-[rgba(243,236,223,0.78)]">
+        <p className="mt-6 max-w-3xl text-lg leading-8 text-[rgba(237,237,242,0.78)]">
           {snapshot}
         </p>
-        <div className="report-cover-meta mt-8 flex flex-col gap-3 pt-5 text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.5)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="report-cover-meta mt-8 flex flex-col gap-3 pt-5 text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.5)] sm:flex-row sm:items-center sm:justify-between">
           <span>A diagnostic read of what the brand signals and what to fix next</span>
           <span>{reportId}</span>
         </div>
@@ -399,13 +399,13 @@ function HowWeReadBrandsBlock({
 }) {
   return (
     <section className="pb-10">
-      <div className="ink-panel report-story-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-7 sm:p-10">
+      <div className="ink-panel report-story-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
         <p className="section-label">How We Read Brands</p>
-        <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-[0.98] tracking-[-0.05em] text-[#f6efe2]">
+        <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-[0.98] tracking-[-0.05em] text-[#F4F5F8]">
           Most brand audits give you a checklist. We give you a verdict.
         </h2>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-5 text-base leading-7 text-[rgba(243,236,223,0.76)]">
+          <div className="space-y-5 text-base leading-7 text-[rgba(237,237,242,0.76)]">
             <p>
               Every brand is telling a story whether it means to or not. The
               colours, the words, the offer, the website — all of it is
@@ -423,12 +423,12 @@ function HowWeReadBrandsBlock({
           </div>
           <div className="report-story-side rounded-[1.6rem] p-5">
             <p className="section-label">The genre</p>
-            <p className="mt-4 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+            <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
               Every brand has a genre — the narrative logic an audience uses to
               make sense of it. Right now {brandName} is reading as{" "}
-              <span className="text-[#f6efe2]">{genre}</span>.
+              <span className="text-[#F4F5F8]">{genre}</span>.
             </p>
-            <div className="editorial-rule mt-5 space-y-4 border-[rgba(243,236,223,0.12)] pt-5 text-sm leading-7 text-[rgba(243,236,223,0.68)]">
+            <div className="editorial-rule mt-5 space-y-4 border-[rgba(237,237,242,0.12)] pt-5 text-sm leading-7 text-[rgba(237,237,242,0.68)]">
               <p>Positioning Clarity — can someone explain the offer without your help?</p>
               <p>AI Visibility — can AI tools find, read, and recommend your brand?</p>
               <p>Visual Credibility — does the surface match the price being asked?</p>
@@ -456,14 +456,14 @@ function ScoreDashboardBlock({
   const overallBand = bandFor(posterScore);
   return (
     <section className="pb-10">
-      <div className="ink-panel report-score-shell rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-7 sm:p-10">
-        <p className="section-label text-[rgba(243,236,223,0.6)]">Score dashboard</p>
+      <div className="ink-panel report-score-shell rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
+        <p className="section-label text-[rgba(237,237,242,0.6)]">Score dashboard</p>
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="report-score-core rounded-[1.8rem] p-8 text-center">
-            <p className="font-serif text-[clamp(4rem,10vw,6.4rem)] leading-none tracking-[-0.07em] text-[#f6efe2]">
+            <p className="font-serif text-[clamp(4rem,10vw,6.4rem)] leading-none tracking-[-0.07em] text-[#F4F5F8]">
               {posterScore}/100
             </p>
-            <p className="mt-4 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+            <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
               Overall brand readiness
             </p>
             <p
@@ -472,19 +472,19 @@ function ScoreDashboardBlock({
             >
               {scoreBand}
             </p>
-            <p className="mt-4 font-serif text-2xl italic leading-tight text-[rgba(243,236,223,0.92)]">
+            <p className="mt-4 font-serif text-2xl italic leading-tight text-[rgba(237,237,242,0.92)]">
               {scoreModifier}
             </p>
           </div>
           <div className="flex flex-col justify-between gap-5">
             <div>
-              <p className="section-label text-[rgba(243,236,223,0.56)]">What the scores reveal</p>
-              <h3 className="mt-4 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] text-[#f6efe2]">
+              <p className="section-label text-[rgba(237,237,242,0.56)]">What the scores reveal</p>
+              <h3 className="mt-4 max-w-xl font-serif text-4xl leading-[0.98] tracking-[-0.04em] text-[#F4F5F8]">
                 {scoreModifier}
               </h3>
             </div>
-            <div className="editorial-rule border-[rgba(243,236,223,0.12)] pt-5">
-              <p className="max-w-xl text-sm leading-7 text-[rgba(243,236,223,0.7)]">
+            <div className="editorial-rule border-[rgba(237,237,242,0.12)] pt-5">
+              <p className="max-w-xl text-sm leading-7 text-[rgba(237,237,242,0.7)]">
                 Each axis is scored 0–100 across five tiers: Flatlining, Fragile, Developing, Stable, and Leading. The colour of each score reflects which tier that signal currently sits in.
               </p>
             </div>
@@ -502,7 +502,7 @@ function ScoreDashboardBlock({
                   background: `${band.color}12`,
                 }}
               >
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(243,236,223,0.56)]">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
                   {row.label}
                 </p>
                 <p
@@ -514,7 +514,7 @@ function ScoreDashboardBlock({
                 <p className="mt-1 text-[9.5px] uppercase tracking-[0.18em]" style={{ color: band.color, opacity: 0.7 }}>
                   {band.label}
                 </p>
-                <p className="mt-2 text-xs leading-6 text-[rgba(243,236,223,0.68)]">
+                <p className="mt-2 text-xs leading-6 text-[rgba(237,237,242,0.68)]">
                   {row.note}
                 </p>
               </div>
@@ -529,8 +529,6 @@ function ScoreDashboardBlock({
 export function FullReportExperience({
   locale,
   initialUrl = "",
-  paymentRequired = false,
-  paymentUnlocked = false,
   paymentSessionId = null,
   accessError = "",
 }: {
@@ -731,7 +729,7 @@ export function FullReportExperience({
   const [url, setUrl] = useState(searchParams.get("url") || initialUrl || "");
   const [report, setReport] = useState<BrandReport | null>(null);
   const [status, setStatus] = useState<string>(copy.statusInitial);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(accessError);
   const [isPending, startTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -753,7 +751,12 @@ export function FullReportExperience({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: targetUrl, language: locale }),
+          body: JSON.stringify({
+            url: targetUrl,
+            language: locale,
+            reference: searchParams.get("reference") || undefined,
+            sessionId: searchParams.get("session_id") || paymentSessionId || undefined,
+          }),
         });
 
         const payload = (await response.json()) as ReportResponse | ErrorResponse;
@@ -921,7 +924,7 @@ export function FullReportExperience({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#06110E] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[#84efd4] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isPending ? copy.submitBusy : copy.submitIdle}
                 </button>
@@ -930,7 +933,7 @@ export function FullReportExperience({
                 </p>
               </div>
               {error ? (
-                <p className="mt-4 text-sm leading-6 text-[#8a4339]">{error}</p>
+                <p className="mt-4 text-sm leading-6 text-[#F2495C]">{error}</p>
               ) : null}
             </div>
           </form>
@@ -1017,13 +1020,13 @@ export function FullReportExperience({
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={!report || isDownloading}
-                className="inline-flex items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-6 py-3 text-sm font-medium text-[#151b28] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[rgba(244,247,252,0.98)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#06110E] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[#84efd4] disabled:cursor-not-allowed disabled:opacity-60"
               >
                   {isDownloading ? copy.downloadBusy : copy.downloadIdle}
               </button>
               <Link
                 href={siteI18n.withLang("/sample-report", locale)}
-                className="inline-flex items-center justify-center rounded-full border border-[rgba(243,236,223,0.18)] px-6 py-3 text-sm font-medium text-[#f6efe2] hover:bg-[rgba(255,255,255,0.06)]"
+                className="inline-flex items-center justify-center rounded-full border border-[rgba(111,224,194,0.28)] px-6 py-3 font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#F4F5F8] hover:bg-[rgba(111,224,194,0.08)]"
               >
                 {copy.sampleCta}
               </Link>
@@ -1056,31 +1059,31 @@ export function FullReportExperience({
             />
 
             <section className="grid gap-10 pb-10 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.whatItDoes}</p>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.72)]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.whatItDoes}</p>
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.72)]">
                   {report.whatItDoes}
                 </p>
-                <div className="editorial-rule mt-6 border-[rgba(243,236,223,0.12)] pt-6">
-                  <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.snapshot}</p>
-                  <p className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+                <div className="editorial-rule mt-6 border-[rgba(237,237,242,0.12)] pt-6">
+                  <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.snapshot}</p>
+                  <p className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                     {report.snapshot}
                   </p>
-                  <p className="mt-6 text-base leading-7 text-[rgba(243,236,223,0.72)]">
+                  <p className="mt-6 text-base leading-7 text-[rgba(237,237,242,0.72)]">
                     {report.url}
                   </p>
                 </div>
               </div>
 
-              <div className="ink-panel grid gap-5 rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 pt-8 sm:p-8">
+              <div className="ink-panel grid gap-5 rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 pt-8 sm:p-8">
                 {report.scorecard.map((row) => {
                   const band = bandFor(row.score);
                   return (
                     <div
                       key={row.label}
-                      className="grid gap-3 border-b border-[rgba(243,236,223,0.12)] pb-5 sm:grid-cols-[1fr_4.5rem_1fr]"
+                      className="grid gap-3 border-b border-[rgba(237,237,242,0.12)] pb-5 sm:grid-cols-[1fr_4.5rem_1fr]"
                     >
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                         {scoreLabels[row.label] || row.label}
                       </p>
                       <p
@@ -1089,7 +1092,7 @@ export function FullReportExperience({
                       >
                         {row.score}
                       </p>
-                      <p className="text-sm leading-6 text-[rgba(243,236,223,0.72)]">
+                      <p className="text-sm leading-6 text-[rgba(237,237,242,0.72)]">
                         {row.note}
                       </p>
                     </div>
@@ -1169,24 +1172,24 @@ export function FullReportExperience({
                 title={labels.fixTitle}
                 items={report.priorityFixes.fixNow}
               />
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.audienceRead}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.audienceRead}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   {labels.audienceTitle}
                 </h2>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.audienceRead.primaryAudience}
                 </p>
-                <div className="editorial-rule mt-6 space-y-6 border-[rgba(243,236,223,0.12)] pt-6">
+                <div className="editorial-rule mt-6 space-y-6 border-[rgba(237,237,242,0.12)] pt-6">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                    <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                       {labels.tone}
                     </p>
                     <div className="mt-3 space-y-3">
                       {report.toneOfVoice.map((item) => (
                         <p
                           key={`tone-${item}`}
-                          className="border-b border-[rgba(243,236,223,0.12)] pb-3 text-sm leading-7 text-[rgba(243,236,223,0.72)] last:border-b-0 last:pb-0"
+                          className="border-b border-[rgba(237,237,242,0.12)] pb-3 text-sm leading-7 text-[rgba(237,237,242,0.72)] last:border-b-0 last:pb-0"
                         >
                           {item}
                         </p>
@@ -1201,14 +1204,14 @@ export function FullReportExperience({
                     ] as Array<[string, string[]]>
                   ).map(([heading, items]) => (
                     <div key={heading}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                         {heading}
                       </p>
                       <div className="mt-3 space-y-3">
                         {items.map((item) => (
                           <p
                             key={item}
-                            className="border-b border-[rgba(243,236,223,0.12)] pb-3 text-sm leading-7 text-[rgba(243,236,223,0.72)] last:border-b-0 last:pb-0"
+                            className="border-b border-[rgba(237,237,242,0.12)] pb-3 text-sm leading-7 text-[rgba(237,237,242,0.72)] last:border-b-0 last:pb-0"
                           >
                             {item}
                           </p>
@@ -1221,14 +1224,14 @@ export function FullReportExperience({
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">
                   {labels.strategic}
                 </p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   {labels.strategicTitle}
                 </h2>
-                <p className="mt-5 max-w-3xl text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 max-w-3xl text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.strategicDirection}
                 </p>
               </div>
@@ -1242,33 +1245,33 @@ export function FullReportExperience({
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.archetype}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.archetype}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   {report.archetypeRead.primary} with a secondary pull toward {report.archetypeRead.secondary}
                 </h2>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.archetypeRead.rationale}
                 </p>
               </div>
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">Brand myth</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">Brand myth</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   The legend this brand is already trying to tell
                 </h2>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.brandMyth}
                 </p>
               </div>
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.verbalImage}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.verbalImage}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   What the name, hero line, and first-screen tone are teaching people to expect
                 </h2>
-                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
                     ["Name signal", report.verbalImage.nameSignal],
                     ["Headline signal", report.verbalImage.headlineSignal],
@@ -1276,10 +1279,10 @@ export function FullReportExperience({
                     ["Risk", report.verbalImage.risk],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                         {label}
                       </p>
-                      <p className="mt-3 text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                      <p className="mt-3 text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                         {value}
                       </p>
                     </div>
@@ -1295,12 +1298,12 @@ export function FullReportExperience({
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.namingFit}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.namingFit}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   Whether the name is helping the sale or making the homepage do extra work
                 </h2>
-                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
                     ["Verdict", report.namingFit.verdict],
                     ["Role match", report.namingFit.roleMatch],
@@ -1308,10 +1311,10 @@ export function FullReportExperience({
                     ["Correction", report.namingFit.correction],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                         {label}
                       </p>
-                      <p className="mt-3 text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                      <p className="mt-3 text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                         {value}
                       </p>
                     </div>
@@ -1319,22 +1322,22 @@ export function FullReportExperience({
                 </div>
               </div>
 
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">{labels.headlineCorrection}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">{labels.headlineCorrection}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   How the first line has to change to close the gap faster
                 </h2>
-                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
                     ["Current problem", report.headlineCorrection.currentProblem],
                     ["Correction logic", report.headlineCorrection.correctionLogic],
                     ["Rewritten direction", report.headlineCorrection.rewrittenDirection],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.56)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
                         {label}
                       </p>
-                      <p className="mt-3 text-sm leading-7 text-[rgba(243,236,223,0.76)]">
+                      <p className="mt-3 text-sm leading-7 text-[rgba(237,237,242,0.76)]">
                         {value}
                       </p>
                     </div>
@@ -1349,25 +1352,25 @@ export function FullReportExperience({
                 title="The answer to ‘what is this brand actually known for?’"
                 body={report.brandKnownFor}
               />
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.58)]">{labels.industryFit}</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.58)]">{labels.industryFit}</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   Category expectation versus the role this brand is trying to play
                 </h2>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   Expected archetype: {report.industryFit.expectedArchetype}
                 </p>
-                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
-                  <p className="text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
+                  <p className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                     {report.industryFit.assessment}
                   </p>
-                  <p className="text-sm leading-7 text-[#f6efe2]">
+                  <p className="text-sm leading-7 text-[#F4F5F8]">
                     {report.industryFit.leverage}
                   </p>
                   {report.expectationGap.map((item) => (
                     <p
                       key={item}
-                      className="border-b border-[rgba(243,236,223,0.12)] pb-4 text-sm leading-7 text-[rgba(243,236,223,0.72)] last:border-b-0 last:pb-0"
+                      className="border-b border-[rgba(237,237,242,0.12)] pb-4 text-sm leading-7 text-[rgba(237,237,242,0.72)] last:border-b-0 last:pb-0"
                     >
                       {item}
                     </p>
@@ -1388,13 +1391,13 @@ export function FullReportExperience({
                 {report.aestheticDirections.map((direction) => (
                   <article
                     key={direction.name}
-                    className="ink-panel rounded-[1.8rem] border border-[rgba(243,236,223,0.14)] p-6"
+                    className="ink-panel rounded-[1.8rem] border border-[rgba(237,237,242,0.14)] p-6"
                   >
-                    <p className="section-label text-[rgba(243,236,223,0.58)]">Direction</p>
-                    <h3 className="mt-4 font-serif text-3xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+                    <p className="section-label text-[rgba(237,237,242,0.58)]">Direction</p>
+                    <h3 className="mt-4 font-serif text-3xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                       {direction.name}
                     </h3>
-                    <p className="mt-4 text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                    <p className="mt-4 text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                       {direction.note}
                     </p>
                   </article>
@@ -1528,15 +1531,15 @@ export function FullReportExperience({
                   scoreModifier={report.scoreModifier}
                   posterScore={report.posterScore}
                 />
-	                <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-	                  <p className="section-label text-[rgba(243,236,223,0.58)]">Direction cues</p>
-	                  <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+	                <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+	                  <p className="section-label text-[rgba(237,237,242,0.58)]">Direction cues</p>
+	                  <h3 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
 	                    What the next iteration should borrow and what it should avoid
 	                  </h3>
-	                  <p className="mt-4 text-base leading-7 text-[rgba(243,236,223,0.72)]">
+	                  <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.72)]">
 	                    {report.brandMyth}
 	                  </p>
-	                  <div className="editorial-rule mt-6 space-y-6 border-[rgba(243,236,223,0.12)] pt-6">
+	                  <div className="editorial-rule mt-6 space-y-6 border-[rgba(237,237,242,0.12)] pt-6">
                     <MoodboardChipGroup label="Palette" items={report.visualCodes.palette} />
                     <MoodboardChipGroup label="Textures" items={report.visualCodes.textures} />
                     <MoodboardChipGroup label="Symbols" items={report.visualCodes.symbols} />
@@ -1570,15 +1573,15 @@ export function FullReportExperience({
 
               {featuredSurface ? (
                 <div className="mt-8">
-	                  <div className="ink-panel overflow-hidden rounded-[2rem] border border-[rgba(243,236,223,0.14)]">
-	                    <div className="border-b border-[rgba(243,236,223,0.12)] px-5 py-4 sm:px-6">
+	                  <div className="ink-panel overflow-hidden rounded-[2rem] border border-[rgba(237,237,242,0.14)]">
+	                    <div className="border-b border-[rgba(237,237,242,0.12)] px-5 py-4 sm:px-6">
                       <SurfaceMethodLabel />
                       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-	                          <h3 className="font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+	                          <h3 className="font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
 	                            {featuredSurface.label}
 	                          </h3>
-	                          <p className="mt-3 max-w-2xl text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+	                          <p className="mt-3 max-w-2xl text-sm leading-7 text-[rgba(237,237,242,0.72)]">
 	                            {featuredSurface.note}
 	                          </p>
                         </div>
@@ -1595,7 +1598,7 @@ export function FullReportExperience({
                       </div>
                     </div>
                     <div className="bg-[color:var(--background-strong)] p-3 sm:p-4">
-	                      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] border border-[rgba(243,236,223,0.12)] bg-[linear-gradient(180deg,#1d2433,#0f141e)] shadow-[0_20px_60px_rgba(4,7,13,0.34)]">
+	                      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] border border-[rgba(237,237,242,0.12)] bg-[linear-gradient(180deg,#1d2433,#0f141e)] shadow-[0_20px_60px_rgba(4,7,13,0.34)]">
                         {featuredSurface.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1652,11 +1655,11 @@ export function FullReportExperience({
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">
                   Mixed signals
                 </p>
-                <p className="mt-5 text-base leading-7 text-[rgba(243,236,223,0.74)]">
+                <p className="mt-5 text-base leading-7 text-[rgba(237,237,242,0.74)]">
                   {report.mixedSignals}
                 </p>
               </div>
@@ -1699,9 +1702,9 @@ export function FullReportExperience({
             </section>
 
             <section className="grid gap-8 pb-10 lg:grid-cols-2">
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
                 <p className="section-label">Priority fix stack</p>
-                <div className="editorial-rule mt-5 space-y-5 border-[rgba(243,236,223,0.12)] pt-5">
+                <div className="editorial-rule mt-5 space-y-5 border-[rgba(237,237,242,0.12)] pt-5">
                   {(
                     [
                       ["Fix now", report.priorityFixes.fixNow, "#E07A5F"],
@@ -1718,7 +1721,7 @@ export function FullReportExperience({
                       </p>
                       <div className="mt-3 space-y-3">
                         {(items as string[]).map((item) => (
-                          <p key={item} className="text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                          <p key={item} className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                             {item}
                           </p>
                         ))}
@@ -1728,8 +1731,8 @@ export function FullReportExperience({
                 </div>
               </div>
 
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">
                   Rewrite suggestions
                 </p>
                 <div className="editorial-rule mt-5 space-y-5 pt-5">
@@ -1739,10 +1742,10 @@ export function FullReportExperience({
                     ["CTA", report.rewriteSuggestions.cta],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.58)]">
+                      <p className="text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.58)]">
                         {label}
                       </p>
-                      <p className="mt-3 text-base leading-7 text-[rgba(243,236,223,0.78)]">
+                      <p className="mt-3 text-base leading-7 text-[rgba(237,237,242,0.78)]">
                         {value}
                       </p>
                     </div>
@@ -1757,18 +1760,18 @@ export function FullReportExperience({
                 title="Your roadmap for the next 30 days"
                 items={report.actionPlan.next30Days}
               />
-              <div className="ink-panel rounded-[2rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8">
-                <p className="section-label text-[rgba(243,236,223,0.6)]">What comes next</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+              <div className="ink-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-6 sm:p-8">
+                <p className="section-label text-[rgba(237,237,242,0.6)]">What comes next</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   Three ways to use this diagnosis
                 </h2>
-                <div className="editorial-rule mt-6 space-y-4 border-[rgba(243,236,223,0.12)] pt-6">
+                <div className="editorial-rule mt-6 space-y-4 border-[rgba(237,237,242,0.12)] pt-6">
                   {[
                     "Do it yourself — use the fix stack and action plan as your roadmap.",
                     "BrandMirror Reviewed — guided walkthrough of the diagnosis and next moves.",
                     "Work with Sahar — turn the diagnosis into a full brand and website rebuild.",
                   ].map((item) => (
-                    <p key={item} className="text-sm leading-7 text-[rgba(243,236,223,0.72)]">
+                    <p key={item} className="text-sm leading-7 text-[rgba(237,237,242,0.72)]">
                       {item}
                     </p>
                   ))}
@@ -1779,10 +1782,10 @@ export function FullReportExperience({
             <section className="pb-12">
               <div className="editorial-rule pt-8">
                 <p className="section-label">Strategic continuation</p>
-                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#f6efe2]">
+                <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#F4F5F8]">
                   What this strategy should extend into next
                 </h2>
-                <p className="mt-5 max-w-3xl text-base leading-7 text-[rgba(243,236,223,0.72)]">
+                <p className="mt-5 max-w-3xl text-base leading-7 text-[rgba(237,237,242,0.72)]">
                   {report.strategicNextMove}
                 </p>
               </div>

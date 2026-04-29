@@ -154,7 +154,15 @@ export function scoreConsequence(key: DimensionKey, score: number) {
     : "The positioning is clear enough to build trust and sharpen.";
 }
 
-export function buildScopeLine(scanLabel: string) {
+export function buildScopeLine(scanLabel: string, locale: "en" | "es" | "ru" = "en") {
+  if (locale === "es") {
+    return `Análisis realizado: ${scanLabel} | Alcance: texto de la página principal, visibilidad en IA, jerarquía visual, claridad de la oferta y camino de conversión.`;
+  }
+
+  if (locale === "ru") {
+    return `Скан проведён: ${scanLabel} | Охват: текст главной страницы, видимость в ИИ, визуальная иерархия, ясность предложения и путь к действию.`;
+  }
+
   return `Scan conducted: ${scanLabel} | Scope: homepage copy, AI visibility, visual hierarchy, offer clarity, conversion path.`;
 }
 

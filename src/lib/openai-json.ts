@@ -56,16 +56,25 @@ function toOpenAIError(status: number, detail: string) {
   );
 }
 
-function extractOutputText(payload: any) {
-  if (typeof payload?.output_text === "string" && payload.output_text.trim()) {
+type OpenAITextPayload = {
+  output_text?: unknown;
+  output?: Array<{
+    content?: Array<{
+      text?: unknown;
+    }>;
+  }>;
+};
+
+function extractOutputText(payload: OpenAITextPayload) {
+  if (typeof payload.output_text === "string" && payload.output_text.trim()) {
     return payload.output_text;
   }
 
   const fragments: string[] = [];
 
-  for (const item of payload?.output || []) {
-    for (const content of item?.content || []) {
-      if (typeof content?.text === "string") {
+  for (const item of payload.output || []) {
+    for (const content of item.content || []) {
+      if (typeof content.text === "string") {
         fragments.push(content.text);
       }
     }

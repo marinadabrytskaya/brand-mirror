@@ -28,7 +28,7 @@ export function withLang(href: string, locale: SiteLocale) {
 export const siteCopy = {
   en: {
     landing: {
-      brandPowered: "Powered by Sahar",
+      brandPowered: "Created by SAHAR",
       navHow: "How it works",
       navOffer: "Offer",
       navSample: "Sample report",
@@ -231,6 +231,12 @@ export const siteCopy = {
         "Enter your URL. BrandMirror reads what buyers feel before they decide to leave.",
       websiteUrl: "Website URL",
       urlPlaceholder: "yourbrand.com",
+      emailLabel: "Email for report",
+      emailPlaceholder: "you@example.com",
+      emailRequired: "Enter a valid email address to receive the report.",
+      checkoutCta: "Unlock — $197",
+      checkoutBusy: "Opening checkout...",
+      checkoutError: "Unable to open checkout right now.",
       submitIdle: "\u25B6 READ THE SIGNAL",
       submitBusy: "Reading brand...",
       statusInitial: "Enter a URL to begin",
@@ -383,7 +389,7 @@ export const siteCopy = {
   },
   es: {
     landing: {
-      brandPowered: "Powered by Sahar",
+      brandPowered: "Creado por SAHAR",
       navHow: "Cómo funciona",
       navOffer: "Oferta",
       navSample: "Reporte de muestra",
@@ -573,6 +579,12 @@ export const siteCopy = {
         "La capa gratuita muestra qué está funcionando, qué está rompiendo la confianza y dónde el mensaje empieza a perder al comprador. El reporte completo se abre solo después del pago.",
       websiteUrl: "URL del sitio web",
       urlPlaceholder: "tu-marca.com",
+      emailLabel: "Email para recibir el reporte",
+      emailPlaceholder: "tu@email.com",
+      emailRequired: "Introduce un email válido para recibir el reporte.",
+      checkoutCta: "Desbloquear — $197",
+      checkoutBusy: "Abriendo checkout...",
+      checkoutError: "No pudimos abrir el checkout ahora.",
       submitIdle: "Lee mi marca",
       submitBusy: "Leyendo marca...",
       statusInitial: "Ingresa un sitio web para generar la primera lectura.",
@@ -723,7 +735,7 @@ export const siteCopy = {
   },
   ru: {
     landing: {
-      brandPowered: "Powered by Sahar",
+      brandPowered: "Создано SAHAR",
       navHow: "Как это работает",
       navOffer: "Оффер",
       navSample: "Пример отчёта",
@@ -913,6 +925,12 @@ export const siteCopy = {
         "Бесплатный слой показывает, что работает, что ломает доверие и где сообщение начинает терять покупателя. Полный отчёт открывается только после оплаты.",
       websiteUrl: "URL сайта",
       urlPlaceholder: "yourbrand.com",
+      emailLabel: "Email для отчёта",
+      emailPlaceholder: "you@example.com",
+      emailRequired: "Введите корректный email, чтобы получить отчёт.",
+      checkoutCta: "Открыть — $197",
+      checkoutBusy: "Открываю оплату...",
+      checkoutError: "Не удалось открыть оплату прямо сейчас.",
       submitIdle: "Прочитать мой бренд",
       submitBusy: "Читаю бренд...",
       statusInitial: "Введите сайт, чтобы сгенерировать first read.",

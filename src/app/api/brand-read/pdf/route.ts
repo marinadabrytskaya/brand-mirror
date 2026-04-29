@@ -848,7 +848,7 @@ async function renderBrandReadPdf(
   });
 
   const page3 = addPage();
-  let y3 = PAGE.height - PAGE.marginY;
+  const y3 = PAGE.height - PAGE.marginY;
   drawLabel(page3, "BrandMirror / Free First Read", PAGE.marginX, y3);
   page3.drawText(safeUrl, {
     x: PAGE.width - PAGE.marginX - sans.widthOfTextAtSize(safeUrl, 10),

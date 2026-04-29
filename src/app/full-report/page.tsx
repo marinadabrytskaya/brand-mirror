@@ -4,6 +4,7 @@ import { normalizeUrl } from "@/lib/brand-read";
 import { FullReportExperience } from "@/components/full-report-experience";
 import { getSiteLocale, siteCopy, type SiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
+import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
 
 export const metadata: Metadata = {
   title: "Full Report",
@@ -40,10 +41,28 @@ export default async function FullReportPage({
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
     : params.session_id;
+  const reference = Array.isArray(params.reference)
+    ? params.reference[0]
+    : params.reference;
   let paidAccess = null;
   let accessError = "";
 
-  if (isStripeConfigured() && sessionId) {
+  if (isPaystackConfigured() && reference) {
+    try {
+      paidAccess = await getPaystackCheckoutAccess(reference);
+      if (!paidAccess) {
+        accessError =
+          siteCopy[locale].fullReport.paymentVerifyError ||
+          "We couldn't verify payment for this report.";
+      }
+    } catch (error) {
+      accessError =
+        error instanceof Error
+          ? error.message
+          : siteCopy[locale].fullReport.paymentVerifyError ||
+            "We couldn't verify payment for this report.";
+    }
+  } else if (isStripeConfigured() && sessionId) {
     try {
       paidAccess = await getPaidCheckoutAccess(sessionId);
       if (!paidAccess) {
@@ -65,9 +84,15 @@ export default async function FullReportPage({
       <FullReportExperience
         locale={locale}
         initialUrl={paidAccess?.reportUrl || requestedUrl || ""}
-        paymentRequired={isStripeConfigured()}
+        paymentRequired={isPaystackConfigured() || isStripeConfigured()}
         paymentUnlocked={Boolean(paidAccess)}
-        paymentSessionId={paidAccess?.sessionId || null}
+        paymentSessionId={
+          paidAccess && "sessionId" in paidAccess
+            ? paidAccess.sessionId
+            : paidAccess && "reference" in paidAccess
+              ? paidAccess.reference
+              : null
+        }
         accessError={accessError}
       />
     </Suspense>

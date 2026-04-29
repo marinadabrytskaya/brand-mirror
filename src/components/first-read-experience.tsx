@@ -7,6 +7,7 @@ import { type BrandReadResult } from "@/lib/brand-read";
 import { bandFor, type Band, BANDS, DIMENSIONS } from "@/lib/score-band";
 import LanguageSwitcher from "@/components/language-switcher";
 import siteI18n from "@/lib/site-i18n";
+import { normalizeCustomerEmail } from "@/lib/customer-email";
 import {
   buildBrandReadParagraphs,
   buildExpandedSignal,
@@ -30,6 +31,15 @@ type ErrorResponse = {
   error?: string;
   detail?: string;
 };
+
+type CheckoutResponse = {
+  ok: boolean;
+  checkoutUrl?: string;
+  error?: string;
+  detail?: string;
+};
+
+type FirstReadCopy = (typeof siteI18n.siteCopy)[SiteLocale]["firstRead"];
 
 // ---------------------------------------------------------------------------
 // Scanner taxonomy lives in src/lib/score-band.ts. This component only imports
@@ -171,11 +181,13 @@ const terminalText: React.CSSProperties = {
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
   const copy = siteI18n.siteCopy[locale].firstRead;
   const [url, setUrl] = useState("");
+  const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string>(copy.statusInitial);
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
   const [isTestingFullPdf, setIsTestingFullPdf] = useState(false);
+  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [clock, setClock] = useState<string>(() => formatLocalClock());
@@ -206,6 +218,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       return;
     }
 
+    const checkedEmail = normalizeCustomerEmail(email);
+    if (!checkedEmail) {
+      setError(copy.emailRequired ?? "Enter a valid email address to receive the report.");
+      setStatus("");
+      return;
+    }
+
     setError("");
     setStatus(copy.statusReading);
 
@@ -216,7 +235,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: checkedUrl.url, language: locale }),
+          body: JSON.stringify({ url: checkedUrl.url, language: locale, email: checkedEmail }),
         });
 
         const payload = (await response.json()) as ReadResponse | ErrorResponse;
@@ -274,11 +293,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     return copy.scanner?.enterUrl ?? "ENTER URL";
   })();
 
-  const reportHref = siteI18n.withLang(
-    `/full-report${reportSourceUrl ? `?url=${encodeURIComponent(reportSourceUrl)}` : ""}`,
-    locale,
-  );
-
   async function downloadPdfFromResponse(response: Response, filename: string) {
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
@@ -324,9 +338,57 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
   }
 
+  async function handleOpenCheckout() {
+    const checkedUrl = normalizeUrl(reportSourceUrl);
+    if (!checkedUrl.ok) {
+      setError(copy.invalidUrl);
+      return;
+    }
+
+    const checkedEmail = normalizeCustomerEmail(email);
+    if (!checkedEmail) {
+      setError(copy.emailRequired ?? "Enter a valid email address to receive the report.");
+      return;
+    }
+
+    setError("");
+    setIsOpeningCheckout(true);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: checkedUrl.url,
+          language: locale,
+          email: checkedEmail,
+        }),
+      });
+
+      const payload = (await response.json()) as CheckoutResponse;
+      if (!response.ok || !payload.checkoutUrl) {
+        throw new Error(
+          payload.detail || payload.error || copy.checkoutError || "Unable to open checkout right now.",
+        );
+      }
+
+      window.location.href = payload.checkoutUrl;
+    } catch (checkoutError) {
+      setError(
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : copy.checkoutError || "Unable to open checkout right now.",
+      );
+    } finally {
+      setIsOpeningCheckout(false);
+    }
+  }
+
   return (
     <main
-      className="min-h-screen"
+      className="page-shell report-shell min-h-screen"
       style={{
         background: COLOR.bg,
         color: COLOR.text,
@@ -494,6 +556,52 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             >
               {normalizedPreviewUrl.ok ? copy.statusReady : copy.startHelper}
             </p>
+
+            <label
+              htmlFor="customer-email"
+              className="mt-5 block"
+              style={{ ...metaLabel, letterSpacing: "0.24em" }}
+            >
+              {(copy.emailLabel ?? "Email for report").toUpperCase()}
+            </label>
+
+            <div
+              className="mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5"
+              style={{
+                borderColor: normalizeCustomerEmail(email)
+                  ? "rgba(111,224,194,0.55)"
+                  : "rgba(255,255,255,0.16)",
+                background: "rgba(255,255,255,0.018)",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  color: "#D4C4DC",
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "13px",
+                }}
+              >
+                @
+              </span>
+              <input
+                id="customer-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder={copy.emailPlaceholder ?? "you@example.com"}
+                className="min-w-0 flex-1 bg-transparent outline-none"
+                style={{
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "15px",
+                  color: COLOR.text,
+                  caretColor: "#6FE0C2",
+                  letterSpacing: "0.01em",
+                }}
+              />
+            </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
@@ -889,9 +997,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   >
                     brandmirror.app
                   </a>
-                  <Link
-                    href={reportHref}
-                    className="inline-flex items-center justify-center rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                  <button
+                    type="button"
+                    onClick={handleOpenCheckout}
+                    disabled={isOpeningCheckout}
+                    className="inline-flex items-center justify-center rounded-full border px-4 py-2 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
                     style={{
                       ...metaLabel,
                       fontSize: "10px",
@@ -899,8 +1009,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       color: COLOR.text,
                     }}
                   >
-                    UNLOCK&nbsp;&mdash;&nbsp;$197
-                  </Link>
+                    {isOpeningCheckout
+                      ? (copy.checkoutBusy ?? "Opening checkout...").toUpperCase()
+                      : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197").toUpperCase()}
+                  </button>
                 </div>
                 {currentUrl ? (
                   <button
@@ -995,9 +1107,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     brandmirror.app
                   </a>
                 </div>
-                <Link
-                  href={reportHref}
-                  className="shrink-0 rounded-full border px-4 py-2 transition hover:bg-white/[0.04]"
+                <button
+                  type="button"
+                  onClick={handleOpenCheckout}
+                  disabled={isOpeningCheckout}
+                  className="shrink-0 rounded-full border px-4 py-2 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     ...metaLabel,
                     fontSize: "10px",
@@ -1005,8 +1119,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     color: COLOR.text,
                   }}
                 >
-                  UNLOCK&nbsp;&mdash;&nbsp;$197
-                </Link>
+                  {isOpeningCheckout
+                    ? (copy.checkoutBusy ?? "Opening checkout...").toUpperCase()
+                    : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197").toUpperCase()}
+                </button>
               </div>
             </div>
           </div>
@@ -1078,7 +1194,7 @@ function ScannerReadout({
   isPending: boolean;
   isLive: boolean;
   mode: "idle" | "ready" | "scanning" | "live";
-  copy?: any;
+  copy?: FirstReadCopy;
 }) {
   const scannerCopy = copy?.scanner ?? {};
   const localizedBandLabels = copy?.bandLabels ?? {};

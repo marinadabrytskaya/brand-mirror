@@ -61,7 +61,7 @@ export const BANDS: readonly Band[] = [
   {
     key: "leading",
     label: "LEADING",
-    color: "#2FDCA0",
+    color: "#D8C5E0",
     lo: 85,
     hi: 100,
     blurb: "It sells. The page does the hard work before the copy has to explain.",

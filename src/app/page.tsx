@@ -115,6 +115,17 @@ function HeroLiveScan({ cta }: { cta: string }) {
   );
 }
 
+function ScanCornerMarks() {
+  return (
+    <>
+      <span className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute right-3 top-3 h-3 w-3 border-r border-t border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute bottom-3 left-3 h-3 w-3 border-b border-l border-[#6FE0C2]/70" />
+      <span className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-[#6FE0C2]/70" />
+    </>
+  );
+}
+
 function SectionHeading({
   label,
   title,
@@ -292,26 +303,27 @@ export default async function Home({
             />
           </div>
 
-          <div className="ink-panel rounded-[2.25rem] border border-[rgba(243,236,223,0.14)] p-6 sm:p-8 lg:p-10">
-            <p className="section-label text-[rgba(243,236,223,0.56)]">
+          <div className="relative overflow-hidden rounded-[2.25rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] p-6 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
+            <ScanCornerMarks />
+            <p className="section-label text-[rgba(111,224,194,0.78)]">
               {copy.fullReport.cardLabel}
             </p>
             <div className="editorial-rule mt-6 space-y-4 pt-6">
               {copy.fullReport.items.map((item) => (
                 <div
                   key={item}
-                  className="flex items-center justify-between gap-6 border-b border-[rgba(243,236,223,0.12)] pb-4 last:border-b-0 last:pb-0"
+                  className="flex items-center justify-between gap-6 border-b border-[rgba(111,224,194,0.12)] pb-4 last:border-b-0 last:pb-0"
                 >
-                  <p className="text-sm uppercase tracking-[0.18em] text-[rgba(243,236,223,0.7)]">
+                  <p className="text-sm uppercase tracking-[0.18em] text-[rgba(244,245,248,0.76)]">
                     {item}
                   </p>
-                  <span className="text-xs uppercase tracking-[0.22em] text-[rgba(243,236,223,0.48)]">
+                  <span className="text-xs uppercase tracking-[0.22em] text-[rgba(111,224,194,0.72)]">
                     {copy.fullReport.included}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="editorial-rule mt-8 grid gap-4 pt-5 text-sm text-[rgba(243,236,223,0.7)] sm:grid-cols-2">
+            <div className="editorial-rule mt-8 grid gap-4 pt-5 text-sm text-[rgba(237,237,242,0.64)] sm:grid-cols-2">
               {copy.fullReport.notes.map((item) => (
                 <p key={item}>{item}</p>
               ))}
@@ -358,7 +370,7 @@ export default async function Home({
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href={siteI18n.withLang("/first-read", locale)}
-              className="inline-flex items-center justify-center rounded-full bg-[color:var(--foreground)] px-6 py-3 text-sm font-medium text-[#f6f0e6] hover:-translate-y-0.5 hover:bg-[#24201c]"
+              className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 text-sm font-semibold text-[#06110E] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[#84efd4]"
             >
               {copy.offers.primaryCta}
             </Link>
@@ -377,30 +389,31 @@ export default async function Home({
 
       <section className="px-6 pb-16 pt-10 sm:px-8 lg:px-12 lg:pb-24">
         <div className="mx-auto max-w-7xl">
-          <div className="ink-panel rounded-[2.3rem] border border-[rgba(243,236,223,0.14)] px-6 py-10 sm:px-8 lg:px-12 lg:py-14">
-            <p className="section-label text-[rgba(243,236,223,0.6)]">
+          <div className="relative overflow-hidden rounded-[2.3rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] px-6 py-10 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:px-8 lg:px-12 lg:py-14">
+            <ScanCornerMarks />
+            <p className="section-label text-[rgba(111,224,194,0.78)]">
               {copy.final.label}
             </p>
             <div className="mt-4 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
               <div>
-                <h2 className="font-serif text-4xl leading-[1.02] tracking-[-0.04em] text-[#f6efe2] sm:text-5xl lg:text-6xl">
+                <h2 className="font-serif text-4xl leading-[1.02] tracking-[-0.04em] text-[#F4F5F8] sm:text-5xl lg:text-6xl">
                   {copy.final.title}
                 </h2>
               </div>
               <div>
-                <p className="text-base leading-7 text-[rgba(243,236,223,0.72)]">
+                <p className="text-base leading-7 text-[rgba(237,237,242,0.72)]">
                   {copy.final.body}
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href={siteI18n.withLang("/first-read", locale)}
-                    className="inline-flex items-center justify-center rounded-full bg-[#f6efe2] px-6 py-3 text-sm font-medium text-[#1b1815] hover:-translate-y-0.5"
+                    className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 text-sm font-semibold text-[#06110E] hover:-translate-y-0.5 hover:bg-[#84efd4]"
                   >
                     {copy.final.primaryCta}
                   </Link>
                   <Link
                     href={siteI18n.withLang("/sample-report", locale)}
-                    className="inline-flex items-center justify-center rounded-full border border-[rgba(243,236,223,0.24)] px-6 py-3 text-sm font-medium text-[#f6efe2] hover:bg-[rgba(255,255,255,0.06)]"
+                    className="inline-flex items-center justify-center rounded-full border border-[rgba(111,224,194,0.28)] px-6 py-3 text-sm font-medium text-[#F4F5F8] hover:bg-[rgba(111,224,194,0.08)]"
                   >
                     {copy.final.secondaryCta}
                   </Link>
