@@ -34,6 +34,17 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run build
 ```
 
+## Promo Codes
+
+Promo codes are configured with `PROMO_CODES`:
+
+```bash
+PROMO_CODES="PARTNER100:100,BD30:30"
+```
+
+`100` opens the paid report with a signed promo unlock token. Lower percentages
+apply a Paystack discount before checkout.
+
 ## Product Direction
 
 Core tagline: `See what your brand is actually saying.`

@@ -182,6 +182,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const copy = siteI18n.siteCopy[locale].firstRead;
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [status, setStatus] = useState<string>(copy.statusInitial);
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
@@ -364,6 +365,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           url: checkedUrl.url,
           language: locale,
           email: checkedEmail,
+          promoCode: promoCode.trim() || undefined,
         }),
       });
 
@@ -544,6 +546,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 }}
               />
             </div>
+
             <p
               className="mt-2"
               style={{
@@ -982,6 +985,49 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 </p>
               </div>
               <div className="mt-8 flex flex-col gap-3">
+                <label
+                  htmlFor="promo-code"
+                  style={{ ...metaLabel, letterSpacing: "0.24em" }}
+                >
+                  {(copy.promoLabel ?? "Promo code").toUpperCase()}
+                </label>
+                <div
+                  className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+                  style={{
+                    borderColor: promoCode.trim()
+                      ? "rgba(212,196,220,0.48)"
+                      : "rgba(255,255,255,0.16)",
+                    background: "rgba(255,255,255,0.018)",
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      color: "#D4C4DC",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "13px",
+                    }}
+                  >
+                    %
+                  </span>
+                  <input
+                    id="promo-code"
+                    name="promoCode"
+                    type="text"
+                    autoComplete="off"
+                    value={promoCode}
+                    onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
+                    placeholder={copy.promoPlaceholder ?? "OPTIONAL"}
+                    className="min-w-0 flex-1 bg-transparent uppercase outline-none"
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "15px",
+                      color: COLOR.text,
+                      caretColor: "#D4C4DC",
+                      letterSpacing: "0.06em",
+                    }}
+                  />
+                </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <a
                     href="https://brandmirror.app"

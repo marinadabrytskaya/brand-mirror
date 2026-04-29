@@ -5,6 +5,7 @@ import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
 import { getStoredPaidReport, savePaidReport } from "@/lib/supabase";
 import { isReportEmailConfigured, sendBrandReportEmail } from "@/lib/report-email";
+import { verifyPromoToken } from "@/lib/promo";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -16,8 +17,10 @@ export async function POST(request: Request) {
       language?: string;
       sessionId?: string;
       reference?: string;
+      promoToken?: string;
     };
     const language = getSiteLocale(body.language);
+    const promoAccess = verifyPromoToken(body.promoToken);
     const paystackAccess = isPaystackConfigured()
       ? await getPaystackCheckoutAccess(body.reference)
       : null;
@@ -25,7 +28,7 @@ export async function POST(request: Request) {
       !paystackAccess && isStripeConfigured()
         ? await getPaidCheckoutAccess(body.sessionId)
         : null;
-    const paidAccess = paystackAccess || stripeAccess;
+    const paidAccess = paystackAccess || stripeAccess || promoAccess;
 
     if ((isPaystackConfigured() || isStripeConfigured()) && !paidAccess) {
       return NextResponse.json(
@@ -37,8 +40,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const provider = paystackAccess ? "paystack" : stripeAccess ? "stripe" : null;
-    const paymentReference = paystackAccess?.reference || stripeAccess?.sessionId || null;
+    const provider = paystackAccess ? "paystack" : stripeAccess ? "stripe" : promoAccess ? "promo" : null;
+    const paymentReference =
+      paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
     const paidEmail = paidAccess?.customerEmail || null;
     const paidLocale = paidAccess?.locale || language;
 

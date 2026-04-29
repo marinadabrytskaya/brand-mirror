@@ -5,7 +5,7 @@ import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { getSiteLocale, type SiteLocale } from "@/lib/site-i18n";
 
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
-const REPORT_PRICE_ZAR_CENTS = 3_700_00;
+export const REPORT_PRICE_ZAR_CENTS = 3_700_00;
 
 type PaystackInitializeResponse = {
   status: boolean;
@@ -35,6 +35,8 @@ type PaystackVerifyResponse = {
       locale?: string;
       product?: string;
       customer_email?: string;
+      promo_code?: string;
+      discount_percent?: number;
       report_url?: string;
     };
   };
@@ -93,11 +95,17 @@ export async function createPaystackCheckout({
   reportUrl,
   locale,
   email,
+  amount,
+  promoCode,
+  discountPercent,
 }: {
   origin: string;
   reportUrl: string;
   locale: SiteLocale;
   email: string;
+  amount?: number;
+  promoCode?: string | null;
+  discountPercent?: number | null;
 }) {
   const normalizedUrl = normalizeUrl(reportUrl);
   if (!normalizedUrl) {
@@ -113,7 +121,7 @@ export async function createPaystackCheckout({
   const payload = await paystackFetch<PaystackInitializeResponse>("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
-      amount: REPORT_PRICE_ZAR_CENTS,
+      amount: amount ?? REPORT_PRICE_ZAR_CENTS,
       email: normalizedEmail,
       currency: "ZAR",
       reference,
@@ -123,6 +131,8 @@ export async function createPaystackCheckout({
         product: "brandmirror_full_report",
         display_price: "$197",
         customer_email: normalizedEmail,
+        promo_code: promoCode || undefined,
+        discount_percent: discountPercent || undefined,
         report_url: normalizedUrl,
       },
     }),

@@ -5,6 +5,7 @@ import { FullReportExperience } from "@/components/full-report-experience";
 import { getSiteLocale, siteCopy, type SiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
+import { verifyPromoToken } from "@/lib/promo";
 
 export const metadata: Metadata = {
   title: "Full Report",
@@ -44,10 +45,21 @@ export default async function FullReportPage({
   const reference = Array.isArray(params.reference)
     ? params.reference[0]
     : params.reference;
+  const promoToken = Array.isArray(params.promo_token)
+    ? params.promo_token[0]
+    : params.promo_token;
   let paidAccess = null;
   let accessError = "";
 
-  if (isPaystackConfigured() && reference) {
+  const promoAccess = verifyPromoToken(promoToken);
+
+  if (promoAccess) {
+    paidAccess = promoAccess;
+  } else if (promoToken) {
+    accessError =
+      siteCopy[locale].fullReport.paymentVerifyError ||
+      "We couldn't verify payment for this report.";
+  } else if (isPaystackConfigured() && reference) {
     try {
       paidAccess = await getPaystackCheckoutAccess(reference);
       if (!paidAccess) {

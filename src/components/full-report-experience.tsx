@@ -756,6 +756,7 @@ export function FullReportExperience({
             language: locale,
             reference: searchParams.get("reference") || undefined,
             sessionId: searchParams.get("session_id") || paymentSessionId || undefined,
+            promoToken: searchParams.get("promo_token") || undefined,
           }),
         });
 

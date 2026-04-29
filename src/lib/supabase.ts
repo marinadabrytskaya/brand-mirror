@@ -116,7 +116,7 @@ export async function savePaidReport({
   email: string;
   url: string;
   locale: SiteLocale;
-  provider: "paystack" | "stripe";
+  provider: "paystack" | "stripe" | "promo";
   paymentReference: string;
   amountTotal: number | null;
   currency: string | null;
