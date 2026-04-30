@@ -2428,11 +2428,163 @@ function buildManualCompetitiveLandscape(report: BrandReport): CompetitiveLandsc
   };
 }
 
+const TECHNICAL_AEO_PATTERN =
+  /\b(aeo|technical audit|technical layer|technical blocker|technical blockers|llms\.txt|robots\.txt|sitemap|schema|structured data|metadata|meta description|meta descriptions|crawler|crawlers|crawlable|ai-readable|machine-readable|localbusiness|organization schema|faq|gpt|claude|chatgpt|gemini|perplexity|google ai overviews)\b/i;
+
+function splitSentences(text: string) {
+  return normalizeWhitespace(text)
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+}
+
+function isTechnicalAeoText(text: string) {
+  return TECHNICAL_AEO_PATTERN.test(text);
+}
+
+function cleanNarrativeAeoLeaks(text: string, fallback: string, maxLength: number) {
+  const normalized = normalizeWhitespace(text || "");
+  if (!normalized) {
+    return truncate(normalizeWhitespace(fallback || ""), maxLength);
+  }
+
+  if (!isTechnicalAeoText(normalized)) {
+    return truncate(normalized, maxLength);
+  }
+
+  const cleaned = splitSentences(normalized)
+    .filter((sentence) => !isTechnicalAeoText(sentence))
+    .join(" ");
+
+  if (cleaned) {
+    return truncate(cleaned, maxLength);
+  }
+
+  const fallbackText = normalizeWhitespace(fallback || "");
+  if (fallbackText && !isTechnicalAeoText(fallbackText)) {
+    return truncate(fallbackText, maxLength);
+  }
+
+  return truncate(
+    "The brand needs clearer public language, stronger proof, and a more explicit path so buyers understand what to choose and why now.",
+    maxLength,
+  );
+}
+
+function collectTechnicalAeoFindings(values: unknown[]) {
+  const findings: string[] = [];
+
+  const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      for (const sentence of splitSentences(value)) {
+        if (isTechnicalAeoText(sentence)) {
+          findings.push(sentence);
+        }
+      }
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+
+    if (value && typeof value === "object") {
+      Object.values(value).forEach(visit);
+    }
+  };
+
+  values.forEach(visit);
+  return Array.from(new Set(findings.map((item) => truncate(item, 220))));
+}
+
+function technicalAeoFixesFromFindings(findings: string[]) {
+  if (!findings.length) return [];
+
+  const text = findings.join(" ").toLowerCase();
+  const fixes: string[] = [];
+
+  if (/metadata|meta description|title tag|category nouns?/.test(text)) {
+    fixes.push(
+      "Developer fix: tighten the title tag, meta description, H1, and visible category nouns so AI summaries can name the offer without guessing.",
+    );
+  }
+
+  if (/schema|structured data|localbusiness|organization schema/.test(text)) {
+    fixes.push(
+      "Developer fix: add or clean Organization/LocalBusiness schema and keep the business name, category, services, and URL consistent with the page copy.",
+    );
+  }
+
+  if (/llms\.txt/.test(text)) {
+    fixes.push(
+      "Developer fix: consider adding an llms.txt file that points AI tools to the homepage, core service pages, FAQs, and strongest proof pages.",
+    );
+  }
+
+  if (/crawler|crawlers|crawlable|robots\.txt|sitemap|blocked|access/.test(text)) {
+    fixes.push(
+      "Developer fix: check robots.txt, sitemap, canonical URLs, and crawler access so search and AI systems can reach the important pages.",
+    );
+  }
+
+  if (/faq|answer sections?/.test(text)) {
+    fixes.push(
+      "Developer fix: add concise FAQ or answer sections that explain who the offer is for, what is included, how it works, and what result to expect.",
+    );
+  }
+
+  if (!fixes.length) {
+    fixes.push(
+      "Developer fix: make the page easier for AI systems to read by clarifying category language, service names, proof, and the main next step.",
+    );
+  }
+
+  return fixes;
+}
+
+function appendUniqueTruncated(
+  current: string[],
+  additions: string[],
+  maxItems: number,
+  maxLength: number,
+) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const item of [...current, ...additions]) {
+    const cleaned = truncate(normalizeWhitespace(item), maxLength);
+    const key = cleaned.toLowerCase();
+    if (!cleaned || seen.has(key)) continue;
+    seen.add(key);
+    result.push(cleaned);
+    if (result.length >= maxItems) break;
+  }
+
+  return result;
+}
+
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
 
-  return {
+  const technicalAeoFindings = collectTechnicalAeoFindings([
+    raw.toneCheck,
+    raw.positioningRead,
+    raw.visualIdentityRead,
+    raw.aboveTheFold,
+    raw.conversionRead,
+    raw.strategicDirection,
+    raw.snapshot,
+    raw.mixedSignals,
+    raw.brandMyth,
+    raw.whatIsMissing,
+    raw.whatToDoNext,
+    raw.scorecard,
+  ]);
+  const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings);
+
+  const normalized: BrandReport = {
     url: fallback.url,
     brandName: truncate(normalizeWhitespace(raw.brandName || fallback.brandName), 80),
     visualWorld: fallback.visualWorld,
@@ -2443,13 +2595,14 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
     scoreBand: truncate(normalizeWhitespace(raw.scoreBand || fallback.scoreBand), 72),
     scoreModifier: truncate(normalizeWhitespace(raw.scoreModifier || fallback.scoreModifier), 180),
     whatItDoes: truncate(normalizeWhitespace(raw.whatItDoes || fallback.whatItDoes), 280),
-    snapshot: truncate(
-      normalizeWhitespace(raw.snapshot || fallback.snapshot),
+    snapshot: cleanNarrativeAeoLeaks(
+      raw.snapshot || fallback.snapshot,
+      fallback.snapshot,
       520,
     ),
-    whatItSignals: truncate(normalizeWhitespace(raw.whatItSignals || fallback.whatItSignals), 900),
-    whatIsMissing: truncate(normalizeWhitespace(raw.whatIsMissing || fallback.whatIsMissing), 900),
-    whatToDoNext: truncate(normalizeWhitespace(raw.whatToDoNext || fallback.whatToDoNext), 900),
+    whatItSignals: cleanNarrativeAeoLeaks(raw.whatItSignals || fallback.whatItSignals, fallback.whatItSignals, 900),
+    whatIsMissing: cleanNarrativeAeoLeaks(raw.whatIsMissing || fallback.whatIsMissing, fallback.whatIsMissing, 900),
+    whatToDoNext: cleanNarrativeAeoLeaks(raw.whatToDoNext || fallback.whatToDoNext, fallback.whatToDoNext, 900),
     whatToAmplify: truncate(normalizeWhitespace(raw.whatToAmplify || fallback.whatToAmplify), 760),
     whatToDrop: truncate(normalizeWhitespace(raw.whatToDrop || fallback.whatToDrop), 760),
     surfaceCaptures:
@@ -2519,33 +2672,40 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
         70,
       ),
       note:
-        truncate(
-          normalizeWhitespace(item.note || fallback.scorecard[index]?.note || ""),
+        cleanNarrativeAeoLeaks(
+          item.note || fallback.scorecard[index]?.note || "",
+          fallback.scorecard[index]?.note || "",
           160,
         ) || fallback.scorecard[index]?.note || "",
     })),
-    positioningRead: truncate(
-      normalizeWhitespace(raw.positioningRead || fallback.positioningRead),
+    positioningRead: cleanNarrativeAeoLeaks(
+      raw.positioningRead || fallback.positioningRead,
+      fallback.positioningRead,
       900,
     ),
-    toneCheck: truncate(
-      normalizeWhitespace(raw.toneCheck || fallback.toneCheck),
+    toneCheck: cleanNarrativeAeoLeaks(
+      raw.toneCheck || fallback.toneCheck,
+      fallback.toneCheck,
       900,
     ),
-    visualIdentityRead: truncate(
-      normalizeWhitespace(raw.visualIdentityRead || fallback.visualIdentityRead),
+    visualIdentityRead: cleanNarrativeAeoLeaks(
+      raw.visualIdentityRead || fallback.visualIdentityRead,
+      fallback.visualIdentityRead,
       900,
     ),
-    aboveTheFold: truncate(
-      normalizeWhitespace(raw.aboveTheFold || fallback.aboveTheFold),
+    aboveTheFold: cleanNarrativeAeoLeaks(
+      raw.aboveTheFold || fallback.aboveTheFold,
+      fallback.aboveTheFold,
       900,
     ),
-    conversionRead: truncate(
-      normalizeWhitespace(raw.conversionRead || fallback.conversionRead),
+    conversionRead: cleanNarrativeAeoLeaks(
+      raw.conversionRead || fallback.conversionRead,
+      fallback.conversionRead,
       900,
     ),
-    strategicDirection: truncate(
-      normalizeWhitespace(raw.strategicDirection || fallback.strategicDirection),
+    strategicDirection: cleanNarrativeAeoLeaks(
+      raw.strategicDirection || fallback.strategicDirection,
+      fallback.strategicDirection,
       900,
     ),
     archetypeRead: {
@@ -2797,8 +2957,9 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
       normalizeWhitespace(raw.brandMyth || fallback.brandMyth),
       320,
     ),
-    mixedSignals: truncate(
-      normalizeWhitespace(raw.mixedSignals || fallback.mixedSignals),
+    mixedSignals: cleanNarrativeAeoLeaks(
+      raw.mixedSignals || fallback.mixedSignals,
+      fallback.mixedSignals,
       900,
     ),
     frictionMap:
@@ -2842,9 +3003,12 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
           : fallback.priorityFixes.fixNow,
       fixNext:
         raw.priorityFixes?.fixNext?.length
-          ? raw.priorityFixes.fixNext
-              .map((item) => truncate(normalizeWhitespace(item), 180))
-              .slice(0, 4)
+          ? appendUniqueTruncated(
+              routedTechnicalFixes,
+              raw.priorityFixes.fixNext,
+              4,
+              180,
+            )
           : fallback.priorityFixes.fixNext,
       keep:
         raw.priorityFixes?.keep?.length
@@ -2991,9 +3155,12 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
     actionPlan: {
       next7Days:
         raw.actionPlan?.next7Days?.length
-          ? raw.actionPlan.next7Days
-              .map((item) => truncate(normalizeWhitespace(item), 190))
-              .slice(0, 4)
+          ? appendUniqueTruncated(
+              routedTechnicalFixes,
+              raw.actionPlan.next7Days,
+              4,
+              190,
+            )
           : fallback.actionPlan.next7Days,
       next30Days:
         raw.actionPlan?.next30Days?.length
@@ -3002,11 +3169,32 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
               .slice(0, 4)
           : fallback.actionPlan.next30Days,
     },
-    strategicNextMove: truncate(
-      normalizeWhitespace(raw.strategicNextMove || fallback.strategicNextMove),
+    strategicNextMove: cleanNarrativeAeoLeaks(
+      raw.strategicNextMove || fallback.strategicNextMove,
+      fallback.strategicNextMove,
       300,
     ),
   };
+
+  if (routedTechnicalFixes.length && !raw.priorityFixes?.fixNext?.length) {
+    normalized.priorityFixes.fixNext = appendUniqueTruncated(
+      routedTechnicalFixes,
+      normalized.priorityFixes.fixNext,
+      4,
+      180,
+    );
+  }
+
+  if (routedTechnicalFixes.length && !raw.actionPlan?.next7Days?.length) {
+    normalized.actionPlan.next7Days = appendUniqueTruncated(
+      routedTechnicalFixes,
+      normalized.actionPlan.next7Days,
+      4,
+      190,
+    );
+  }
+
+  return normalized;
 }
 
 async function requestGeminiBrandReport(
@@ -3040,6 +3228,9 @@ Important rules:
 - If a sentence sounds like a memo, rewrite it until it sounds like an observation a smart person would actually say aloud.
 - A good line should make the reader feel seen, slightly exposed, and clear on what to do next.
 - The writing should move like this: attention -> interest -> trust -> action.
+- Keep the diagnosis editorial and founder-facing. Do not put raw technical AEO terms such as schema, metadata, crawler access, robots.txt, sitemap, llms.txt, structured data, or LocalBusiness inside snapshot, positioningRead, toneCheck, visualIdentityRead, aboveTheFold, conversionRead, strategicDirection, mixedSignals, brandMyth, or strategicNextMove.
+- Technical AEO findings are useful, but they belong only inside concrete action fields: priorityFixes.fixNext, actionPlan.next7Days, messagingPriorities, or offerStrategy. Phrase them as tasks someone can hand to a developer.
+- When writing a technical AEO task, be concrete: title tag, meta description, H1/category nouns, Organization/LocalBusiness schema, FAQ sections, robots.txt, sitemap, crawler access, and llms.txt are allowed there.
 - Match descriptive vocabulary to the brand's actual category. This matters for every prose field.
   - For financial, investment, legal, advisory, consulting, or B2B-service brands: use discipline, rigor, conviction, judgment, authority, restraint, fluency. Do NOT use performance, athletic, physical, driven, muscular, or kinetic language.
   - For performance, sport, outdoor, or athletic brands: use drive, pressure, stamina, physicality. Do NOT use clinical, advisory, or academic vocabulary.
