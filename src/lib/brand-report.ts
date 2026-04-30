@@ -385,6 +385,48 @@ function truncate(value = "", maxLength = 300) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
 }
 
+const POSTER_TAGLINE_FALLBACK = "A brand in search of a sharper signal.";
+
+const POSTER_TAGLINE_FORBIDDEN_PATTERNS = [
+  /\b(ai|aeo|seo|schema|metadata|crawler|robots\.txt|sitemap|llms\.txt|prompt|scrap(?:e|ing)|framework|archetype|diagnosis|audit|strategy|positioning|conversion|cta)\b/i,
+  /unlock your potential/i,
+  /transform your future/i,
+  /where dreams come true/i,
+  /elevate your brand/i,
+  /next level/i,
+  /game[- ]changer/i,
+  /cutting edge/i,
+  /revolutioni[sz]e/i,
+  /\b(broken|bad|weak|fails?|embarrass(?:ing)?|generic|bullshit)\b/i,
+];
+
+function countWords(value = "") {
+  return normalizeWhitespace(value)
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function isUsablePosterTagline(value = "") {
+  const text = normalizeWhitespace(value);
+  const words = countWords(text);
+
+  if (!/[A-Za-zА-Яа-яЁёÁÉÍÓÚÜÑáéíóúüñ]/.test(text)) return false;
+  if (words < 5 || words > 14) return false;
+  if (text.length > 120) return false;
+
+  return !POSTER_TAGLINE_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function cleanPosterTagline(value = "", fallback = POSTER_TAGLINE_FALLBACK) {
+  const text = truncate(normalizeWhitespace(value), 120);
+  if (isUsablePosterTagline(text)) return text;
+
+  const fallbackText = truncate(normalizeWhitespace(fallback), 120);
+  if (isUsablePosterTagline(fallbackText)) return fallbackText;
+
+  return POSTER_TAGLINE_FALLBACK;
+}
+
 function buildSignalTaglineFromScores(
   scores: Array<{ label: string; score: number }>,
   fallback: string,
@@ -398,43 +440,43 @@ function buildSignalTaglineFromScores(
   const hasVisual = weakest.includes("visual credibility");
 
   if (hasAI && hasOffer) {
-    return "AI can find fragments. The offer still needs language it can repeat.";
+    return "The brand is visible. The promise needs cleaner words.";
   }
   if (hasOffer && hasPositioning) {
-    return "The page shows capability before it names what buyers can buy.";
+    return "The mood arrives first. The meaning should follow faster.";
   }
   if (hasAI && hasPositioning) {
-    return "The category is visible, but AI still has to guess what the brand should own.";
+    return "The name is visible. The role needs sharper edges.";
   }
   if (hasAI && hasConversion) {
-    return "AI cannot repeat the promise cleanly, and the next step asks too early.";
+    return "The signal is present. The next step needs proof.";
   }
   if (hasOffer && hasConversion) {
-    return "The offer is vague, so the click asks for trust it has not earned.";
+    return "There is interest here. The promise needs more proof.";
   }
   if (hasVisual && hasOffer) {
-    return "The page looks better than it sells. The offer is still missing.";
+    return "A beautiful signal, still searching for its sharpest line.";
   }
   if (hasVisual && hasConversion) {
-    return "The page does not earn enough trust before it asks for action.";
+    return "The presence is strong. The invitation needs more weight.";
   }
   if (hasAI) {
-    return "The brand exists, but AI still needs cleaner signals to recommend it.";
+    return "The brand is present. The meaning needs a clearer line.";
   }
   if (hasOffer) {
-    return "The offer is still under-named; buyers cannot repeat it fast enough.";
+    return "The value is there. The words must carry it.";
   }
   if (hasPositioning) {
-    return "Capability is visible, but the category promise is still buried.";
+    return "There is capability here. The promise needs a front door.";
   }
   if (hasConversion) {
-    return "Interest is present, but the page still makes action feel risky.";
+    return "The interest is there. The next step needs earning.";
   }
   if (hasVisual) {
-    return "The visual layer is not earning trust fast enough.";
+    return "There is presence here. Now it needs a clearer promise.";
   }
 
-  return fallback;
+  return cleanPosterTagline(fallback);
 }
 
 function average(values: number[]) {
@@ -1506,10 +1548,11 @@ function buildFallbackReport(url: string, read: BrandReadResult): BrandReport {
       ? read.visualWorld
       : "sage";
   const safeBrandName = normalizeWhitespace(read.brandName || "Brand");
-  const safeTitle = normalizeWhitespace(read.title || "The Clearer Signal");
-  const safeGenre = normalizeWhitespace(read.genre || "Editorial Diagnosis");
-  const safeTagline = normalizeWhitespace(
-    read.tagline || "The brand has quality. The promise still needs sharper edges.",
+  const safeTitle = normalizeWhitespace(read.title || "The Open Threshold");
+  const safeGenre = normalizeWhitespace(read.genre || "Cinematic Reveal");
+  const safeTagline = cleanPosterTagline(
+    read.tagline,
+    "The world is already there; the message must meet it.",
   );
   const safeWhatItDoes = normalizeWhitespace(
     read.whatItDoes ||
@@ -2636,6 +2679,25 @@ function normalizeReport(
     fallback.scorecard,
   ]);
   const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings, language);
+  const normalizedScorecard = scorecardSource.slice(0, 5).map((item, index) => ({
+    label: fallback.scorecard[index]?.label || "Score",
+    score: clampScore(
+      typeof item.score === "number" && Number.isFinite(item.score)
+        ? item.score
+        : fallback.scorecard[index]?.score,
+      70,
+    ),
+    note:
+      cleanNarrativeAeoLeaks(
+        item.note || fallback.scorecard[index]?.note || "",
+        fallback.scorecard[index]?.note || "",
+        160,
+      ) || fallback.scorecard[index]?.note || "",
+  }));
+  const scoreDerivedTagline = buildSignalTaglineFromScores(
+    normalizedScorecard.map((item) => ({ label: item.label, score: item.score })),
+    fallback.tagline,
+  );
 
   const normalized: BrandReport = {
     url: fallback.url,
@@ -2643,7 +2705,7 @@ function normalizeReport(
     visualWorld: fallback.visualWorld,
     title: truncate(normalizeWhitespace(raw.title || fallback.title), 80),
     genre: truncate(normalizeWhitespace(raw.genre || fallback.genre), 48),
-    tagline: truncate(normalizeWhitespace(raw.tagline || fallback.tagline), 140),
+    tagline: cleanPosterTagline(raw.tagline, scoreDerivedTagline),
     posterScore: clampScore(raw.posterScore, fallback.posterScore),
     scoreBand: truncate(normalizeWhitespace(raw.scoreBand || fallback.scoreBand), 72),
     scoreModifier: truncate(normalizeWhitespace(raw.scoreModifier || fallback.scoreModifier), 180),
@@ -2716,21 +2778,7 @@ function normalizeReport(
             y: Math.max(10, Math.min(76, Number(item.y ?? fallback.screenshotCallouts[index]?.y ?? 16))),
           }))
         : fallback.screenshotCallouts,
-    scorecard: scorecardSource.slice(0, 5).map((item, index) => ({
-      label: fallback.scorecard[index]?.label || "Score",
-      score: clampScore(
-        typeof item.score === "number" && Number.isFinite(item.score)
-          ? item.score
-          : fallback.scorecard[index]?.score,
-        70,
-      ),
-      note:
-        cleanNarrativeAeoLeaks(
-          item.note || fallback.scorecard[index]?.note || "",
-          fallback.scorecard[index]?.note || "",
-          160,
-        ) || fallback.scorecard[index]?.note || "",
-    })),
+    scorecard: normalizedScorecard,
     positioningRead: cleanNarrativeAeoLeaks(
       raw.positioningRead || fallback.positioningRead,
       fallback.positioningRead,
@@ -3288,6 +3336,18 @@ Important rules:
 - Keep the diagnosis editorial and founder-facing. Do not put raw technical AEO terms such as schema, metadata, crawler access, robots.txt, sitemap, llms.txt, structured data, or LocalBusiness inside snapshot, positioningRead, toneCheck, visualIdentityRead, aboveTheFold, conversionRead, strategicDirection, mixedSignals, brandMyth, or strategicNextMove.
 - Technical AEO findings are useful, but they belong only inside concrete action fields: priorityFixes.fixNext, actionPlan.next7Days, messagingPriorities, or offerStrategy. Phrase them as tasks someone can hand to a developer.
 - When writing a technical AEO task, be concrete: title tag, meta description, H1/category nouns, Organization/LocalBusiness schema, FAQ sections, robots.txt, sitemap, crawler access, and llms.txt are allowed there.
+- Movie-poster layer rules for brandName, title, genre, and tagline:
+  - Treat these as a public-facing cinematic poster interpretation by SAHAR, not as the paid diagnostic body.
+  - Keep the poster layer concise, elegant, aspirational, and safe for the brand to share publicly.
+  - The poster title should feel like a movie title or editorial chapter title, not a CTA, score, or diagnosis.
+  - The genre should be 2-4 words.
+  - The tagline should be 6-12 words where possible, clear on its own, emotionally intelligent, and specific to the current brand signal.
+  - The tagline should feel like a movie-poster line, not a marketing slogan and not a consultant note.
+  - Never mention AI, scraping, missing data, prompts, frameworks, archetypes, internal analysis, schema, metadata, crawler access, SEO, AEO, or conversion terms in title, genre, or tagline.
+  - Avoid generic phrases such as "unlock your potential", "transform your future", "where dreams come true", "elevate your brand", "next level", or "game-changer".
+  - Avoid harsh or embarrassing language. The public poster can be honest, but it should not shame the brand.
+  - Good tagline directions: "The world is already there; the message must meet it." / "A beautiful signal, still searching for its sharpest line." / "The mood arrives first. The meaning should follow faster." / "There is presence here. Now it needs a clearer promise." / "The story has texture. The spine needs more strength."
+  - If uncertain, use: "A brand in search of a sharper signal."
 - Match descriptive vocabulary to the brand's actual category. This matters for every prose field.
   - For financial, investment, legal, advisory, consulting, or B2B-service brands: use discipline, rigor, conviction, judgment, authority, restraint, fluency. Do NOT use performance, athletic, physical, driven, muscular, or kinetic language.
   - For performance, sport, outdoor, or athletic brands: use drive, pressure, stamina, physicality. Do NOT use clinical, advisory, or academic vocabulary.
@@ -3307,7 +3367,10 @@ ${url}
 
 Existing first-read:
 - Brand name: ${firstRead.brandName}
+- Visual world: ${firstRead.visualWorld}
+- Symbol logic: ${firstRead.symbol}
 - Poster title: ${firstRead.title}
+- Poster genre: ${firstRead.genre}
 - Tagline: ${firstRead.tagline}
 - Summary: ${firstRead.summary}
 - Current signal: ${firstRead.current}
@@ -3385,6 +3448,7 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
 {
   "brandName": "string",
   "title": "string",
+  "genre": "poster genre, 2-4 words",
   "tagline": "string",
   "snapshot": "2 blunt commercial sentences",
   "surfaceCaptures": [
