@@ -217,6 +217,12 @@ button {
   color: rgba(111, 224, 194, 0.72);
 }
 
+.brandmirror-live-brand {
+  color: rgba(244, 245, 248, 0.72);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
 .brandmirror-live-status {
   display: inline-flex;
   align-items: center;

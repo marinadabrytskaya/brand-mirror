@@ -1539,6 +1539,7 @@ function ScannerReadout({
               ? scannerCopy.scanning ?? "SCANNING"
               : scannerCopy.awaitingSignal ?? "AWAITING SIGNAL"}
         </span>
+        <span className="brandmirror-live-brand">BrandMirror</span>
         <span suppressHydrationWarning>{clock}</span>
       </div>
 

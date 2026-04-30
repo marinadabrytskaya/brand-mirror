@@ -116,7 +116,7 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
           <span className="brandmirror-live-dot" aria-hidden />
           {liveCopy.status}
         </span>
-        <span>BrandMirror</span>
+        <span className="brandmirror-live-brand">BrandMirror</span>
       </div>
 
       <div className="mt-8 text-center">
@@ -288,9 +288,6 @@ export default async function Home({
             </div>
             <div className="flex items-center gap-3">
               <nav className="hidden items-center gap-6 text-sm text-[color:var(--foreground-soft)] md:flex">
-                <a href="#how-it-works" className="hover:text-[color:var(--foreground)]">
-                  {copy.navHow}
-                </a>
                 <a href="#offers" className="hover:text-[color:var(--foreground)]">
                   {copy.navOffer}
                 </a>
@@ -385,83 +382,6 @@ export default async function Home({
         </div>
       </section>
 
-      <section
-        id="how-it-works"
-        className="px-6 py-20 sm:px-8 lg:px-12 lg:py-28"
-      >
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.46fr_0.54fr]">
-          <div className="lg:sticky lg:top-12 lg:self-start">
-            <SectionHeading
-              label={copy.how.label}
-              title={copy.how.title}
-              body={copy.how.body}
-            />
-          </div>
-
-          <div className="space-y-6">
-            {copy.how.workflow.map((item) => (
-              <div
-                key={item.step}
-                className="grain-panel rounded-[2rem] border border-[color:var(--line)] p-6 sm:p-8"
-              >
-                <div className="grid gap-4 sm:grid-cols-[4rem_1fr]">
-                  <p className="font-serif text-6xl leading-none tracking-[-0.06em] text-[color:var(--accent)]">
-                    {item.step}
-                  </p>
-                  <div>
-                    <h3 className="font-serif text-3xl leading-tight tracking-[-0.03em] text-[color:var(--foreground)]">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 max-w-lg text-base leading-7 text-[color:var(--foreground-soft)]">
-                      {item.body}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-20 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.43fr_0.57fr]">
-          <div>
-            <SectionHeading
-              label={copy.fullReport.label}
-              title={copy.fullReport.title}
-              body={copy.fullReport.body}
-            />
-          </div>
-
-          <div className="relative overflow-hidden rounded-[2.25rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] p-6 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
-            <ScanCornerMarks />
-            <p className="section-label text-[rgba(111,224,194,0.78)]">
-              {copy.fullReport.cardLabel}
-            </p>
-            <div className="editorial-rule mt-6 space-y-4 pt-6">
-              {copy.fullReport.items.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between gap-6 border-b border-[rgba(111,224,194,0.12)] pb-4 last:border-b-0 last:pb-0"
-                >
-                  <p className="text-sm uppercase tracking-[0.18em] text-[rgba(244,245,248,0.76)]">
-                    {item}
-                  </p>
-                  <span className="text-xs uppercase tracking-[0.22em] text-[rgba(111,224,194,0.72)]">
-                    {copy.fullReport.included}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="editorial-rule mt-8 grid gap-4 pt-5 text-sm text-[rgba(237,237,242,0.64)] sm:grid-cols-2">
-              {copy.fullReport.notes.map((item) => (
-                <p key={item}>{item}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section id="offers" className="px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
         <div className="mx-auto max-w-7xl">
             <SectionHeading
@@ -534,6 +454,45 @@ export default async function Home({
       </section>
 
       <section className="px-6 py-20 sm:px-8 lg:px-12">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.43fr_0.57fr]">
+          <div>
+            <SectionHeading
+              label={copy.fullReport.label}
+              title={copy.fullReport.title}
+              body={copy.fullReport.body}
+            />
+          </div>
+
+          <div className="relative overflow-hidden rounded-[2.25rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] p-6 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
+            <ScanCornerMarks />
+            <p className="section-label text-[rgba(111,224,194,0.78)]">
+              {copy.fullReport.cardLabel}
+            </p>
+            <div className="editorial-rule mt-6 space-y-4 pt-6">
+              {copy.fullReport.items.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center justify-between gap-6 border-b border-[rgba(111,224,194,0.12)] pb-4 last:border-b-0 last:pb-0"
+                >
+                  <p className="text-sm uppercase tracking-[0.18em] text-[rgba(244,245,248,0.76)]">
+                    {item}
+                  </p>
+                  <span className="text-xs uppercase tracking-[0.22em] text-[rgba(111,224,194,0.72)]">
+                    {copy.fullReport.included}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="editorial-rule mt-8 grid gap-4 pt-5 text-sm text-[rgba(237,237,242,0.64)] sm:grid-cols-2">
+              {copy.fullReport.notes.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.4fr_0.6fr]">
           <div>
             <SectionHeading
@@ -554,43 +513,6 @@ export default async function Home({
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 pb-16 pt-10 sm:px-8 lg:px-12 lg:pb-24">
-        <div className="mx-auto max-w-7xl">
-          <div className="relative overflow-hidden rounded-[2.3rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] px-6 py-10 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:px-8 lg:px-12 lg:py-14">
-            <ScanCornerMarks />
-            <p className="section-label text-[rgba(111,224,194,0.78)]">
-              {copy.final.label}
-            </p>
-            <div className="mt-4 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-              <div>
-                <h2 className="font-serif text-4xl leading-[1.02] tracking-[-0.04em] text-[#F4F5F8] sm:text-5xl lg:text-6xl">
-                  {copy.final.title}
-                </h2>
-              </div>
-              <div>
-                <p className="text-base leading-7 text-[rgba(237,237,242,0.72)]">
-                  {copy.final.body}
-                </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href={siteI18n.withLang("/first-read", locale)}
-                    className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 text-sm font-semibold text-[#06110E] hover:-translate-y-0.5 hover:bg-[#84efd4]"
-                  >
-                    {copy.final.primaryCta}
-                  </Link>
-                  <Link
-                    href={siteI18n.withLang("/sample-report", locale)}
-                    className="inline-flex items-center justify-center rounded-full border border-[rgba(111,224,194,0.28)] px-6 py-3 text-sm font-medium text-[#F4F5F8] hover:bg-[rgba(111,224,194,0.08)]"
-                  >
-                    {copy.final.secondaryCta}
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
