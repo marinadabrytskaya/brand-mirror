@@ -2564,6 +2564,21 @@ function appendUniqueTruncated(
   return result;
 }
 
+function prependLimitedTechnicalFixes(
+  technicalFixes: string[],
+  current: string[],
+  maxTechnicalItems: number,
+  maxItems: number,
+  maxLength: number,
+) {
+  return appendUniqueTruncated(
+    technicalFixes.slice(0, maxTechnicalItems),
+    current,
+    maxItems,
+    maxLength,
+  );
+}
+
 function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
@@ -3005,9 +3020,10 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
           : fallback.priorityFixes.fixNow,
       fixNext:
         raw.priorityFixes?.fixNext?.length
-          ? appendUniqueTruncated(
+          ? prependLimitedTechnicalFixes(
               routedTechnicalFixes,
               raw.priorityFixes.fixNext,
+              3,
               4,
               180,
             )
@@ -3157,9 +3173,10 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
     actionPlan: {
       next7Days:
         raw.actionPlan?.next7Days?.length
-          ? appendUniqueTruncated(
+          ? prependLimitedTechnicalFixes(
               routedTechnicalFixes,
               raw.actionPlan.next7Days,
+              2,
               4,
               190,
             )
@@ -3179,18 +3196,20 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
   };
 
   if (routedTechnicalFixes.length && !raw.priorityFixes?.fixNext?.length) {
-    normalized.priorityFixes.fixNext = appendUniqueTruncated(
+    normalized.priorityFixes.fixNext = prependLimitedTechnicalFixes(
       routedTechnicalFixes,
       normalized.priorityFixes.fixNext,
+      3,
       4,
       180,
     );
   }
 
   if (routedTechnicalFixes.length && !raw.actionPlan?.next7Days?.length) {
-    normalized.actionPlan.next7Days = appendUniqueTruncated(
+    normalized.actionPlan.next7Days = prependLimitedTechnicalFixes(
       routedTechnicalFixes,
       normalized.actionPlan.next7Days,
+      2,
       4,
       190,
     );
