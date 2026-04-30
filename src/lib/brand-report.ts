@@ -389,6 +389,11 @@ const POSTER_TAGLINE_FALLBACK = "A brand in search of a sharper signal.";
 
 const POSTER_TAGLINE_FORBIDDEN_PATTERNS = [
   /\b(ai|aeo|seo|schema|metadata|crawler|robots\.txt|sitemap|llms\.txt|prompt|scrap(?:e|ing)|framework|archetype|diagnosis|audit|strategy|positioning|conversion|cta)\b/i,
+  /\bthe brand is (present|visible|there)\b/i,
+  /\bthe signal is present\b/i,
+  /\bthe name is visible\b/i,
+  /\bthe meaning needs a clearer line\b/i,
+  /\bthe work has shape\b/i,
   /unlock your potential/i,
   /transform your future/i,
   /where dreams come true/i,
@@ -440,16 +445,16 @@ function buildSignalTaglineFromScores(
   const hasVisual = weakest.includes("visual credibility");
 
   if (hasAI && hasOffer) {
-    return "The brand is visible. The promise needs cleaner words.";
+    return "The work is strong; the words need sharper handles.";
   }
   if (hasOffer && hasPositioning) {
     return "The mood arrives first. The meaning should follow faster.";
   }
   if (hasAI && hasPositioning) {
-    return "The name is visible. The role needs sharper edges.";
+    return "The world is clear. The role needs sharper edges.";
   }
   if (hasAI && hasConversion) {
-    return "The signal is present. The next step needs proof.";
+    return "The signal has shape. The next step needs proof.";
   }
   if (hasOffer && hasConversion) {
     return "There is interest here. The promise needs more proof.";
@@ -461,7 +466,7 @@ function buildSignalTaglineFromScores(
     return "The presence is strong. The invitation needs more weight.";
   }
   if (hasAI) {
-    return "The brand is present. The meaning needs a clearer line.";
+    return "The work has texture; the category needs cleaner anchors.";
   }
   if (hasOffer) {
     return "The value is there. The words must carry it.";
@@ -537,6 +542,109 @@ function isUsefulCompetitorUrl(candidateUrl: string, currentUrl: string) {
   ];
 
   return !blockedHosts.some((blocked) => host === blocked || host.endsWith(`.${blocked}`));
+}
+
+function isCreativeStudioReport(report: Pick<BrandReport, "brandName" | "genre" | "whatItDoes" | "snapshot">) {
+  const fingerprint = categoryFingerprint(report);
+  return /(sahar|creative intelligence|brand strategy|campaign direction|brand films?|narrative|messaging|websites?|digital products?|brand experiences?|creative studio|brand studio|strategy studio|design studio)/i.test(
+    fingerprint,
+  );
+}
+
+function isRelevantCompetitorResult(
+  report: BrandReport,
+  competitor: CompetitiveLandscape["competitors"][number],
+) {
+  const fingerprint = [
+    competitor.name,
+    competitor.url,
+    competitor.snapshot,
+    ...competitor.strengths,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (isCreativeStudioReport(report)) {
+    if (/(domain purchas|domain buying|financial services industry|banking platform|insurance platform)/i.test(fingerprint)) {
+      return false;
+    }
+    return /(brand|strategy|creative|studio|campaign|website|digital|experience|narrative|messaging|film|design|transformation)/i.test(
+      fingerprint,
+    );
+  }
+
+  return true;
+}
+
+function meaningfulCtasFromContext(
+  websiteContext: Awaited<ReturnType<typeof fetchWebsiteContext>>,
+) {
+  return (websiteContext.callsToAction || [])
+    .map((item) => normalizeWhitespace(item))
+    .filter(Boolean)
+    .filter((cta) => !/^(home|about|services|work|blog|gallery|menu|more|learn more|read more)$/i.test(cta));
+}
+
+function hasStrongConversionEvidence(
+  websiteContext: Awaited<ReturnType<typeof fetchWebsiteContext>>,
+) {
+  const ctas = meaningfulCtasFromContext(websiteContext);
+  const ctaText = ctas.join(" ");
+  const content = [
+    websiteContext.title,
+    websiteContext.description,
+    ...websiteContext.headings,
+    websiteContext.visibleText,
+    websiteContext.rawHtmlSignals || "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const hasPrimaryAction =
+    /\b(book|schedule|call|discovery|consultation|try|start|apply|buy|shop|request|demo|brand mirror)\b/i.test(
+      ctaText,
+    );
+  const hasProcess = /\b(how we work|process|clarify|shape|build|days?|weeks?|step|01|02|03)\b/i.test(content);
+  const hasProof = /\b(testimonial|client|selected work|case|view work|watch|results|review|laetitia|healing vibes)\b/i.test(
+    content,
+  );
+
+  return ctas.length >= 2 && hasPrimaryAction && (hasProcess || hasProof);
+}
+
+function calibrateReportScorecardToWebsiteContext(
+  report: BrandReport,
+  websiteContext: Awaited<ReturnType<typeof fetchWebsiteContext>>,
+) {
+  if (!hasStrongConversionEvidence(websiteContext)) {
+    return report;
+  }
+
+  report.scorecard = report.scorecard.map((item) => {
+    if (item.label.toLowerCase() !== "conversion readiness") {
+      return item;
+    }
+
+    return {
+      ...item,
+      score: Math.max(item.score, 74),
+      note:
+        "The site already offers clear next-step options; the remaining fix is hierarchy and expectation-setting around the primary path, not simply adding another button.",
+    };
+  });
+
+  const ctas = meaningfulCtasFromContext(websiteContext).slice(0, 3);
+  if (ctas.length > 0) {
+    report.conversionRead =
+      `The conversion path is not absent: ${ctas.join(", ")} already give visitors ways forward. The fix is to make the primary action unmistakable and place proof closer to that decision.`;
+    report.priorityFixes.fixNow = report.priorityFixes.fixNow.map((item) =>
+      /choose the primary conversion|make this cta explicit|add a cta|no clear next step|cta explicit/i.test(item)
+        ? "Choose one primary path for the first screen, then support the existing CTA with proof and what-happens-next copy."
+        : item,
+    );
+  }
+
+  return report;
 }
 
 function escapeRegExp(value: string) {
@@ -2081,6 +2189,7 @@ Return the 3 most direct public competitors for this brand.
 Rules:
 - Prefer direct competitors over adjacent players.
 - Prefer same category, same business model, similar audience, similar market.
+- For creative, brand, strategy, website, campaign, or studio brands: choose brand/creative/digital studios or strategic brand consultancies, not financial-services consultancies, domain sellers, directories, or generic enterprise transformation firms.
 - Only include websites with public homepages.
 - Avoid directories, marketplaces, portfolio aggregators, or giant irrelevant enterprises.
 - Return valid JSON only.
@@ -2182,9 +2291,10 @@ async function generateCompetitiveLandscape(
         item.status === "fulfilled",
     )
     .map((item) => item.value)
-    .filter((item) => item.name && item.url);
+    .filter((item) => item.name && item.url)
+    .filter((item) => isRelevantCompetitorResult(report, item));
 
-  if (!competitors.length) {
+  if (competitors.length < 3) {
     return undefined;
   }
 
@@ -2322,6 +2432,29 @@ function buildCoverBrandRead(report: BrandReport) {
 
 function competitorFallbackCandidates(report: BrandReport): CompetitorCandidate[] {
   const fingerprint = categoryFingerprint(report);
+
+  if (isCreativeStudioReport(report)) {
+    return [
+      {
+        name: "Moving Brands",
+        url: "https://movingbrands.com",
+        reason:
+          "Global creative company working across strategy, brand, digital, and campaigns - a closer peer for SAHAR's strategy-to-build offer.",
+      },
+      {
+        name: "COLLINS",
+        url: "https://www.wearecollins.com",
+        reason:
+          "Brand transformation studio with a strong point of view around strategy, design, voice, and business change.",
+      },
+      {
+        name: "Red Antler",
+        url: "https://www.redantler.com",
+        reason:
+          "Brand company known for strategy, identity, digital experience, and founder-led brand building.",
+      },
+    ];
+  }
 
   if (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)) {
     return [
@@ -3463,6 +3596,10 @@ Conversion readiness — whether the page has earned a confident next step by th
 - 50-70  CTAs exist but are underpowered — weak proof, vague value, mismatched commitment.
 - 70-85  next step is clear and earned for the most likely buyer; minor friction on edge cases.
 - 85-100  the CTA is obvious, proof is within reach, and the commitment level matches the page's promise.
+Conversion calibration:
+- If the page has multiple clear actions such as Book, Try, Start, Apply, Buy, Request, Discovery Call, or Brand Review, plus visible process/proof/work/case-study evidence, conversion readiness should usually be at least 70.
+- In that case, the critique should be about CTA hierarchy, proof placement, and what happens after the click - not about the absence of a CTA.
+- Do not write "choose the primary conversion event" if the site already has clear booking/review/product CTAs. Write "make the primary path more dominant" instead.
 
 Return JSON with exactly these keys. Do not omit any scorecard item under any circumstance — if you are genuinely uncertain, estimate to the nearest 5 and commit. Do not return "null", "0", or an empty string for any score.
 {
@@ -3997,7 +4134,10 @@ export async function generateBrandReport(
     language,
   ).catch(() => null);
 
-  const report = normalizeReport(modelReport || {}, fallback, language);
+  const report = calibrateReportScorecardToWebsiteContext(
+    normalizeReport(modelReport || {}, fallback, language),
+    websiteContext,
+  );
   const primarySurface = {
     ...fallback.surfaceCaptures[0],
     note: report.surfaceCaptures[0]?.note || fallback.surfaceCaptures[0].note,
@@ -5131,7 +5271,7 @@ export async function generateBrandReportPdf(
         fingerprint,
       );
       const badPattern =
-        /(sage energy|myth around|precision thriller|systems that only work|score|page|cta|conversion|trust before|offer.*too|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
+        /(the brand is present|the brand is visible|the signal is present|the meaning needs a clearer line|the work has shape|sage energy|myth around|precision thriller|systems that only work|score|page|cta|conversion|trust before|offer.*too|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
       const groundedForCategory =
         !isIoTBrand ||
         /(iot|infrastructure|operations|industrial|connected|systems|platform|integration|manufactur|sensor|cloud)/i.test(
@@ -5457,7 +5597,7 @@ export async function generateBrandReportPdf(
         title: "Conversion",
         axis: "Conversion Readiness",
         body:
-          "Match the CTA to the business model, then support it with proof and expectation-setting: what the visitor gets, what happens next, and why the commitment is low-risk.",
+          "Make the primary CTA dominant, then place proof and one plain what-happens-next line beside it.",
       },
       {
         title: "Visual",
@@ -5577,27 +5717,24 @@ export async function generateBrandReportPdf(
 
     const sprintNow = uniqueItems(
       [
-        implementationRows[0]?.fix,
-        implementationRows[0]?.impact,
-        sprintCopy.now[0],
+        sprintCopy.next[0],
+        sprintCopy.then[1],
       ].filter(Boolean) as string[],
-      3,
+      2,
     );
     const sprintNext = uniqueItems(
       [
-        implementationRows[1]?.fix,
-        implementationRows[2]?.fix,
-        competitorBorrowLine,
+        sprintCopy.now[0],
+        sprintCopy.next[1],
       ].filter(Boolean) as string[],
-      3,
+      2,
     );
     const sprintThen = uniqueItems(
       [
+        sprintCopy.then[0],
         implementationRows[3]?.fix,
-        implementationRows[4]?.fix,
-        sprintCopy.then[1],
       ].filter(Boolean) as string[],
-      3,
+      2,
     );
 
     const scoreAverage =
@@ -5750,11 +5887,13 @@ export async function generateBrandReportPdf(
           ? rewriteFallbackCopy.iotSubheadline
           : rewriteFallbackCopy.genericSubheadline);
     const generatedCta = bodyCopy(report.rewriteSuggestions?.cta || report.beforeAfterHero?.rewrittenFrame?.cta || "");
-    const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started|book the right session|request a fit call|request fit call)$/i.test(generatedCta);
+    const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started|book the right session|request a fit call|request fit call|choose the next step)$/i.test(generatedCta);
     const suggestedCta =
       useGeneratedCta
         ? generatedCta
-        : (/(brandmirror|brand audit|website audit|ai visibility|homepage audit|report)/i.test(fingerprint)
+        : (isCreativeStudioReport(report)
+        ? "Book a Discovery Call"
+        : /(brandmirror|brand audit|website audit|ai visibility|homepage audit|report)/i.test(fingerprint)
         ? rewriteFallbackCopy.auditCta
         : /(shop|product|store|wellness|healing|therapy|course)/i.test(fingerprint)
         ? rewriteFallbackCopy.shopCta
@@ -6264,9 +6403,9 @@ export async function generateBrandReportPdf(
       );
     });
     if (report.competitiveLandscape?.analysis.quickestWin) {
-      drawPanel(contentLeft, 640, contentWidth, 70, colors.panel);
-      drawSectionTag("FASTEST COMPETITIVE WIN", contentLeft + 18, 662, colors.mint);
-      drawParagraph(report.competitiveLandscape.analysis.quickestWin.message, contentLeft + 192, 656, contentWidth - 212, 8.8, 3);
+      drawPanel(contentLeft, 654, contentWidth, 60, colors.panel);
+      drawSectionTag("FASTEST COMPETITIVE WIN", contentLeft + 18, 675, colors.mint);
+      drawParagraph(report.competitiveLandscape.analysis.quickestWin.message, contentLeft + 192, 668, contentWidth - 212, 8.4, 2.8);
     }
 
     // Page 14: Implementation Playbook / Recommendations
@@ -6433,11 +6572,11 @@ export async function generateBrandReportPdf(
           { label: "THEN", days: "DAYS 22-30" },
         ],
         saharLabel: "WORK WITH SAHAR",
-        saharTitle: "Want the sharper version built with you?",
+        saharTitle: "Turn the diagnosis into the sharper build.",
         saharBody:
-          "Bring this report into a working session. We will turn the highest-leverage fixes into sharper positioning, cleaner proof, stronger AI visibility, and one next step buyers understand.",
-        saharCta: "Book a SAHAR Discovery Call",
-        saharFootnote: "30 minutes. No pitch. Clear next move.",
+          "Bring the report into a working session with SAHAR. We will turn the highest-leverage fixes into sharper positioning, cleaner proof, stronger AI visibility, and a clearer path buyers can act on.",
+        saharCta: "Book a Discovery Call",
+        saharFootnote: "30 minutes. Clear next move.",
       },
       es: {
         workingLabel: "QUÉ YA FUNCIONA",
@@ -6609,11 +6748,11 @@ export async function generateBrandReportPdf(
         characterSpacing: 1.2,
       });
       drawBulletItems(step.items, contentLeft + 128, y + 18, contentWidth - 150, {
-        maxItems: 3,
-        fontSize: 10.4,
-        minSize: 9.0,
-        lineGap: 3.2,
-        itemGap: 4,
+        maxItems: 2,
+        fontSize: 9.9,
+        minSize: 8.6,
+        lineGap: 3,
+        itemGap: 3.5,
         maxHeight: 66,
         color: colors.mutedOnDark,
       });
@@ -6621,28 +6760,34 @@ export async function generateBrandReportPdf(
 
     drawPanel(contentLeft, 540, contentWidth, 184, colors.panel);
     drawSectionTag(closingCopy.saharLabel, contentLeft + 22, 566, colors.mint);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text(closingCopy.saharTitle, contentLeft + 22, 596, {
-      width: 270,
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(18).text(closingCopy.saharTitle, contentLeft + 22, 596, {
+      width: 260,
       lineGap: 2,
     });
     drawParagraph(
       closingCopy.saharBody,
       contentLeft + 22,
       650,
-      270,
-      10.2,
-      3.6,
+      280,
+      9.2,
+      3.0,
     );
-    const ctaX = contentRight - 150;
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(16).text(closingCopy.saharCta, ctaX - 112, 624, {
-      width: 250,
+    const ctaX = contentRight - 206;
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(13.4).text(closingCopy.saharCta, ctaX, 610, {
+      width: 184,
       align: "right",
-      link: "https://calendly.com/maryna-dabrytskaya/30min?month=2026-04",
+      link: "https://calendly.com/maryna-dabrytskaya/30min",
       underline: true,
     });
-    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.2).text(closingCopy.saharFootnote, ctaX - 64, 660, {
-      width: 202,
+    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.0).text(closingCopy.saharFootnote, ctaX, 638, {
+      width: 184,
       align: "right",
+    });
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(9.4).text("saharstudio.com", ctaX, 670, {
+      width: 184,
+      align: "right",
+      link: "https://saharstudio.com",
+      underline: true,
     });
 
     doc.end();
