@@ -81,6 +81,8 @@ export async function POST(request: Request) {
         currency: paidAccess?.currency ?? null,
         report,
         emailStatus: "pending",
+        dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
+        marketingConsent: paidAccess?.marketingConsent ?? false,
       }).catch((saveError) => {
         console.warn("Unable to save paid report before email", saveError);
       });
@@ -116,6 +118,8 @@ export async function POST(request: Request) {
         report,
         emailStatus,
         emailError,
+        dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
+        marketingConsent: paidAccess?.marketingConsent ?? false,
       }).catch((saveError) => {
         console.warn("Unable to save paid report after email", saveError);
       });

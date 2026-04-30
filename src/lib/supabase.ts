@@ -8,12 +8,18 @@ import { type SiteLocale } from "@/lib/site-i18n";
 
 type EmailStatus = "pending" | "sent" | "skipped" | "failed";
 
+type ConsentFields = {
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
+};
+
 export type BrandMirrorDigestFirstRead = {
   id: string;
   email: string;
   url: string;
   locale: string;
   result: BrandReadResult;
+  marketing_consent: boolean;
   created_at: string;
 };
 
@@ -29,6 +35,7 @@ export type BrandMirrorDigestPaidReport = {
   report: BrandReport;
   email_status: EmailStatus;
   email_error: string | null;
+  marketing_consent: boolean;
   created_at: string;
 };
 
@@ -71,14 +78,24 @@ export function getSupabaseAdmin() {
   return adminClient;
 }
 
-async function upsertCustomer(email: string) {
+async function upsertCustomer(email: string, consent?: Partial<ConsentFields>) {
   const supabase = getSupabaseAdmin();
+  const consentPayload =
+    typeof consent?.dataProcessingConsent === "boolean"
+      ? {
+          data_processing_consent: consent.dataProcessingConsent,
+          marketing_consent: Boolean(consent.marketingConsent),
+          consent_updated_at: new Date().toISOString(),
+          consent_source: "brandmirror_web",
+        }
+      : {};
   const { data, error } = await supabase
     .from("brandmirror_customers")
     .upsert(
       {
         email,
         last_seen_at: new Date().toISOString(),
+        ...consentPayload,
       },
       { onConflict: "email" },
     )
@@ -94,24 +111,33 @@ export async function saveFirstReadLead({
   url,
   locale,
   result,
+  dataProcessingConsent,
+  marketingConsent,
 }: {
   email: string;
   url: string;
   locale: SiteLocale;
   result: BrandReadResult;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 }) {
   if (!isSupabaseConfigured()) return { saved: false, reason: "not_configured" };
 
   const normalizedEmail = normalizeCustomerEmail(email);
   if (!normalizedEmail) return { saved: false, reason: "invalid_email" };
 
-  const customerId = await upsertCustomer(normalizedEmail);
+  const customerId = await upsertCustomer(normalizedEmail, {
+    dataProcessingConsent,
+    marketingConsent,
+  });
   const { error } = await getSupabaseAdmin().from("brandmirror_first_reads").insert({
     customer_id: customerId,
     email: normalizedEmail,
     url,
     locale,
     result,
+    data_processing_consent: dataProcessingConsent,
+    marketing_consent: marketingConsent,
   });
 
   if (error) throw error;
@@ -148,6 +174,8 @@ export async function savePaidReport({
   report,
   emailStatus,
   emailError,
+  dataProcessingConsent,
+  marketingConsent,
 }: {
   email: string;
   url: string;
@@ -159,13 +187,18 @@ export async function savePaidReport({
   report: BrandReport;
   emailStatus: EmailStatus;
   emailError?: string | null;
+  dataProcessingConsent?: boolean;
+  marketingConsent?: boolean;
 }) {
   if (!isSupabaseConfigured()) return { saved: false, reason: "not_configured" };
 
   const normalizedEmail = normalizeCustomerEmail(email);
   if (!normalizedEmail) return { saved: false, reason: "invalid_email" };
 
-  const customerId = await upsertCustomer(normalizedEmail);
+  const customerId = await upsertCustomer(normalizedEmail, {
+    dataProcessingConsent: Boolean(dataProcessingConsent),
+    marketingConsent: Boolean(marketingConsent),
+  });
   const { error } = await getSupabaseAdmin().from("brandmirror_paid_reports").upsert(
     {
       customer_id: customerId,
@@ -179,6 +212,8 @@ export async function savePaidReport({
       report,
       email_status: emailStatus,
       email_error: emailError || null,
+      data_processing_consent: Boolean(dataProcessingConsent),
+      marketing_consent: Boolean(marketingConsent),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "payment_reference" },
@@ -206,14 +241,14 @@ export async function getBrandMirrorDigest({
   const [firstReadsResult, paidReportsResult] = await Promise.all([
     supabase
       .from("brandmirror_first_reads")
-      .select("id,email,url,locale,result,created_at")
+      .select("id,email,url,locale,result,marketing_consent,created_at")
       .gte("created_at", sinceIso)
       .lt("created_at", untilIso)
       .order("created_at", { ascending: false })
       .limit(500),
     supabase
       .from("brandmirror_paid_reports")
-      .select("id,email,url,locale,provider,payment_reference,amount_total,currency,report,email_status,email_error,created_at")
+      .select("id,email,url,locale,provider,payment_reference,amount_total,currency,report,email_status,email_error,marketing_consent,created_at")
       .gte("created_at", sinceIso)
       .lt("created_at", untilIso)
       .order("created_at", { ascending: false })

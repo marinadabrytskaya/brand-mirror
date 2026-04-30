@@ -209,7 +209,7 @@ function formatMoney(amount: number | null, currency: string | null) {
 
 function tableRowsForFirstReads(firstReads: BrandMirrorDigestFirstRead[]) {
   if (!firstReads.length) {
-    return `<tr><td colspan="5" style="padding: 14px; color: #777;">No free reads in this period.</td></tr>`;
+    return `<tr><td colspan="6" style="padding: 14px; color: #777;">No free reads in this period.</td></tr>`;
   }
 
   return firstReads
@@ -222,6 +222,7 @@ function tableRowsForFirstReads(firstReads: BrandMirrorDigestFirstRead[]) {
           <td style="padding: 10px; border-top: 1px solid #eee;"><a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a></td>
           <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(result.brandName || "n/a")}</td>
           <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(String(result.posterScore ?? "n/a"))}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${item.marketing_consent ? "yes" : "no"}</td>
         </tr>
       `;
     })
@@ -230,7 +231,7 @@ function tableRowsForFirstReads(firstReads: BrandMirrorDigestFirstRead[]) {
 
 function tableRowsForPaidReports(paidReports: BrandMirrorDigestPaidReport[]) {
   if (!paidReports.length) {
-    return `<tr><td colspan="7" style="padding: 14px; color: #777;">No paid reports in this period.</td></tr>`;
+    return `<tr><td colspan="8" style="padding: 14px; color: #777;">No paid reports in this period.</td></tr>`;
   }
 
   return paidReports
@@ -245,6 +246,7 @@ function tableRowsForPaidReports(paidReports: BrandMirrorDigestPaidReport[]) {
           <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.provider)}</td>
           <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(formatMoney(item.amount_total, item.currency))}</td>
           <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.email_status)}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${item.marketing_consent ? "yes" : "no"}</td>
         </tr>
       `;
     })
@@ -275,6 +277,7 @@ export async function sendBrandMirrorDigestEmail({
         <p><strong>Free reads:</strong> ${firstReads.length}</p>
         <p><strong>Paid reports:</strong> ${paidReports.length}</p>
         <p><strong>Unique emails:</strong> ${new Set([...firstReads, ...paidReports].map((item) => item.email)).size}</p>
+        <p><strong>Marketing opt-ins:</strong> ${new Set([...firstReads, ...paidReports].filter((item) => item.marketing_consent).map((item) => item.email)).size}</p>
       </div>
 
       <h2 style="font-size: 18px; margin: 24px 0 8px;">Free First Reads</h2>
@@ -286,6 +289,7 @@ export async function sendBrandMirrorDigestEmail({
             <th style="padding: 10px;">URL</th>
             <th style="padding: 10px;">Brand</th>
             <th style="padding: 10px;">Score</th>
+            <th style="padding: 10px;">Marketing</th>
           </tr>
         </thead>
         <tbody>${tableRowsForFirstReads(firstReads)}</tbody>
@@ -302,6 +306,7 @@ export async function sendBrandMirrorDigestEmail({
             <th style="padding: 10px;">Provider</th>
             <th style="padding: 10px;">Amount</th>
             <th style="padding: 10px;">Email status</th>
+            <th style="padding: 10px;">Marketing</th>
           </tr>
         </thead>
         <tbody>${tableRowsForPaidReports(paidReports)}</tbody>

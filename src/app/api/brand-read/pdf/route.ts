@@ -24,6 +24,7 @@ import {
   refundLineForLocale,
 } from "@/lib/free-report-copy";
 import { sendBrandReadEmail } from "@/lib/report-email";
+import { hasDataProcessingConsent } from "@/lib/customer-consent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1101,6 +1102,7 @@ async function parseRequestBody(request: Request): Promise<{
   result?: BrandReadResult;
   email?: string;
   delivery?: "download" | "email";
+  dataProcessingConsent?: boolean;
 }> {
   const contentType = request.headers.get("content-type") || "";
 
@@ -1111,6 +1113,7 @@ async function parseRequestBody(request: Request): Promise<{
       result?: BrandReadResult;
       email?: string;
       delivery?: "download" | "email";
+      dataProcessingConsent?: boolean;
     };
   }
 
@@ -1126,6 +1129,7 @@ async function parseRequestBody(request: Request): Promise<{
     const rawResult = form.get("result");
     const rawEmail = form.get("email");
     const rawDelivery = form.get("delivery");
+    const rawDataProcessingConsent = form.get("dataProcessingConsent");
 
     return {
       url: typeof rawUrl === "string" ? rawUrl : undefined,
@@ -1136,6 +1140,7 @@ async function parseRequestBody(request: Request): Promise<{
           : undefined,
       email: typeof rawEmail === "string" ? rawEmail : undefined,
       delivery: rawDelivery === "email" ? "email" : undefined,
+      dataProcessingConsent: hasDataProcessingConsent(rawDataProcessingConsent),
     };
   }
 
@@ -1147,6 +1152,27 @@ export async function POST(request: Request) {
     const body = await parseRequestBody(request);
     const language = getSiteLocale(body.language);
     const email = normalizeCustomerEmail(body.email);
+    if (body.delivery === "email") {
+      if (!email) {
+        return Response.json(
+          {
+            error: "Email is required before sending the PDF.",
+            detail: "Enter a valid email address to receive your BrandMirror PDF.",
+          },
+          { status: 400 },
+        );
+      }
+      if (!hasDataProcessingConsent(body.dataProcessingConsent)) {
+        return Response.json(
+          {
+            error: "Data processing consent is required before sending the PDF.",
+            detail: "Please agree to data processing so we can email your BrandMirror PDF.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const payload =
       body.result && body.url
         ? { url: body.url, result: body.result }
@@ -1170,7 +1196,8 @@ export async function POST(request: Request) {
     );
 
     if (body.delivery === "email") {
-      if (!email) {
+      const deliveryEmail = email;
+      if (!deliveryEmail) {
         return Response.json(
           {
             error: "Email is required before sending the PDF.",
@@ -1179,9 +1206,8 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
-
       const delivery = await sendBrandReadEmail({
-        to: email,
+        to: deliveryEmail,
         result: payload.result,
         locale: language,
         pdf,

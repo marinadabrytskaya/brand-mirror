@@ -21,6 +21,8 @@ export type PromoAccess = {
   amountTotal: number;
   currency: string;
   promoCode: string;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 };
 
 function base64url(input: string | Buffer) {
@@ -75,11 +77,15 @@ export function createPromoToken({
   locale,
   email,
   promoCode,
+  dataProcessingConsent,
+  marketingConsent,
 }: {
   reportUrl: string;
   locale: SiteLocale;
   email: string;
   promoCode: string;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 }) {
   const normalizedUrl = normalizeUrl(reportUrl);
   const normalizedEmail = normalizeCustomerEmail(email);
@@ -94,6 +100,8 @@ export function createPromoToken({
       locale,
       email: normalizedEmail,
       code: normalizePromoCode(promoCode),
+      dataProcessingConsent,
+      marketingConsent,
       exp: Date.now() + PROMO_TOKEN_TTL_MS,
     }),
   );
@@ -124,6 +132,8 @@ export function verifyPromoToken(token?: string | null): PromoAccess | null {
         locale?: string;
         email?: string;
         code?: string;
+        dataProcessingConsent?: boolean;
+        marketingConsent?: boolean;
         exp?: number;
       };
     } catch {
@@ -146,5 +156,7 @@ export function verifyPromoToken(token?: string | null): PromoAccess | null {
     amountTotal: 0,
     currency: "USD",
     promoCode: decoded.code,
+    dataProcessingConsent: decoded.dataProcessingConsent === true,
+    marketingConsent: decoded.marketingConsent === true,
   };
 }

@@ -275,6 +275,12 @@ export const siteCopy = {
       emailLabel: "Email for report",
       emailPlaceholder: "you@example.com",
       emailRequired: "Enter a valid email address to receive the report.",
+      dataConsentLabel:
+        "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report.",
+      dataConsentRequired:
+        "Please agree to data processing so we can generate and send your report.",
+      marketingConsentLabel:
+        "Send me occasional SAHAR/BrandMirror updates, offers, and useful promo materials. I can unsubscribe anytime.",
       promoLabel: "Promo code",
       promoPlaceholder: "OPTIONAL",
       promoApply: "Apply",
@@ -679,6 +685,12 @@ export const siteCopy = {
       emailLabel: "Correo para recibir el reporte",
       emailPlaceholder: "tu@email.com",
       emailRequired: "Introduce un email válido para recibir el reporte.",
+      dataConsentLabel:
+        "Acepto que SAHAR/BrandMirror procese mi email y la URL del sitio para generar y enviar mi reporte.",
+      dataConsentRequired:
+        "Acepta el procesamiento de datos para que podamos generar y enviar tu reporte.",
+      marketingConsentLabel:
+        "Quiero recibir novedades, ofertas y materiales promocionales útiles de SAHAR/BrandMirror. Puedo darme de baja cuando quiera.",
       promoLabel: "Código promocional",
       promoPlaceholder: "OPCIONAL",
       promoApply: "Aplicar",
@@ -1148,6 +1160,12 @@ export const siteCopy = {
       emailLabel: "Эл. почта для отчёта",
       emailPlaceholder: "you@example.com",
       emailRequired: "Введите корректный email, чтобы получить отчёт.",
+      dataConsentLabel:
+        "Я согласен/согласна, что SAHAR/BrandMirror может обработать мой email и URL сайта, чтобы сгенерировать и отправить отчёт.",
+      dataConsentRequired:
+        "Подтвердите согласие на обработку данных, чтобы мы могли сгенерировать и отправить отчёт.",
+      marketingConsentLabel:
+        "Я хочу получать от SAHAR/BrandMirror новости, предложения и полезные промоматериалы. Я смогу отписаться в любой момент.",
       promoLabel: "Промокод",
       promoPlaceholder: "НЕОБЯЗАТЕЛЬНО",
       promoApply: "Применить",

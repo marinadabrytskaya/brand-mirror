@@ -206,6 +206,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const searchParams = useSearchParams();
   const [url, setUrl] = useState(() => searchParams.get("url") || "");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
+  const [dataProcessingConsent, setDataProcessingConsent] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoPreview, setPromoPreview] = useState<PromoPreview | null>(null);
   const [promoStatus, setPromoStatus] = useState<"idle" | "checking" | "applied" | "invalid">("idle");
@@ -273,6 +275,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       return;
     }
 
+    if (!dataProcessingConsent) {
+      setError(copy.dataConsentRequired ?? "Please agree to data processing so we can generate and send your report.");
+      setStatus("");
+      return;
+    }
+
     setError("");
     setPdfEmailStatus("");
     setStatus(copy.statusReading);
@@ -284,7 +292,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: checkedUrl.url, language: locale, email: checkedEmail }),
+          body: JSON.stringify({
+            url: checkedUrl.url,
+            language: locale,
+            email: checkedEmail,
+            dataProcessingConsent,
+            marketingConsent,
+          }),
         });
 
         const payload = (await response.json()) as ReadResponse | ErrorResponse;
@@ -314,6 +328,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             result: payload.result,
             email: checkedEmail,
             delivery: "email",
+            dataProcessingConsent,
           }),
         });
         const pdfDelivery = (await pdfDeliveryResponse.json().catch(() => null)) as {
@@ -390,6 +405,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       return;
     }
 
+    if (!dataProcessingConsent) {
+      setError(copy.dataConsentRequired ?? "Please agree to data processing so we can generate and send your report.");
+      return;
+    }
+
     setError("");
     setIsOpeningCheckout(true);
 
@@ -403,6 +423,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           url: checkedUrl.url,
           language: locale,
           email: checkedEmail,
+          dataProcessingConsent,
+          marketingConsent,
           promoCode: promoCode.trim() || undefined,
         }),
       });
@@ -690,6 +712,34 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                   letterSpacing: "0.01em",
                 }}
               />
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textSoft }}>
+                <input
+                  type="checkbox"
+                  checked={dataProcessingConsent}
+                  onChange={(event) => setDataProcessingConsent(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
+                  required
+                />
+                <span>
+                  {copy.dataConsentLabel ??
+                    "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report."}
+                </span>
+              </label>
+              <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textMuted }}>
+                <input
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(event) => setMarketingConsent(event.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
+                />
+                <span>
+                  {copy.marketingConsentLabel ??
+                    "Send me occasional SAHAR/BrandMirror updates, offers, and useful promo materials. I can unsubscribe anytime."}
+                </span>
+              </label>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">

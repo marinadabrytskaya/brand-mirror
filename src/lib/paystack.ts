@@ -38,6 +38,8 @@ type PaystackVerifyResponse = {
       promo_code?: string;
       discount_percent?: number;
       report_url?: string;
+      data_processing_consent?: boolean | string;
+      marketing_consent?: boolean | string;
     };
   };
 };
@@ -50,6 +52,8 @@ export type PaystackCheckoutAccess = {
   customerName: string | null;
   amountTotal: number | null;
   currency: string | null;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 };
 
 export function isPaystackConfigured() {
@@ -98,6 +102,8 @@ export async function createPaystackCheckout({
   amount,
   promoCode,
   discountPercent,
+  dataProcessingConsent,
+  marketingConsent,
 }: {
   origin: string;
   reportUrl: string;
@@ -106,6 +112,8 @@ export async function createPaystackCheckout({
   amount?: number;
   promoCode?: string | null;
   discountPercent?: number | null;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 }) {
   const normalizedUrl = normalizeUrl(reportUrl);
   if (!normalizedUrl) {
@@ -133,6 +141,8 @@ export async function createPaystackCheckout({
         customer_email: normalizedEmail,
         promo_code: promoCode || undefined,
         discount_percent: discountPercent || undefined,
+        data_processing_consent: dataProcessingConsent,
+        marketing_consent: marketingConsent,
         report_url: normalizedUrl,
       },
     }),
@@ -176,5 +186,7 @@ export async function getPaystackCheckoutAccess(reference?: string | null) {
     customerName,
     amountTotal: payload.data.amount ?? null,
     currency: payload.data.currency ?? null,
+    dataProcessingConsent: String(payload.data.metadata?.data_processing_consent) === "true",
+    marketingConsent: String(payload.data.metadata?.marketing_consent) === "true",
   } satisfies PaystackCheckoutAccess;
 }

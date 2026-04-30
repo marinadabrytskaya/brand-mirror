@@ -3,6 +3,7 @@ import { createCheckoutSession, isStripeConfigured } from "@/lib/stripe";
 import { getSiteLocale } from "@/lib/site-i18n";
 import { createPaystackCheckout, isPaystackConfigured, REPORT_PRICE_ZAR_CENTS } from "@/lib/paystack";
 import { normalizeCustomerEmail } from "@/lib/customer-email";
+import { hasDataProcessingConsent, hasMarketingConsent } from "@/lib/customer-consent";
 import { applyPromoDiscount, createPromoToken, getPromoDiscount } from "@/lib/promo";
 
 export const runtime = "nodejs";
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
       language?: string;
       email?: string;
       promoCode?: string;
+      dataProcessingConsent?: boolean;
+      marketingConsent?: boolean;
     };
     const locale = getSiteLocale(body.language);
     const email = normalizeCustomerEmail(body.email);
@@ -24,6 +27,17 @@ export async function POST(request: NextRequest) {
         {
           error: "Email is required before checkout.",
           detail: "Enter a valid email address so we can deliver the report.",
+        },
+        { status: 400 },
+      );
+    }
+    const dataProcessingConsent = hasDataProcessingConsent(body.dataProcessingConsent);
+    const marketingConsent = hasMarketingConsent(body.marketingConsent);
+    if (!dataProcessingConsent) {
+      return NextResponse.json(
+        {
+          error: "Data processing consent is required before checkout.",
+          detail: "Please agree to data processing so we can generate and deliver your report.",
         },
         { status: 400 },
       );
@@ -46,6 +60,8 @@ export async function POST(request: NextRequest) {
         locale,
         email,
         promoCode: promoDiscount.code,
+        dataProcessingConsent,
+        marketingConsent,
       });
 
       return NextResponse.json({
@@ -76,6 +92,8 @@ export async function POST(request: NextRequest) {
         amount: discountedAmount,
         promoCode: promoDiscount?.code,
         discountPercent: promoDiscount?.percentOff,
+        dataProcessingConsent,
+        marketingConsent,
       });
 
       return NextResponse.json({
@@ -92,6 +110,9 @@ export async function POST(request: NextRequest) {
       origin: request.nextUrl.origin,
       reportUrl: body.url || "",
       locale,
+      email,
+      dataProcessingConsent,
+      marketingConsent,
     });
 
     return NextResponse.json({

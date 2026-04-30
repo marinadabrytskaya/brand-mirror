@@ -2,6 +2,7 @@ import "server-only";
 
 import Stripe from "stripe";
 import { normalizeUrl } from "@/lib/brand-read";
+import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { getSiteLocale, type SiteLocale } from "@/lib/site-i18n";
 
 const STRIPE_API_VERSION = "2026-03-25.dahlia";
@@ -17,6 +18,8 @@ export type PaidCheckoutAccess = {
   customerName: string | null;
   amountTotal: number | null;
   currency: string | null;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 };
 
 export function isStripeConfigured() {
@@ -42,14 +45,24 @@ export async function createCheckoutSession({
   origin,
   reportUrl,
   locale,
+  email,
+  dataProcessingConsent,
+  marketingConsent,
 }: {
   origin: string;
   reportUrl: string;
   locale: SiteLocale;
+  email: string;
+  dataProcessingConsent: boolean;
+  marketingConsent: boolean;
 }) {
   const normalizedUrl = normalizeUrl(reportUrl);
   if (!normalizedUrl) {
     throw new Error("Enter a valid website URL before opening checkout.");
+  }
+  const normalizedEmail = normalizeCustomerEmail(email);
+  if (!normalizedEmail) {
+    throw new Error("Enter a valid email address before opening checkout.");
   }
 
   const stripe = getStripe();
@@ -61,6 +74,7 @@ export async function createCheckoutSession({
     success_url: successUrl,
     cancel_url: cancelUrl,
     customer_creation: "always",
+    customer_email: normalizedEmail,
     billing_address_collection: "auto",
     line_items: [
       {
@@ -80,6 +94,9 @@ export async function createCheckoutSession({
       locale,
       product: "brandmirror_full_report",
       report_url: normalizedUrl,
+      customer_email: normalizedEmail,
+      data_processing_consent: String(dataProcessingConsent),
+      marketing_consent: String(marketingConsent),
     },
   });
 
@@ -114,5 +131,7 @@ export async function getPaidCheckoutAccess(sessionId?: string | null) {
     customerName: session.customer_details?.name ?? null,
     amountTotal: session.amount_total ?? null,
     currency: session.currency ?? null,
+    dataProcessingConsent: session.metadata?.data_processing_consent === "true",
+    marketingConsent: session.metadata?.marketing_consent === "true",
   } satisfies PaidCheckoutAccess;
 }
