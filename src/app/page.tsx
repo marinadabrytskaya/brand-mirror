@@ -530,7 +530,10 @@ export default async function Home({
 
       <footer className="px-6 pb-10 sm:px-8 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-5 border-t border-[color:var(--line)] pt-6 text-xs uppercase tracking-[0.16em] text-[color:var(--foreground-soft)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-          <p className="max-w-3xl leading-6">{copy.legalLine}</p>
+          <div className="max-w-3xl space-y-3 leading-6">
+            <p>{copy.footerAbout}</p>
+            <p>{copy.legalLine}</p>
+          </div>
           <div className="flex flex-wrap gap-x-5 gap-y-3 lg:justify-end">
             <a
               href={`mailto:${CONTACT_EMAIL}`}
@@ -550,6 +553,18 @@ export default async function Home({
             >
               LinkedIn
             </a>
+            <Link
+              href={siteI18n.withLang("/privacy", locale)}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              {copy.footerPrivacy}
+            </Link>
+            <Link
+              href={siteI18n.withLang("/terms", locale)}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              {copy.footerTerms}
+            </Link>
           </div>
         </div>
       </footer>

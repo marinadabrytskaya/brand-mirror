@@ -18,6 +18,8 @@ BrandMirror reads any homepage across positioning, AI visibility, offer clarity,
 - Homepage: ${absoluteUrl("/")}
 - Free first read: ${absoluteUrl("/first-read")}
 - Sample report: ${absoluteUrl("/sample-report")}
+- Privacy Policy: ${absoluteUrl("/privacy")}
+- Terms & Refund Policy: ${absoluteUrl("/terms")}
 
 ## Offer Ladder
 
@@ -32,6 +34,8 @@ BrandMirror is an AI-powered brand diagnosis tool that helps any website underst
 ## Contact
 
 hello@saharstudio.com
+https://saharstudio.com
+https://www.linkedin.com/company/112570517/
 `;
 
   return new Response(body, {

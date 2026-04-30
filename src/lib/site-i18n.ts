@@ -257,6 +257,10 @@ export const siteCopy = {
       },
       legalLine:
         "Powered by SAHAR. BrandMirror is a proprietary diagnostic system by SAHAR Studio. © 2026 SAHAR Studio. All rights reserved.",
+      footerAbout:
+        "BrandMirror is created by SAHAR Studio, a creative intelligence studio for brand strategy, websites, campaign direction, and AI visibility.",
+      footerPrivacy: "Privacy Policy",
+      footerTerms: "Terms & Refund Policy",
     },
     firstRead: {
       back: "Back to BrandMirror",
@@ -667,6 +671,10 @@ export const siteCopy = {
       },
       legalLine:
         "Powered by SAHAR. BrandMirror es un sistema diagnóstico propietario de SAHAR Studio. © 2026 SAHAR Studio. Todos los derechos reservados.",
+      footerAbout:
+        "BrandMirror fue creado por SAHAR Studio, un estudio de inteligencia creativa para estrategia de marca, sitios web, dirección de campañas y visibilidad en IA.",
+      footerPrivacy: "Política de privacidad",
+      footerTerms: "Términos y reembolsos",
     },
     firstRead: {
       back: "Volver a BrandMirror",
@@ -1141,6 +1149,10 @@ export const siteCopy = {
       },
       legalLine:
         "Powered by SAHAR. BrandMirror is a proprietary diagnostic system by SAHAR Studio. © 2026 SAHAR Studio. Все права защищены.",
+      footerAbout:
+        "BrandMirror создан SAHAR Studio — студией creative intelligence для бренд-стратегии, сайтов, кампаний и видимости в ИИ.",
+      footerPrivacy: "Политика конфиденциальности",
+      footerTerms: "Условия и возвраты",
     },
     firstRead: {
       back: "Назад в BrandMirror",
