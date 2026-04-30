@@ -262,7 +262,7 @@ export default async function AiBrandAuditPage({
   const structuredData = buildStructuredData(copy);
 
   return (
-    <main className="page-shell min-h-screen bg-[color:var(--background)] px-6 py-6 sm:px-8 lg:px-12">
+    <main className="page-shell homepage-shell min-h-screen bg-[color:var(--background)] px-6 py-6 sm:px-8 lg:px-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
