@@ -33,7 +33,7 @@ export const siteCopy = {
       navOffer: "Offer",
       navSample: "Sample report",
       kicker: "BrandMirror shows what to fix first.",
-      title: "AI Website Audit for Any Website",
+      title: "AI Brand Audit for Any Website",
       body:
         "Your website may have a leak visitors can feel before they can name it. Enter any homepage and get a free first read of its positioning, AI visibility, offer clarity, visual trust, and conversion readiness.",
       primaryCta: "\u25B6 Read My Brand",
@@ -436,7 +436,7 @@ export const siteCopy = {
       navOffer: "Oferta",
       navSample: "Reporte de muestra",
       kicker: "BrandMirror muestra qué corregir primero.",
-      title: "Auditoría web con IA para cualquier sitio",
+      title: "Auditoría de marca con IA para cualquier sitio",
       body:
         "Tu sitio puede tener una fuga que el visitante siente antes de poder nombrarla. Introduce cualquier homepage y recibe una primera lectura gratuita de posicionamiento, visibilidad en IA, claridad de oferta, confianza visual y preparación para convertir.",
       primaryCta: "Lee mi marca",
@@ -613,7 +613,7 @@ export const siteCopy = {
           {
             question: "¿Qué es BrandMirror?",
             answer:
-              "BrandMirror es una auditoría web con IA para cualquier homepage que necesita explicar valor y convertir. Lee posicionamiento, visibilidad en IA, claridad de oferta, credibilidad visual y preparación para convertir.",
+              "BrandMirror es una auditoría de marca con IA para cualquier homepage que necesita explicar valor y convertir. Lee posicionamiento, visibilidad en IA, claridad de oferta, credibilidad visual y preparación para convertir.",
           },
           {
             question: "¿Qué recibo en la primera lectura gratuita?",
@@ -891,7 +891,7 @@ export const siteCopy = {
       navOffer: "Предложение",
       navSample: "Пример отчёта",
       kicker: "BrandMirror показывает, что исправить первым.",
-      title: "AI-аудит для любого сайта",
+      title: "AI-аудит бренда для любого сайта",
       body:
         "У сайта может быть утечка, которую посетитель чувствует раньше, чем может назвать. Вставь любой homepage и получи бесплатный первый разбор позиционирования, видимости в ИИ, ясности оффера, визуального доверия и готовности к конверсии.",
       primaryCta: "Прочитать мой бренд",

@@ -3,7 +3,7 @@ import { absoluteUrl, SITE_URL } from "@/lib/site-url";
 export function GET() {
   const body = `# BrandMirror
 
-BrandMirror is an AI website audit for any homepage that needs to explain value and convert.
+BrandMirror is an AI brand audit for any homepage that needs to explain value and convert.
 
 Primary URL: ${SITE_URL}
 Created by: SAHAR Studio
@@ -27,7 +27,7 @@ BrandMirror reads any homepage across positioning, AI visibility, offer clarity,
 
 ## Good Summary
 
-BrandMirror is an AI-powered website diagnosis tool that helps any website understand why its homepage is not converting and what to fix first.
+BrandMirror is an AI-powered brand diagnosis tool that helps any website understand why its homepage is not converting and what to fix first.
 
 ## Contact
 

@@ -36,14 +36,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: "BrandMirror",
   title: {
-    default: "BrandMirror | AI Website Audit for Any Website",
+    default: "BrandMirror | AI Brand Audit for Any Website",
     template: "%s | BrandMirror",
   },
   description:
-    "BrandMirror is an AI website audit that reads any homepage for positioning, AI visibility, offer clarity, visual trust, and conversion readiness before buyers drift away.",
+    "BrandMirror is an AI brand audit that reads any homepage for positioning, AI visibility, offer clarity, visual trust, and conversion readiness before buyers drift away.",
   keywords: [
-    "AI website audit",
     "AI brand audit",
+    "AI website audit",
     "homepage audit",
     "brand positioning audit",
     "website conversion audit",
@@ -56,15 +56,15 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "BrandMirror",
-    title: "BrandMirror | AI Website Audit for Any Website",
+    title: "BrandMirror | AI Brand Audit for Any Website",
     description:
       "See what any homepage is making clear, what is leaking trust, and what to fix first across positioning, AI visibility, offer, visual credibility, and conversion.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BrandMirror | AI Website Audit for Any Website",
+    title: "BrandMirror | AI Brand Audit for Any Website",
     description:
-      "A fast AI-powered website read for any homepage that needs to explain value and convert.",
+      "A fast AI-powered brand read for any homepage that needs to explain value and convert.",
   },
   robots: {
     index: true,
