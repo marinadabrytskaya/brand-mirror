@@ -46,9 +46,9 @@ export const siteCopy = {
       ],
       signalHeadingLabel: "What it reads",
       signalHeadingTitle:
-        "Buyers don't read your brand. They feel it.",
+        "A brand diagnosis for buyers, search engines, and LLMs.",
       signalHeadingBody:
-        "BrandMirror reads what they feel — before they decide to leave.",
+        "BrandMirror reads how clearly a website explains its value, how credible it feels, and whether AI tools can understand, repeat, and recommend the brand.",
       signalColumns: [
         {
           label: "Positioning",
@@ -469,9 +469,9 @@ export const siteCopy = {
       ],
       signalHeadingLabel: "Qué lee",
       signalHeadingTitle:
-        "Un diagnóstico de marca que trata gusto, tono y claridad como un solo sistema.",
+        "Un diagnóstico de marca para compradores, buscadores y modelos de IA.",
       signalHeadingBody:
-        "BrandMirror está hecho para mostrar lo que los compradores perciben antes de poder explicarlo. El resultado debe sentirse como un diagnóstico comercial, no como una lista de comentarios.",
+        "BrandMirror lee con qué claridad el sitio explica su valor, cuánta confianza genera y si las herramientas de IA pueden entender, repetir y recomendar la marca.",
       signalColumns: [
         {
           label: "Posicionamiento",
@@ -944,9 +944,9 @@ export const siteCopy = {
       ],
       signalHeadingLabel: "Что он читает",
       signalHeadingTitle:
-        "Диагностика бренда, которая рассматривает вкус, тон и ясность как одну систему.",
+        "Диагностика бренда для покупателей, поисковых систем и LLM-моделей.",
       signalHeadingBody:
-        "BrandMirror создан, чтобы показать то, что покупатель чувствует раньше, чем может это сформулировать. Результат должен ощущаться как коммерческий диагноз, а не как набор комментариев.",
+        "BrandMirror читает, насколько ясно сайт объясняет ценность, вызывает доверие и может быть понят, повторён и рекомендован AI-инструментами.",
       signalColumns: [
         {
           label: "Позиционирование",
