@@ -11,7 +11,10 @@ export const metadata: Metadata = {
   },
 };
 
-const homeStructuredData = [
+function buildHomeStructuredData(
+  faqItems: ReadonlyArray<{ question: string; answer: string }>,
+) {
+  return [
   {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -45,7 +48,20 @@ const homeStructuredData = [
       url: SITE_URL,
     },
   },
-] as const;
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  },
+  ];
+}
 
 const heroLiveScanCopy = {
   en: {
@@ -159,10 +175,9 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
         {rows.map((row) => (
           <div
             key={row.label}
-            className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
-            style={{ gridTemplateColumns: "150px minmax(128px,1fr) 74px" }}
+            className="grid grid-cols-[minmax(0,6.9rem)_minmax(4rem,1fr)_3.5rem] items-center gap-3 border-t border-[rgba(255,255,255,0.06)] pt-3 sm:grid-cols-[150px_minmax(128px,1fr)_74px] sm:gap-4"
           >
-            <span className="whitespace-nowrap font-mono text-[0.82rem] font-semibold uppercase tracking-[0.15em] text-[rgba(237,237,242,0.68)]">
+            <span className="truncate font-mono text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[rgba(237,237,242,0.68)] sm:text-[0.82rem] sm:tracking-[0.15em]">
               {row.label}
             </span>
             <span className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
@@ -172,7 +187,7 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
               />
             </span>
             <span
-              className="text-right font-sans text-[2.45rem] font-semibold leading-none tabular-nums"
+              className="text-right font-sans text-[2rem] font-semibold leading-none tabular-nums sm:text-[2.45rem]"
               style={{ color: row.color }}
             >
               {row.value}
@@ -233,13 +248,14 @@ export default async function Home({
   const locale = siteI18n.getSiteLocale(params.lang);
   const copy = siteI18n.siteCopy[locale].landing;
   const refundLine = refundLineForLocale(locale);
+  const structuredData = buildHomeStructuredData(copy.faq.items);
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(homeStructuredData).replace(/</g, "\\u003c"),
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
       />
       <section className="relative min-h-[100svh] px-6 pb-10 pt-3 sm:px-8 lg:px-12">
@@ -275,7 +291,7 @@ export default async function Home({
           </header>
 
           <div className="grid flex-1 items-center gap-10 pb-4 pt-8 lg:grid-cols-[0.88fr_1.12fr] lg:pt-8">
-            <div className="max-w-xl">
+            <div className="min-w-0 max-w-xl">
               <p className="section-label soft-fade-up">{copy.kicker}</p>
               <p className="soft-fade-up mt-4 max-w-[44rem] font-serif text-[clamp(3.3rem,8vw,6.4rem)] leading-[0.9] tracking-[-0.06em] text-[color:var(--foreground)]">
                 BrandMirror
@@ -286,6 +302,16 @@ export default async function Home({
               <p className="soft-fade-up-slow mt-6 max-w-xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
                 {copy.body}
               </p>
+              <div className="soft-fade-up-slow mt-6 grid gap-3 border-y border-[color:var(--line)] py-5 sm:grid-cols-3">
+                {copy.heroProofs.map((proof) => (
+                  <p
+                    key={proof}
+                    className="text-sm font-medium leading-6 text-[color:var(--foreground-soft)]"
+                  >
+                    {proof}
+                  </p>
+                ))}
+              </div>
               <div className="soft-fade-up-slow mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={siteI18n.withLang("/first-read", locale)}
@@ -302,7 +328,7 @@ export default async function Home({
               </div>
             </div>
 
-            <div className="soft-fade-up-slow relative">
+            <div className="soft-fade-up-slow relative min-w-0">
               <Link
                 href={siteI18n.withLang("/first-read", locale)}
                 className="block transition duration-500 hover:-translate-y-1"
@@ -467,6 +493,31 @@ export default async function Home({
           <p className="mt-4 text-sm font-medium text-[color:var(--foreground-soft)]">
             {refundLine}
           </p>
+        </div>
+      </section>
+
+      <section className="px-6 py-20 sm:px-8 lg:px-12">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.4fr_0.6fr]">
+          <div>
+            <SectionHeading
+              label={copy.faq.label}
+              title={copy.faq.title}
+              body={copy.faq.body}
+            />
+          </div>
+
+          <div className="editorial-rule divide-y divide-[color:var(--line)] border-y border-[color:var(--line)]">
+            {copy.faq.items.map((item) => (
+              <div key={item.question} className="grid gap-4 py-6 sm:grid-cols-[0.48fr_0.52fr]">
+                <h3 className="font-serif text-2xl leading-tight tracking-[-0.03em] text-[color:var(--foreground)]">
+                  {item.question}
+                </h3>
+                <p className="text-base leading-7 text-[color:var(--foreground-soft)]">
+                  {item.answer}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

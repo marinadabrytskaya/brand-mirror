@@ -32,16 +32,16 @@ export const siteCopy = {
       navHow: "How it works",
       navOffer: "Offer",
       navSample: "Sample report",
-      kicker: "BrandMirror finds it in 60 seconds. Free.",
-      title: "Your brand has a leak.",
+      kicker: "BrandMirror shows what to fix first.",
+      title: "AI Brand Audit for Founders",
       body:
-        "Buyers land on your homepage, sense something is off, and leave. They can't name it. BrandMirror can.",
+        "Your brand has a leak buyers can feel before they can name it. Enter a homepage and get a free first read of your positioning, AI visibility, offer clarity, visual trust, and conversion readiness.",
       primaryCta: "\u25B6 Read My Brand",
       secondaryCta: "See sample report \u2192",
       heroProofs: [
-        "Free first signal before asking for payment.",
-        "Paid report only when the diagnosis already feels specific.",
-        "Built to explain why the brand is not converting.",
+        "Free first read: 5 scores, strongest asset, main friction.",
+        "$197 full report: website evidence, fix stack, competitor read, PDF.",
+        "Built for founders who need to know what to fix, not just what to admire.",
       ],
       signalHeadingLabel: "What it reads",
       signalHeadingTitle:
@@ -207,6 +207,39 @@ export const siteCopy = {
         ],
         primaryCta: "\u25B6 UNLOCK FULL REPORT — $197",
         secondaryCta: "See sample report \u2192",
+      },
+      faq: {
+        label: "Answers for humans and AI",
+        title: "What BrandMirror is, what it includes, and when to use it.",
+        body:
+          "These are the plain-language answers a buyer, developer, or AI system should be able to repeat without guessing.",
+        items: [
+          {
+            question: "What is BrandMirror?",
+            answer:
+              "BrandMirror is an AI brand audit for founders, studios, and premium service brands. It reads a homepage across positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
+          },
+          {
+            question: "What do I get in the free first read?",
+            answer:
+              "The free first read gives a fast diagnostic signal: score dashboard, strongest asset, main friction, first diagnosis, and a clear next-step teaser before payment.",
+          },
+          {
+            question: "What is included in the $197 full report?",
+            answer:
+              "The paid report includes the full first read, score dashboard, website evidence, five commercial deep dives, AI visibility read, competitor intelligence, commercial impact, priority fix stack, one-page brand brief, implementation playbook, and PDF export.",
+          },
+          {
+            question: "Who is BrandMirror best for?",
+            answer:
+              "BrandMirror is best for founders, studios, consultants, and premium service brands that already look credible but need clearer positioning, offer language, proof, and conversion direction.",
+          },
+          {
+            question: "Can I hand the recommendations to a developer?",
+            answer:
+              "Yes. The full report includes concrete implementation guidance, including messaging priorities, website structure, AI visibility tasks, metadata/schema checks, and priority fixes.",
+          },
+        ],
       },
       final: {
         label: "Final cue",
@@ -397,16 +430,16 @@ export const siteCopy = {
       navHow: "Cómo funciona",
       navOffer: "Oferta",
       navSample: "Reporte de muestra",
-      kicker: "Primera lectura gratis para marcas que deberían convertir mejor",
-      title: "Deja que BrandMirror lea la primera señal.",
+      kicker: "BrandMirror muestra qué corregir primero.",
+      title: "Auditoría de marca con IA para founders",
       body:
-        "Introduce un sitio web. Recibe la primera lectura diagnóstica: puntuación, señal, fricción y la razón más clara por la que el comprador duda.",
+        "Tu marca tiene una fuga que el comprador siente antes de poder nombrarla. Introduce una homepage y recibe una primera lectura gratuita de posicionamiento, visibilidad en IA, claridad de oferta, confianza visual y preparación para convertir.",
       primaryCta: "Lee mi marca",
       secondaryCta: "Ver reporte de muestra",
       heroProofs: [
-        "Señal gratuita antes de pedir pago.",
-        "Reporte de pago solo cuando el diagnóstico ya se siente específico.",
-        "Diseñado para explicar por qué la marca no está convirtiendo.",
+        "Primera lectura gratis: 5 puntuaciones, activo más fuerte y fricción principal.",
+        "Reporte completo de $197: evidencia del sitio, prioridades de corrección, lectura competitiva y PDF.",
+        "Hecho para founders que necesitan saber qué corregir, no solo qué se ve bien.",
       ],
       signalHeadingLabel: "Qué lee",
       signalHeadingTitle:
@@ -560,6 +593,39 @@ export const siteCopy = {
         ],
         primaryCta: "Empezar primera lectura gratis",
         secondaryCta: "Revisar estructura del reporte completo",
+      },
+      faq: {
+        label: "Respuestas para personas e IA",
+        title: "Qué es BrandMirror, qué incluye y cuándo usarlo.",
+        body:
+          "Estas son las respuestas claras que un comprador, desarrollador o sistema de IA debería poder repetir sin adivinar.",
+        items: [
+          {
+            question: "¿Qué es BrandMirror?",
+            answer:
+              "BrandMirror es una auditoría de marca con IA para founders, estudios y marcas de servicios premium. Lee una homepage desde posicionamiento, visibilidad en IA, claridad de oferta, credibilidad visual y preparación para convertir.",
+          },
+          {
+            question: "¿Qué recibo en la primera lectura gratuita?",
+            answer:
+              "La primera lectura gratuita entrega una señal diagnóstica rápida: tablero de puntuaciones, activo más fuerte, fricción principal, primer diagnóstico y un teaser claro del siguiente paso antes del pago.",
+          },
+          {
+            question: "¿Qué incluye el reporte completo de $197?",
+            answer:
+              "El reporte pagado incluye la primera lectura completa, tablero de puntuaciones, evidencia del sitio, cinco análisis comerciales profundos, lectura de visibilidad en IA, inteligencia competitiva, impacto comercial, prioridades de corrección, brief de marca de una página, playbook de implementación y exportación PDF.",
+          },
+          {
+            question: "¿Para quién es mejor BrandMirror?",
+            answer:
+              "BrandMirror es mejor para founders, estudios, consultores y marcas de servicios premium que ya se ven creíbles, pero necesitan posicionamiento, lenguaje de oferta, prueba y dirección de conversión más claros.",
+          },
+          {
+            question: "¿Puedo entregar las recomendaciones a un desarrollador?",
+            answer:
+              "Sí. El reporte completo incluye guía concreta de implementación: prioridades de mensaje, estructura web, tareas de visibilidad en IA, revisión de metadatos/schema y correcciones prioritarias.",
+          },
+        ],
       },
       final: {
         label: "Cierre",
@@ -814,16 +880,16 @@ export const siteCopy = {
       navHow: "Как это работает",
       navOffer: "Предложение",
       navSample: "Пример отчёта",
-      kicker: "Бесплатный первый разбор для брендов, которым нужно конвертировать лучше",
-      title: "Дай BrandMirror прочитать первый сигнал.",
+      kicker: "BrandMirror показывает, что исправить первым.",
+      title: "AI-аудит бренда для founders",
       body:
-        "Вставь сайт и получи первый диагноз: оценку, сильный сигнал, точку трения и главную причину, почему покупатель сомневается.",
+        "У бренда есть утечка, которую покупатель чувствует раньше, чем может назвать. Вставь homepage и получи бесплатный первый разбор позиционирования, видимости в ИИ, ясности оффера, визуального доверия и готовности к конверсии.",
       primaryCta: "Прочитать мой бренд",
       secondaryCta: "Смотреть пример отчёта",
       heroProofs: [
-        "Сначала бесплатный сигнал, потом уже оплата.",
-        "Платный отчёт открывается только когда диагноз уже кажется точным.",
-        "Продукт сделан, чтобы объяснить, почему бренд не конвертирует.",
+        "Бесплатный первый разбор: 5 оценок, самый сильный актив и главная точка трения.",
+        "Полный отчёт за $197: доказательства с сайта, стек правок, конкурентный разбор и PDF.",
+        "Для founders, которым нужно понять, что исправить, а не просто что красиво выглядит.",
       ],
       signalHeadingLabel: "Что он читает",
       signalHeadingTitle:
@@ -977,6 +1043,39 @@ export const siteCopy = {
         ],
         primaryCta: "Начать бесплатный первый разбор",
         secondaryCta: "Посмотреть структуру полного отчёта",
+      },
+      faq: {
+        label: "Ответы для людей и ИИ",
+        title: "Что такое BrandMirror, что входит внутрь и когда его использовать.",
+        body:
+          "Это ясные ответы, которые покупатель, разработчик или ИИ-система должны суметь повторить без догадок.",
+        items: [
+          {
+            question: "Что такое BrandMirror?",
+            answer:
+              "BrandMirror — это AI-аудит бренда для founders, студий и премиальных сервисных брендов. Он читает homepage через позиционирование, видимость в ИИ, ясность оффера, визуальное доверие и готовность к конверсии.",
+          },
+          {
+            question: "Что я получаю в бесплатном первом разборе?",
+            answer:
+              "Бесплатный первый разбор даёт быстрый диагностический сигнал: панель оценок, самый сильный актив, главную точку трения, первый диагноз и понятный тизер следующего шага до оплаты.",
+          },
+          {
+            question: "Что входит в полный отчёт за $197?",
+            answer:
+              "Платный отчёт включает полный первый разбор, панель оценок, доказательства с сайта, пять глубоких коммерческих разборов, AI visibility, конкурентную разведку, коммерческий эффект, стек приоритетных правок, бренд-бриф на одну страницу, плейбук внедрения и PDF-экспорт.",
+          },
+          {
+            question: "Кому BrandMirror подходит лучше всего?",
+            answer:
+              "BrandMirror лучше всего подходит founders, студиям, консультантам и премиальным сервисным брендам, которые уже выглядят убедительно, но нуждаются в более ясном позиционировании, оффере, proof и конверсионном направлении.",
+          },
+          {
+            question: "Можно ли передать рекомендации разработчику?",
+            answer:
+              "Да. Полный отчёт включает конкретные задачи для внедрения: приоритеты сообщения, структуру сайта, задачи по видимости в ИИ, проверку metadata/schema и приоритетные правки.",
+          },
+        ],
       },
       final: {
         label: "Финальный акцент",
