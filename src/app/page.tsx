@@ -241,13 +241,15 @@ function SectionHeading({
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="section-label">{label}</p>
+      {label ? <p className="section-label">{label}</p> : null}
       <h2 className="mt-4 font-serif text-4xl leading-tight tracking-[-0.03em] text-[color:var(--foreground)] sm:text-5xl">
         {title}
       </h2>
-      <p className="mt-4 max-w-xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
-        {body}
-      </p>
+      {body ? (
+        <p className="mt-4 max-w-xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
+          {body}
+        </p>
+      ) : null}
     </div>
   );
 }

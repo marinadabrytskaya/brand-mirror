@@ -215,10 +215,9 @@ export const siteCopy = {
         secondaryCta: "See sample report \u2192",
       },
       faq: {
-        label: "Answers for humans and AI",
-        title: "What BrandMirror is, what it includes, and when to use it.",
-        body:
-          "These are the plain-language answers a buyer, developer, or AI system should be able to repeat without guessing.",
+        label: "",
+        title: "FAQ",
+        body: "",
         items: [
           {
             question: "What is BrandMirror?",
@@ -626,10 +625,9 @@ export const siteCopy = {
         secondaryCta: "Revisar estructura del reporte completo",
       },
       faq: {
-        label: "Respuestas para personas e IA",
-        title: "Qué es BrandMirror, qué incluye y cuándo usarlo.",
-        body:
-          "Estas son las respuestas claras que un comprador, desarrollador o sistema de IA debería poder repetir sin adivinar.",
+        label: "",
+        title: "FAQ",
+        body: "",
         items: [
           {
             question: "¿Qué es BrandMirror?",
@@ -1101,10 +1099,9 @@ export const siteCopy = {
         secondaryCta: "Посмотреть структуру полного отчёта",
       },
       faq: {
-        label: "Ответы для людей и ИИ",
-        title: "Что такое BrandMirror, что входит внутрь и когда его использовать.",
-        body:
-          "Это ясные ответы, которые покупатель, разработчик или ИИ-система должны суметь повторить без догадок.",
+        label: "",
+        title: "FAQ",
+        body: "",
         items: [
           {
             question: "Что такое BrandMirror?",
