@@ -6,6 +6,7 @@ import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { applyPromoDiscount, createPromoToken, getPromoDiscount } from "@/lib/promo";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {

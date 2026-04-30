@@ -19,6 +19,10 @@ import {
   DEFAULT_MODEL,
 } from "@/lib/brand-read";
 import {
+  hasConfiguredChatModel,
+  requestChatJsonText,
+} from "@/lib/openai-json";
+import {
   captureWebsiteSurface,
   type SiteCapture,
   type SiteCaptureAnchor,
@@ -3011,8 +3015,7 @@ async function requestGeminiBrandReport(
   websiteContext: Awaited<ReturnType<typeof fetchWebsiteContext>>,
   language: SiteLocale,
 ) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
+  if (!hasConfiguredChatModel("brand-report")) return null;
   const targetLanguage = LANGUAGE_NAMES[language];
 
   const prompt = `
@@ -3255,43 +3258,25 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
 }
 `;
 
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
-  const response = await fetch(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+  const text = await requestChatJsonText({
+    scope: "brand-report",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a brand strategist. Always respond with valid JSON only, no markdown fences.",
       },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content: "You are a brand strategist. Always respond with valid JSON only, no markdown fences.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenAI request failed: ${response.status} ${errorText}`);
-  }
-
-  const payload = await response.json();
-  const text = payload?.choices?.[0]?.message?.content || "";
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.7,
+    timeoutMs: 45000,
+  });
 
   if (!text) {
-    throw new Error("OpenAI returned an empty response");
+    return null;
   }
 
   return extractJson(text) as RawBrandReport;
