@@ -193,7 +193,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [error, setError] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
-  const [isTestingFullPdf, setIsTestingFullPdf] = useState(false);
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -337,51 +336,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     }
     return copy.scanner?.enterUrl ?? "ENTER URL";
   })();
-
-  async function downloadPdfFromResponse(response: Response, filename: string) {
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
-  }
-
-  async function handleTestFullPdf() {
-    if (!currentUrl) return;
-    setError("");
-    setIsTestingFullPdf(true);
-    try {
-      const response = await fetch("/api/brand-report/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: currentUrl, language: locale, readResult: result }),
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as ErrorResponse;
-        throw new Error(
-          payload.detail || payload.error || "Unable to export the full PDF right now.",
-        );
-      }
-
-      const filename = `${(result.brandName || "brandmirror").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-full-report.pdf`;
-      await downloadPdfFromResponse(response, filename);
-    } catch (downloadError) {
-      setError(
-        downloadError instanceof Error
-          ? downloadError.message
-          : "Unable to export the full PDF right now.",
-      );
-    } finally {
-      setIsTestingFullPdf(false);
-    }
-  }
 
   async function handleOpenCheckout() {
     const checkedUrl = normalizeUrl(reportSourceUrl);
@@ -1124,24 +1078,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197").toUpperCase()}
                   </button>
                 </div>
-                {currentUrl ? (
-                  <button
-                    type="button"
-                    onClick={handleTestFullPdf}
-                    disabled={isTestingFullPdf}
-                    className="inline-flex items-center justify-center rounded-full border px-4 py-2 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
-                    style={{
-                      ...metaLabel,
-                      fontSize: "10px",
-                      borderColor: "rgba(255,255,255,0.16)",
-                      color: COLOR.textSoft,
-                    }}
-                  >
-                    {isTestingFullPdf
-                      ? copy.testFullPdfBusy.toUpperCase()
-                      : copy.testFullPdfIdle.toUpperCase()}
-                  </button>
-                ) : null}
               </div>
             </div>
           </div>

@@ -1786,7 +1786,14 @@ export function FullReportExperience({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: report.url, language: locale, report }),
+        body: JSON.stringify({
+          url: report.url,
+          language: locale,
+          report,
+          reference: searchParams.get("reference") || undefined,
+          sessionId: searchParams.get("session_id") || paymentSessionId || undefined,
+          promoToken: searchParams.get("promo_token") || undefined,
+        }),
       });
 
       if (!response.ok) {

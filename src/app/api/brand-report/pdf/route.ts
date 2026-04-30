@@ -2,10 +2,13 @@ import {
   type BrandReport,
   generateBrandReport,
   generateBrandReportPdf,
-  generateBrandReportPreviewFromRead,
 } from "@/lib/brand-report";
-import { type BrandReadResult } from "@/lib/brand-read";
+import { normalizeUrl } from "@/lib/brand-read";
 import { getSiteLocale } from "@/lib/site-i18n";
+import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
+import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
+import { verifyPromoToken } from "@/lib/promo";
+import { getStoredPaidReport } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +18,9 @@ async function parseRequestBody(request: Request): Promise<{
   url?: string;
   language?: string;
   report?: BrandReport;
-  readResult?: BrandReadResult;
+  sessionId?: string;
+  reference?: string;
+  promoToken?: string;
 }> {
   const contentType = request.headers.get("content-type") || "";
 
@@ -24,7 +29,9 @@ async function parseRequestBody(request: Request): Promise<{
       url?: string;
       language?: string;
       report?: BrandReport;
-      readResult?: BrandReadResult;
+      sessionId?: string;
+      reference?: string;
+      promoToken?: string;
     };
   }
 
@@ -38,7 +45,9 @@ async function parseRequestBody(request: Request): Promise<{
     const rawUrl = form.get("url");
     const rawLanguage = form.get("language");
     const rawReport = form.get("report");
-    const rawReadResult = form.get("readResult");
+    const rawSessionId = form.get("sessionId");
+    const rawReference = form.get("reference");
+    const rawPromoToken = form.get("promoToken");
 
     return {
       url: typeof rawUrl === "string" ? rawUrl : undefined,
@@ -47,10 +56,9 @@ async function parseRequestBody(request: Request): Promise<{
         typeof rawReport === "string" && rawReport.trim()
           ? (JSON.parse(rawReport) as BrandReport)
           : undefined,
-      readResult:
-        typeof rawReadResult === "string" && rawReadResult.trim()
-          ? (JSON.parse(rawReadResult) as BrandReadResult)
-          : undefined,
+      sessionId: typeof rawSessionId === "string" ? rawSessionId : undefined,
+      reference: typeof rawReference === "string" ? rawReference : undefined,
+      promoToken: typeof rawPromoToken === "string" ? rawPromoToken : undefined,
     };
   }
 
@@ -60,13 +68,63 @@ async function parseRequestBody(request: Request): Promise<{
 export async function POST(request: Request) {
   try {
     const body = await parseRequestBody(request);
-    const language = getSiteLocale(body.language);
+    const requestedLanguage = getSiteLocale(body.language);
+    const promoAccess = verifyPromoToken(body.promoToken);
+    const paystackAccess = isPaystackConfigured()
+      ? await getPaystackCheckoutAccess(body.reference)
+      : null;
+    const stripeAccess =
+      !paystackAccess && isStripeConfigured()
+        ? await getPaidCheckoutAccess(body.sessionId)
+        : null;
+    const paidAccess = paystackAccess || stripeAccess || promoAccess;
+
+    if (!paidAccess) {
+      return new Response(
+        JSON.stringify({
+          error: "Full report PDF is locked until payment is confirmed.",
+          detail: "Complete checkout or use a valid promo code before exporting the full report PDF.",
+        }),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    }
+
+    const paymentReference =
+      paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
+    const paidUrl = normalizeUrl(paidAccess.reportUrl);
+    if (!paidUrl) {
+      return new Response(
+        JSON.stringify({
+          error: "Full report PDF could not be exported.",
+          detail: "The paid checkout did not include a valid report URL.",
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    }
+    const providedReportUrl = normalizeUrl(body.report?.url || body.url || "");
+    const stored = paymentReference
+      ? await getStoredPaidReport(paymentReference).catch((storeError) => {
+          console.warn("Unable to read stored paid report for PDF export", storeError);
+          return null;
+        })
+      : null;
     const report =
-      body.report && body.report.url
+      body.report && body.report.url && providedReportUrl && providedReportUrl === paidUrl
         ? body.report
-        : body.readResult && body.url
-          ? await generateBrandReportPreviewFromRead(body.url, body.readResult)
-          : await generateBrandReport(body.url || "", language);
+        : stored?.report && normalizeUrl(stored.report.url) === paidUrl
+          ? stored.report
+          : await generateBrandReport(paidUrl, paidAccess.locale || requestedLanguage);
+    const language = paidAccess.locale || requestedLanguage;
     const pdf = await generateBrandReportPdf(report, language);
 
     return new Response(new Uint8Array(pdf), {

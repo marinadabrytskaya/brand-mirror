@@ -264,8 +264,6 @@ export const siteCopy = {
       nextMove: "Next move",
       freePdfIdle: "Download free read PDF",
       freePdfBusy: "Exporting free PDF...",
-      testFullPdfIdle: "Test full report PDF",
-      testFullPdfBusy: "Building full PDF...",
       unlockLabel: "Unlock full report",
       unlockBody:
         "Unlock the complete BrandMirror diagnosis with signal read, website surface, five deep dives, competitor intelligence, commercial impact estimate, one-page brand brief, and implementation playbook.",
@@ -615,8 +613,6 @@ export const siteCopy = {
       nextMove: "Siguiente paso",
       freePdfIdle: "Descargar PDF gratuito",
       freePdfBusy: "Exportando PDF gratuito...",
-      testFullPdfIdle: "Probar PDF completo",
-      testFullPdfBusy: "Generando PDF completo...",
       unlockLabel: "Desbloquear reporte completo",
       unlockBody:
         "Desbloquea el diagnóstico completo de BrandMirror con lectura de señales, superficie del sitio, 5 análisis profundos, escenarios de impacto comercial y herramientas de implementación que convierten esta lectura en acción.",
@@ -1034,8 +1030,6 @@ export const siteCopy = {
       nextMove: "Следующий шаг",
       freePdfIdle: "Скачать бесплатный PDF",
       freePdfBusy: "Собираю бесплатный PDF...",
-      testFullPdfIdle: "Проверить PDF полного отчёта",
-      testFullPdfBusy: "Собираю полный PDF...",
       unlockLabel: "Открыть полный отчёт",
       unlockBody:
         "Откройте полный диагноз BrandMirror: разбор сигналов, поверхность сайта, 5 глубоких разборов, анализ конкурентов, оценку коммерческого эффекта, одностраничный бренд-бриф и план внедрения.",
