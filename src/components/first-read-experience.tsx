@@ -737,7 +737,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 />
                 <span>
                   {copy.marketingConsentLabel ??
-                    "Send me occasional SAHAR/BrandMirror updates, offers, and useful promo materials. I can unsubscribe anytime."}
+                    "Send me occasional SAHAR/BrandMirror updates, offers, and useful articles on branding and AI. I can unsubscribe anytime."}
                 </span>
               </label>
             </div>
