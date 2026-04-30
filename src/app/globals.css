@@ -208,7 +208,7 @@ button {
     brandmirrorReadoutNoise 7s steps(3, end) infinite;
 }
 
-.brandmirror-hero-live-scan > * {
+.brandmirror-hero-live-scan > :not(.brandmirror-corner-mark) {
   position: relative;
   z-index: 1;
 }

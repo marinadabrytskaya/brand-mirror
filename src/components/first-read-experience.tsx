@@ -1518,7 +1518,7 @@ function ScannerReadout({
         background: "rgba(255,255,255,0.015)",
       }}
     >
-      <CornerMarks color={showLiveScores ? band.color : idleColor} />
+      <CornerMarks color={showLiveScores ? band.color : idleColor} hideTopLeft={showLiveScores} />
 
       {/* Tiny status strip, reminiscent of a device readout */}
       <div
@@ -1822,7 +1822,7 @@ function ScannerReadout({
   );
 }
 
-function CornerMarks({ color }: { color: string }) {
+function CornerMarks({ color, hideTopLeft = false }: { color: string; hideTopLeft?: boolean }) {
   const sz = 12;
   const base: React.CSSProperties = {
     position: "absolute",
@@ -1833,16 +1833,18 @@ function CornerMarks({ color }: { color: string }) {
   };
   return (
     <>
-      <span
-        aria-hidden
-        style={{
-          ...base,
-          top: 10,
-          left: 10,
-          borderTop: `0.5px solid ${color}`,
-          borderLeft: `0.5px solid ${color}`,
-        }}
-      />
+      {hideTopLeft ? null : (
+        <span
+          aria-hidden
+          style={{
+            ...base,
+            top: 10,
+            left: 10,
+            borderTop: `0.5px solid ${color}`,
+            borderLeft: `0.5px solid ${color}`,
+          }}
+        />
+      )}
       <span
         aria-hidden
         style={{
