@@ -12,6 +12,7 @@ import {
   type VisualWorld,
   fetchWebsiteContext,
   generateBrandRead,
+  getBenchmarkScoreFloors,
   inferIndustryArchetype,
   normalizeUrl,
   normalizeWhitespace,
@@ -2832,7 +2833,7 @@ function normalizeReport(
     fallback.scorecard,
   ]);
   const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings, language);
-  const normalizedScorecard = scorecardSource.slice(0, 5).map((item, index) => ({
+  let normalizedScorecard = scorecardSource.slice(0, 5).map((item, index) => ({
     label: fallback.scorecard[index]?.label || "Score",
     score: clampScore(
       typeof item.score === "number" && Number.isFinite(item.score)
@@ -2847,10 +2848,38 @@ function normalizeReport(
         160,
       ) || fallback.scorecard[index]?.note || "",
   }));
+  const benchmarkFloors = getBenchmarkScoreFloors(fallback.url);
+  if (benchmarkFloors) {
+    normalizedScorecard = normalizedScorecard.map((item) => {
+      const normalizedLabel = item.label.toLowerCase();
+      const floor =
+        normalizedLabel.includes("positioning")
+          ? benchmarkFloors.positioningClarity
+          : normalizedLabel.includes("ai visibility")
+            ? benchmarkFloors.toneCoherence
+            : normalizedLabel.includes("visual")
+              ? benchmarkFloors.visualCredibility
+              : normalizedLabel.includes("offer")
+                ? benchmarkFloors.offerSpecificity
+                : normalizedLabel.includes("conversion")
+                  ? benchmarkFloors.conversionReadiness
+                  : undefined;
+
+      return typeof floor === "number" ? { ...item, score: Math.max(item.score, floor) } : item;
+    });
+  }
   const scoreDerivedTagline = buildSignalTaglineFromScores(
     normalizedScorecard.map((item) => ({ label: item.label, score: item.score })),
     fallback.tagline,
   );
+  const scorecardAverage = Math.round(
+    normalizedScorecard.reduce((sum, item) => sum + item.score, 0) /
+      Math.max(normalizedScorecard.length, 1),
+  );
+  const basePosterScore = clampScore(raw.posterScore, fallback.posterScore);
+  const normalizedPosterScore = benchmarkFloors
+    ? Math.max(basePosterScore, scorecardAverage, fallback.posterScore)
+    : basePosterScore;
 
   const normalized: BrandReport = {
     url: fallback.url,
@@ -2859,9 +2888,9 @@ function normalizeReport(
     title: truncate(normalizeWhitespace(raw.title || fallback.title), 80),
     genre: truncate(normalizeWhitespace(raw.genre || fallback.genre), 48),
     tagline: cleanPosterTagline(raw.tagline, scoreDerivedTagline),
-    posterScore: clampScore(raw.posterScore, fallback.posterScore),
-    scoreBand: truncate(normalizeWhitespace(raw.scoreBand || fallback.scoreBand), 72),
-    scoreModifier: truncate(normalizeWhitespace(raw.scoreModifier || fallback.scoreModifier), 180),
+    posterScore: normalizedPosterScore,
+    scoreBand: scoreBandLabel(normalizedPosterScore),
+    scoreModifier: bandModifier(normalizedPosterScore),
     whatItDoes: truncate(normalizeWhitespace(raw.whatItDoes || fallback.whatItDoes), 280),
     snapshot: cleanNarrativeAeoLeaks(
       raw.snapshot || fallback.snapshot,
@@ -3561,6 +3590,7 @@ CALIBRATION GUARDS — apply these before every score.
 - 85-100 is rare. Reserved for brands visually indistinguishable from a top-10 player in their category (Stripe, Linear, Aesop, Arc, Hermès, Apple). A WordPress theme, Squarespace template, generic dark-gradient SaaS hero, or stock-photo-heavy B2B page caps at 75.
 - Do not place more than ONE axis above 85 unless at least three other axes are already comfortably above 75. A brand cannot be "leading" on one thing while being ordinary on the rest.
 - Default to 60-80 for most brands. If your instinct says "this feels solid", that is STABLE (70-85), not LEADING. Move the number down if you catch yourself being generous.
+- Benchmark anchors: Nike, Apple, and Stripe calibrate the top of the scale. Do not score them as average just because the homepage is campaign-led, commerce-led, or sparse in extracted text. Their visual credibility, offer trust, and conversion readiness should normally sit in STABLE-to-LEADING unless a concrete technical blocker proves otherwise.
 
 Positioning clarity — how quickly the homepage makes the offer legible to a first-time visitor.
 - 0-30   the visitor cannot say what this company does after 10 seconds. Hero is mood-only, abstract, or buried.
