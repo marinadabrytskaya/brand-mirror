@@ -386,10 +386,16 @@ function truncate(value = "", maxLength = 300) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
 }
 
+function lowerFirst(value = "") {
+  return value ? `${value.charAt(0).toLowerCase()}${value.slice(1)}` : value;
+}
+
 const POSTER_TAGLINE_FALLBACK = "A brand in search of a sharper signal.";
 
 const POSTER_TAGLINE_FORBIDDEN_PATTERNS = [
   /\b(ai|aeo|seo|schema|metadata|crawler|robots\.txt|sitemap|llms\.txt|prompt|scrap(?:e|ing)|framework|archetype|diagnosis|audit|strategy|positioning|conversion|cta)\b/i,
+  /\bthere is interest here\b/i,
+  /\bso what\b/i,
   /\bthe brand is (present|visible|there)\b/i,
   /\bthe signal is present\b/i,
   /\bthe name is visible\b/i,
@@ -473,7 +479,7 @@ function buildSignalTaglineFromScores(
     return "The signal has shape. The next step needs proof.";
   }
   if (hasOffer && hasConversion) {
-    return "There is interest here. The promise needs more proof.";
+    return "The promise is visible. The proof should arrive faster.";
   }
   if (hasVisual && hasOffer) {
     return "A beautiful signal, still searching for its sharpest line.";
@@ -2828,37 +2834,37 @@ function normalizeReport(
   fallback: BrandReport,
   language: SiteLocale = "en",
 ): BrandReport {
-  const scorecardSource =
-    raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
+  const scorecardSource = fallback.scorecard;
+  const fallbackAiVisibilityScore =
+    fallback.scorecard.find((item) => item.label.toLowerCase() === "ai visibility")?.score ??
+    fallback.posterScore;
 
-  const technicalAeoFindings = collectTechnicalAeoFindings([
-    raw.toneCheck,
-    raw.positioningRead,
-    raw.visualIdentityRead,
-    raw.aboveTheFold,
-    raw.conversionRead,
-    raw.strategicDirection,
-    raw.snapshot,
-    raw.mixedSignals,
-    raw.brandMyth,
-    raw.whatIsMissing,
-    raw.whatToDoNext,
-    raw.scorecard,
-    fallback.toneCheck,
-    fallback.scorecard,
-  ]);
+  const technicalAeoFindings =
+    fallbackAiVisibilityScore < 70
+      ? collectTechnicalAeoFindings([
+          raw.toneCheck,
+          raw.positioningRead,
+          raw.visualIdentityRead,
+          raw.aboveTheFold,
+          raw.conversionRead,
+          raw.strategicDirection,
+          raw.snapshot,
+          raw.mixedSignals,
+          raw.brandMyth,
+          raw.whatIsMissing,
+          raw.whatToDoNext,
+          raw.scorecard,
+          fallback.toneCheck,
+          fallback.scorecard,
+        ])
+      : [];
   const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings, language);
   let normalizedScorecard = scorecardSource.slice(0, 5).map((item, index) => ({
     label: fallback.scorecard[index]?.label || "Score",
-    score: clampScore(
-      typeof item.score === "number" && Number.isFinite(item.score)
-        ? item.score
-        : fallback.scorecard[index]?.score,
-      70,
-    ),
+    score: clampScore(fallback.scorecard[index]?.score ?? item.score, 70),
     note:
       cleanNarrativeAeoLeaks(
-        item.note || fallback.scorecard[index]?.note || "",
+        fallback.scorecard[index]?.note || item.note || "",
         fallback.scorecard[index]?.note || "",
         160,
       ) || fallback.scorecard[index]?.note || "",
@@ -2891,10 +2897,9 @@ function normalizeReport(
     normalizedScorecard.reduce((sum, item) => sum + item.score, 0) /
       Math.max(normalizedScorecard.length, 1),
   );
-  const basePosterScore = clampScore(raw.posterScore, fallback.posterScore);
   const normalizedPosterScore = benchmarkFloors
-    ? Math.max(basePosterScore, scorecardAverage, fallback.posterScore)
-    : basePosterScore;
+    ? Math.max(scorecardAverage, fallback.posterScore)
+    : scorecardAverage;
 
   const normalized: BrandReport = {
     url: fallback.url,
@@ -5316,13 +5321,19 @@ export async function generateBrandReportPdf(
         fingerprint,
       );
       const badPattern =
-        /(the brand is present|the brand is visible|the signal is present|the meaning needs a clearer line|the work has shape|sage energy|myth around|precision thriller|systems that only work|score|page|cta|conversion|trust before|offer.*too|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
+        /(there is interest here|so what|the brand is present|the brand is visible|the signal is present|the meaning needs a clearer line|the work has shape|sage energy|myth around|precision thriller|systems that only work|score|page|cta|conversion|trust before|offer.*too|ai visibility|discoverability|readiness|does not|still needs|too weak|too thin|unnamed|asks too early)/i;
       const groundedForCategory =
         !isIoTBrand ||
         /(iot|infrastructure|operations|industrial|connected|systems|platform|integration|manufactur|sensor|cloud)/i.test(
           cleanTagline,
         );
-      if (cleanTagline && cleanTagline.length < 120 && !badPattern.test(cleanTagline) && groundedForCategory) {
+      if (
+        cleanTagline &&
+        cleanTagline.length < 120 &&
+        isUsablePosterTagline(cleanTagline) &&
+        !badPattern.test(cleanTagline) &&
+        groundedForCategory
+      ) {
         return firstSentence(cleanTagline, cleanTagline);
       }
 
@@ -5478,6 +5489,15 @@ export async function generateBrandReportPdf(
 
     const axisScoreNote = (label: string) => scoreByLabel(label)?.note || "";
     const axisRevealingLine = (label: string) => {
+      const score = scoreByLabel(label)?.score ?? overallScore;
+      if (score >= 85) {
+        if (label === "AI visibility") {
+          return "AI systems already have enough signal to describe and recommend the brand confidently.";
+        }
+        if (label === "Conversion readiness") {
+          return "The next step is already visible and credible enough to support action.";
+        }
+      }
       if (label === "Positioning clarity") {
         return firstSentence(
           report.strongestSignal && report.mainFriction
@@ -5511,6 +5531,26 @@ export async function generateBrandReportPdf(
     };
 
     const axisMeaning = (label: string) => {
+      const score = scoreByLabel(label)?.score ?? overallScore;
+      if (score >= 85) {
+        if (label === "AI visibility") {
+          return "This is already a strong AI-readability layer. The work is to preserve naming consistency across pages, metadata, schema, and external profiles so the signal stays easy to repeat.";
+        }
+        if (label === "Conversion readiness") {
+          return "This is not a missing-CTA issue. The page already gives buyers a credible path forward; the next gain is sharper expectation-setting around that path.";
+        }
+        if (label === "Offer specificity") {
+          return "The offer is already clear enough to lead. The next gain is precision: make the strongest deliverable, buyer, and outcome impossible to miss.";
+        }
+      }
+      if (score >= 70) {
+        if (label === "AI visibility") {
+          return "The AI-readable layer is working. Keep category language, metadata, FAQ support, schema, and proof naming consistent so external systems keep describing the brand accurately.";
+        }
+        if (label === "Conversion readiness") {
+          return "The action path exists. Do not add another button by default; make the primary route, proof, and what-happens-next copy feel more connected.";
+        }
+      }
       if (label === "Positioning clarity") {
         return "Lead with category, buyer, problem, and outcome before atmosphere. The page can stay premium, but the first screen needs to remove the visitor's guessing work.";
       }
@@ -5629,7 +5669,9 @@ export async function generateBrandReportPdf(
         title: "AI Visibility",
         axis: "AI Visibility",
         body:
-          "Add exact category nouns to the H1, title tag, meta description, and schema. Keep naming identical across the homepage, metadata, and directory profiles.",
+          (scoreByLabel("AI visibility")?.score ?? overallScore) >= 70
+            ? "Keep the existing AI-readable layer consistent: reuse the same category nouns, service names, proof language, and metadata across service pages, FAQs, profiles, and directory listings."
+            : "Add exact category nouns to the H1, title tag, meta description, and schema. Keep naming identical across the homepage, metadata, and directory profiles.",
       },
       {
         title: "Offer",
@@ -5642,7 +5684,9 @@ export async function generateBrandReportPdf(
         title: "Conversion",
         axis: "Conversion Readiness",
         body:
-          "Make the primary CTA dominant, then place proof and one plain what-happens-next line beside it.",
+          (scoreByLabel("Conversion readiness")?.score ?? overallScore) >= 70
+            ? "Keep the primary CTA dominant, then make the surrounding proof and what-happens-next copy support the existing action path."
+            : "Make the primary CTA dominant, then place proof and one plain what-happens-next line beside it.",
       },
       {
         title: "Visual",
@@ -5676,9 +5720,13 @@ export async function generateBrandReportPdf(
       .map((item) => {
         const issue =
           item.title === "AI Visibility"
-            ? "AI systems need clearer category nouns, metadata, schema, and consistent naming before they can describe the brand confidently."
+            ? item.score.score >= 70
+              ? "AI systems can already read the brand with reasonable confidence; the task is consistency, not a rebuild."
+              : "AI systems need clearer category nouns, metadata, schema, and consistent naming before they can describe the brand confidently."
             : item.title === "Conversion Readiness"
-              ? "The page needs a clearer action path: what to click, what happens next, and whether the visitor is booking, buying, registering, or enquiring."
+              ? item.score.score >= 70
+                ? "The action path exists; the task is to make proof, expectations, and the primary route work together with less hesitation."
+                : "The page needs a clearer action path: what to click, what happens next, and whether the visitor is booking, buying, registering, or enquiring."
               : firstSentence(stripBrandLead(item.score.note || item.diagnosis), item.score.note) ||
                 firstSentence(stripBrandLead(item.diagnosis), "This axis is slowing the page down.");
         return {
@@ -5709,13 +5757,13 @@ export async function generateBrandReportPdf(
           "Remove vague mood copy that does not explain what is being sold.",
         ],
         next: [
-          "Add exact category nouns to the H1, title tag, meta description, and schema.",
+          "Keep exact category nouns consistent across the H1, title tag, meta description, schema, and profiles.",
           "Tighten section hierarchy so each block earns trust before asking for action.",
           "Turn broad service language into 2-3 concrete use cases or deliverables.",
         ],
         then: [
           "Turn the sharpened message into service pages, proof blocks, and sales assets.",
-          "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+          "Keep FAQ support and naming consistent so external systems can read the brand clearly.",
           "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
         ],
       },
@@ -5726,13 +5774,13 @@ export async function generateBrandReportPdf(
           "Eliminar copy de ambiente que no explica qué se vende.",
         ],
         next: [
-          "Añadir nombres exactos de categoría en H1, title tag, meta description y datos estructurados.",
+          "Mantener nombres de categoría consistentes en H1, title tag, meta description, datos estructurados y perfiles.",
           "Ajustar la jerarquía de secciones para que cada bloque gane confianza antes de pedir acción.",
           "Convertir lenguaje amplio de servicios en 2-3 casos de uso o entregables concretos.",
         ],
         then: [
           "Convertir el mensaje afinado en páginas de servicio, bloques de prueba y activos de venta.",
-          "Publicar FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
+          "Mantener FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
           "Revisar clics de CTA, calidad de consultas y orden de prueba; ajustar lo que aún crea duda.",
         ],
       },
@@ -5743,41 +5791,56 @@ export async function generateBrandReportPdf(
           "Убрать атмосферный текст, который не объясняет, что именно продаётся.",
         ],
         next: [
-          "Добавить точные названия категории в H1, title tag, meta description и структурированные данные.",
+          "Держать точные названия категории едиными в H1, title tag, meta description, structured data и внешних профилях.",
           "Уточнить иерархию секций, чтобы каждый блок зарабатывал доверие до просьбы о действии.",
           "Превратить широкий язык услуг в 2-3 конкретных сценария использования или результата.",
         ],
         then: [
           "Развернуть уточнённое сообщение в страницы услуг, блоки доказательств и материалы продаж.",
-          "Опубликовать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
+          "Поддерживать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
           "Проверить клики по CTA, качество заявок и порядок доказательств; усилить то, что всё ещё вызывает сомнение.",
         ],
       },
     }[language];
 
-    const competitorBorrowLine =
-      report.competitiveLandscape?.competitors?.length
-        ? `Borrow from ${report.competitiveLandscape.competitors[0].name}: ${firstSentence(report.competitiveLandscape.competitors[0].strengths[0] || report.competitiveLandscape.competitors[0].snapshot || "clearer category language").toLowerCase()}`
-        : "Borrow the category pattern that helps buyers compare faster: name the problem, show proof early, and make the next step feel lower-risk.";
+    const buildCompetitorBorrowLine = () => {
+      const competitor = report.competitiveLandscape?.competitors?.[0];
+      if (!competitor) {
+        return "Borrow the category pattern that helps buyers compare faster: name the problem, show proof early, and make the next step feel lower-risk.";
+      }
+
+      const name = competitor.name || "the strongest peer";
+      const strength = firstSentence(
+        competitor.strengths[0] || competitor.snapshot || "clearer category language",
+      ).replace(/[.?!]+$/, "");
+
+      if (/moving brands/i.test(name) || isCreativeStudioReport(report)) {
+        return `Borrow from ${name}: show the strategy-to-build path more concretely - named services, selected proof, and the exact way a buyer starts.`;
+      }
+
+      return `Borrow from ${name}: ${lowerFirst(strength)}. Translate that into one concrete page move: clearer proof, a named deliverable, or a safer next step.`;
+    };
+
+    const competitorBorrowLine = buildCompetitorBorrowLine();
 
     const sprintNow = uniqueItems(
       [
-        sprintCopy.next[0],
-        sprintCopy.then[1],
+        implementationRows[0]?.fix,
+        implementationRows[1]?.fix,
       ].filter(Boolean) as string[],
       2,
     );
     const sprintNext = uniqueItems(
       [
-        sprintCopy.now[0],
-        sprintCopy.next[1],
+        implementationRows[2]?.fix,
+        competitorBorrowLine,
       ].filter(Boolean) as string[],
       2,
     );
     const sprintThen = uniqueItems(
       [
-        sprintCopy.then[0],
         implementationRows[3]?.fix,
+        sprintCopy.then[2],
       ].filter(Boolean) as string[],
       2,
     );

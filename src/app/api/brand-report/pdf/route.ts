@@ -8,7 +8,6 @@ import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
 import { verifyPromoToken } from "@/lib/promo";
-import { getStoredPaidReport } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,8 +93,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const paymentReference =
-      paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
     const paidUrl = normalizeUrl(paidAccess.reportUrl);
     if (!paidUrl) {
       return new Response(
@@ -112,18 +109,10 @@ export async function POST(request: Request) {
       );
     }
     const providedReportUrl = normalizeUrl(body.report?.url || body.url || "");
-    const stored = paymentReference
-      ? await getStoredPaidReport(paymentReference).catch((storeError) => {
-          console.warn("Unable to read stored paid report for PDF export", storeError);
-          return null;
-        })
-      : null;
     const report =
       body.report && body.report.url && providedReportUrl && providedReportUrl === paidUrl
         ? body.report
-        : stored?.report && normalizeUrl(stored.report.url) === paidUrl
-          ? stored.report
-          : await generateBrandReport(paidUrl, paidAccess.locale || requestedLanguage);
+        : await generateBrandReport(paidUrl, paidAccess.locale || requestedLanguage);
     const language = paidAccess.locale || requestedLanguage;
     const pdf = await generateBrandReportPdf(report, language);
 

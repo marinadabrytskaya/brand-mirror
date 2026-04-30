@@ -565,7 +565,10 @@ function buildPdfAlignedScorePages(report: BrandReport, locale: SiteLocale = "en
         "Выбери одно главное действие - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок - и объясни, что происходит после клика.",
     },
   }[locale];
-  const aiVisibilityRead = /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
+  const aiVisibilityScore = getScoreByLabel(report, "AI visibility", overallScore).score;
+  const aiVisibilityRead = aiVisibilityScore >= 70
+    ? report.toneCheck
+    : /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
     ? report.toneCheck
     : [
         report.toneCheck,
@@ -829,17 +832,17 @@ function PdfAlignedReportSections({
       ],
       sprintNow: [
         "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
-        "Choose the primary conversion event and make the CTA explicit.",
+        "Clarify why the existing CTA is the right next move.",
         "Remove vague mood copy that does not explain what is being sold.",
       ],
       sprintNext: [
-        "Add exact category nouns to the H1, title tag, meta description, and schema.",
+        "Keep exact category nouns consistent across the H1, title tag, meta description, schema, and profiles.",
         "Tighten section hierarchy so each block earns trust before asking for action.",
         "Turn broad service language into 2-3 concrete use cases or deliverables.",
       ],
       sprintThen: [
         "Turn the sharpened message into service pages, proof blocks, and sales assets.",
-        "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+        "Keep FAQ support and naming consistent so external systems can read the brand clearly.",
         "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
       ],
     },
@@ -878,13 +881,13 @@ function PdfAlignedReportSections({
         "Eliminar copy de ambiente que no explica qué se vende.",
       ],
       sprintNext: [
-        "Añadir nombres exactos de categoría en H1, title tag, meta description y datos estructurados.",
+        "Mantener nombres de categoría consistentes en H1, title tag, meta description, datos estructurados y perfiles.",
         "Ajustar la jerarquía de secciones para que cada bloque gane confianza antes de pedir acción.",
         "Convertir lenguaje amplio de servicios en 2-3 casos de uso o entregables concretos.",
       ],
       sprintThen: [
         "Convertir el mensaje afinado en páginas de servicio, bloques de prueba y activos de venta.",
-        "Publicar FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
+        "Mantener FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
         "Revisar clics de CTA, calidad de consultas y orden de prueba; ajustar lo que aún crea duda.",
       ],
     },
@@ -923,13 +926,13 @@ function PdfAlignedReportSections({
         "Убрать атмосферный текст, который не объясняет, что именно продаётся.",
       ],
       sprintNext: [
-        "Добавить точные названия категории в H1, title tag, meta description и структурированные данные.",
+        "Держать точные названия категории едиными в H1, title tag, meta description, structured data и внешних профилях.",
         "Уточнить иерархию секций, чтобы каждый блок зарабатывал доверие до просьбы о действии.",
         "Превратить широкий язык услуг в 2-3 конкретных сценария использования или результата.",
       ],
       sprintThen: [
         "Развернуть уточнённое сообщение в страницы услуг, блоки доказательств и материалы продаж.",
-        "Опубликовать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
+        "Поддерживать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
         "Проверить клики по CTA, качество заявок и порядок доказательств; усилить то, что всё ещё вызывает сомнение.",
       ],
     },
@@ -940,10 +943,20 @@ function PdfAlignedReportSections({
       : scoreAverage < 78
         ? localizedFlowCopy.currentSignal[1]
         : localizedFlowCopy.currentSignal[2];
+  const aiScore = getScoreByLabel(report, "AI visibility", overallScore).score;
+  const conversionScore = getScoreByLabel(report, "Conversion readiness", overallScore).score;
   const recommendationRows = [
     {
       ...localizedFlowCopy.recommendations[0],
-      score: getScoreByLabel(report, "AI visibility", overallScore).score,
+      ...(aiScore >= 70
+        ? {
+            body:
+              "The AI-readable layer is already functioning. The opportunity is consistency, not a rebuild.",
+            fix:
+              "Keep the same category nouns, service names, proof language, and metadata across pages, FAQs, profiles, and directory listings.",
+          }
+        : {}),
+      score: aiScore,
     },
     {
       ...localizedFlowCopy.recommendations[1],
@@ -951,12 +964,37 @@ function PdfAlignedReportSections({
     },
     {
       ...localizedFlowCopy.recommendations[2],
-      score: getScoreByLabel(report, "Conversion readiness", overallScore).score,
+      ...(conversionScore >= 70
+        ? {
+            body:
+              "The action path exists. The next gain is making proof, expectations, and the primary route feel more connected.",
+            fix:
+              "Keep one primary CTA dominant, then place proof and a plain what-happens-next line close to that existing action.",
+          }
+        : {}),
+      score: conversionScore,
     },
   ];
-  const sprintNow = localizedFlowCopy.sprintNow;
-  const sprintNext = localizedFlowCopy.sprintNext;
-  const sprintThen = localizedFlowCopy.sprintThen;
+  const sprintNow = [
+    recommendationRows[1]?.fix,
+    recommendationRows[2]?.fix,
+    localizedFlowCopy.sprintNow[2],
+  ].filter(Boolean);
+  const sprintNext = [
+    localizedFlowCopy.sprintNext[1],
+    recommendationRows[0]?.fix,
+    localizedFlowCopy.sprintNext[2],
+  ].filter(Boolean);
+  const extendLanguageLine =
+    locale === "es"
+      ? "Extender el lenguaje afinado a páginas de servicio, bloques de prueba, activos de venta y perfiles externos."
+      : locale === "ru"
+        ? "Развернуть уточнённый язык в страницы услуг, блоки доказательств, материалы продаж и внешние профили."
+        : "Extend the refined language into service pages, proof blocks, sales assets, and partner profiles.";
+  const sprintThen = [
+    localizedFlowCopy.sprintThen[2],
+    extendLanguageLine,
+  ].filter(Boolean);
 
   return (
     <>

@@ -3,7 +3,7 @@ import { generateBrandReport, generateBrandReportPdf } from "@/lib/brand-report"
 import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
-import { getStoredPaidReport, savePaidReport } from "@/lib/supabase";
+import { savePaidReport } from "@/lib/supabase";
 import { isReportEmailConfigured, sendBrandReportEmail } from "@/lib/report-email";
 import { verifyPromoToken } from "@/lib/promo";
 
@@ -45,23 +45,6 @@ export async function POST(request: Request) {
       paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
     const paidEmail = paidAccess?.customerEmail || null;
     const paidLocale = paidAccess?.locale || language;
-
-    if (paymentReference) {
-      const stored = await getStoredPaidReport(paymentReference).catch((storeError) => {
-        console.warn("Unable to read stored paid report", storeError);
-        return null;
-      });
-      if (stored?.report) {
-        return NextResponse.json({
-          ok: true,
-          report: stored.report,
-          delivery: {
-            emailStatus: stored.emailStatus,
-            emailError: stored.emailError,
-          },
-        });
-      }
-    }
 
     const report = await generateBrandReport(
       paidAccess?.reportUrl || body.url || "",
