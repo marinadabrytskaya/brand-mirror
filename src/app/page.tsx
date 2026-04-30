@@ -1,7 +1,51 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/language-switcher";
 import { refundLineForLocale } from "@/lib/free-report-copy";
+import { absoluteUrl, SITE_URL } from "@/lib/site-url";
 import siteI18n from "@/lib/site-i18n";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
+
+const homeStructuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "SAHAR Studio",
+    url: SITE_URL,
+    brand: {
+      "@type": "Brand",
+      name: "BrandMirror",
+      url: SITE_URL,
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "BrandMirror",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: SITE_URL,
+    description:
+      "BrandMirror is an AI brand audit for founders, studios, and premium service brands. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
+    offers: {
+      "@type": "Offer",
+      price: "197",
+      priceCurrency: "USD",
+      url: absoluteUrl("/first-read"),
+      availability: "https://schema.org/InStock",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "SAHAR Studio",
+      url: SITE_URL,
+    },
+  },
+] as const;
 
 const heroLiveScanCopy = {
   en: {
@@ -192,6 +236,12 @@ export default async function Home({
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homeStructuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <section className="relative min-h-[100svh] px-6 pb-10 pt-3 sm:px-8 lg:px-12">
         <div className="drift pointer-events-none absolute -left-24 top-36 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(123,154,161,0.24),_transparent_68%)] blur-2xl" />
         <div className="drift-delay pointer-events-none absolute right-0 top-0 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,_rgba(205,180,214,0.2),_transparent_62%)] blur-3xl" />

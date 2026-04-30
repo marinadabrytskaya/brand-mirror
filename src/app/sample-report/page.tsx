@@ -4,8 +4,12 @@ import LanguageSwitcher from "@/components/language-switcher";
 import { getSiteLocale, siteCopy, withLang } from "@/lib/site-i18n";
 
 export const metadata: Metadata = {
-  title: "Sample Report",
-  description: "Preview the BrandMirror diagnostic output experience.",
+  title: "Sample BrandMirror Report",
+  description:
+    "Preview the BrandMirror report format: score dashboard, first diagnosis, signal read, commercial friction, and fix direction.",
+  alternates: {
+    canonical: "/sample-report",
+  },
 };
 
 const sampleScoreValues = [

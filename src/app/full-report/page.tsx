@@ -8,8 +8,16 @@ import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack"
 import { verifyPromoToken } from "@/lib/promo";
 
 export const metadata: Metadata = {
-  title: "Full Report",
-  description: "Generate the full BrandMirror report and export it as PDF.",
+  title: "Private Full Report",
+  description: "Access a paid BrandMirror full report.",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 function FullReportFallback({ locale }: { locale: SiteLocale }) {
