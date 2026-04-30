@@ -356,12 +356,16 @@ function ReportCoverCard({
   whatItDoes,
   snapshot,
   reportId,
+  overallScore,
+  scoreBand,
   locale,
 }: {
   brandName: string;
   whatItDoes: string;
   snapshot: string;
   reportId: string;
+  overallScore: number;
+  scoreBand: string;
   locale: SiteLocale;
 }) {
   const coverCopy = {
@@ -402,106 +406,7 @@ function ReportCoverCard({
         </p>
         <div className="report-cover-meta mt-8 flex flex-col gap-3 pt-5 text-sm uppercase tracking-[0.18em] text-[rgba(237,237,242,0.5)] sm:flex-row sm:items-center sm:justify-between">
           <span>{coverCopy.meta}</span>
-          <span>{reportId}</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HowWeReadBrandsBlock({
-  brandName,
-  genre,
-  locale,
-}: {
-  brandName: string;
-  genre: string;
-  locale: SiteLocale;
-}) {
-  const blockCopy = {
-    en: {
-      label: "How We Read Brands",
-      title: "Most brand audits give you a checklist. We give you a verdict.",
-      paragraphs: [
-        "Every brand is telling a story whether it means to or not. The colours, the words, the offer, the website — all of it is sending a signal before a buyer has made a conscious decision.",
-        "BrandMirror reads that signal the way a sharp audience reads a film in the first ten minutes: what lands, what feels off, and what makes someone stay or leave.",
-        "We reverse-engineer that first decision and turn it into a score, a genre, a fix stack, and a set of next moves.",
-      ],
-      genreLabel: "The genre",
-      genrePrefix: "Every brand has a genre — the narrative logic an audience uses to make sense of it. Right now",
-      genreMiddle: "is reading as",
-      dimensions: [
-        "Positioning Clarity — can someone explain the offer without your help?",
-        "AI Visibility — can AI tools find, read, and recommend your brand?",
-        "Visual Credibility — does the surface match the price being asked?",
-        "Offer Specificity — does the proposition arrive fast enough to buy?",
-        "Conversion Readiness — is there a clear next step when the buyer is ready?",
-      ],
-    },
-    es: {
-      label: "Cómo leemos marcas",
-      title: "La mayoría de auditorías de marca te dan una lista. Nosotros te damos un veredicto.",
-      paragraphs: [
-        "Cada marca está contando una historia, quiera o no. Los colores, las palabras, la oferta, el sitio: todo envía una señal antes de que el comprador tome una decisión consciente.",
-        "BrandMirror lee esa señal como una audiencia exigente lee una película en los primeros diez minutos: qué aterriza, qué se siente raro y qué hace que alguien se quede o se vaya.",
-        "Desarmamos esa primera decisión y la convertimos en una puntuación, un género, una pila de correcciones y un conjunto de próximos movimientos.",
-      ],
-      genreLabel: "El género",
-      genrePrefix: "Cada marca tiene un género: la lógica narrativa que una audiencia usa para entenderla. Ahora mismo",
-      genreMiddle: "se lee como",
-      dimensions: [
-        "Claridad de posicionamiento — ¿alguien puede explicar la oferta sin tu ayuda?",
-        "Visibilidad en IA — ¿las herramientas de IA pueden encontrar, leer y recomendar tu marca?",
-        "Credibilidad visual — ¿la superficie coincide con el precio que se pide?",
-        "Especificidad de la oferta — ¿la propuesta llega lo bastante rápido para comprar?",
-        "Preparación para convertir — ¿hay un siguiente paso claro cuando el comprador está listo?",
-      ],
-    },
-    ru: {
-      label: "Как мы читаем бренды",
-      title: "Большинство аудитов бренда дают чеклист. Мы даём вердикт.",
-      paragraphs: [
-        "Каждый бренд рассказывает историю, даже если не собирался. Цвета, слова, предложение, сайт — всё это отправляет сигнал до того, как покупатель принял осознанное решение.",
-        "BrandMirror читает этот сигнал так, как внимательная аудитория читает фильм в первые десять минут: что сработало, что кажется неверным и что заставляет человека остаться или уйти.",
-        "Мы разбираем это первое решение и превращаем его в оценку, жанр, список исправлений и набор следующих шагов.",
-      ],
-      genreLabel: "Жанр",
-      genrePrefix: "У каждого бренда есть жанр — повествовательная логика, через которую аудитория его понимает. Сейчас",
-      genreMiddle: "считывается как",
-      dimensions: [
-        "Ясность позиционирования — может ли человек объяснить предложение без вашей помощи?",
-        "Видимость в ИИ — могут ли инструменты ИИ найти, прочитать и рекомендовать ваш бренд?",
-        "Визуальная убедительность — соответствует ли поверхность заявленной цене?",
-        "Точность предложения — появляется ли предложение достаточно быстро, чтобы его купить?",
-        "Готовность к конверсии — есть ли ясный следующий шаг, когда покупатель готов?",
-      ],
-    },
-  }[locale];
-  return (
-    <section className="pb-10">
-      <div className="ink-panel report-story-panel rounded-[2rem] border border-[rgba(237,237,242,0.14)] p-7 sm:p-10">
-        <p className="section-label">{blockCopy.label}</p>
-        <h2 className="mt-5 max-w-3xl font-serif text-5xl leading-[0.98] tracking-[-0.05em] text-[#F4F5F8]">
-          {blockCopy.title}
-        </h2>
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-5 text-base leading-7 text-[rgba(237,237,242,0.76)]">
-            {blockCopy.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-          <div className="report-story-side rounded-[1.6rem] p-5">
-            <p className="section-label">{blockCopy.genreLabel}</p>
-            <p className="mt-4 text-base leading-7 text-[rgba(237,237,242,0.74)]">
-              {blockCopy.genrePrefix} {brandName} {blockCopy.genreMiddle}{" "}
-              <span className="text-[#F4F5F8]">{genre}</span>.
-            </p>
-            <div className="editorial-rule mt-5 space-y-4 border-[rgba(237,237,242,0.12)] pt-5 text-sm leading-7 text-[rgba(237,237,242,0.68)]">
-              {blockCopy.dimensions.map((dimension) => (
-                <p key={dimension}>{dimension}</p>
-              ))}
-            </div>
-          </div>
+          <span>{reportId} · {overallScore}/100 · {scoreBand}</span>
         </div>
       </div>
     </section>
@@ -513,12 +418,14 @@ function ScoreDashboardBlock({
   scoreBand,
   scoreModifier,
   scorecard,
+  scoreLabels,
   locale,
 }: {
   posterScore: number;
   scoreBand: string;
   scoreModifier: string;
   scorecard: { label: string; score: number; note: string }[];
+  scoreLabels: Record<string, string>;
   locale: SiteLocale;
 }) {
   const overallBand = bandFor(posterScore);
@@ -591,7 +498,7 @@ function ScoreDashboardBlock({
                 }}
               >
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
-                  {row.label}
+                  {scoreLabels[row.label] || row.label}
                 </p>
                 <p
                   className="mt-3 font-serif text-5xl leading-none tracking-[-0.06em]"
@@ -723,9 +630,9 @@ function PdfAlignedReportSections({
       firstDiagnosis: "First diagnosis",
       currentState: "Current state",
       measure: "What we measure",
-      measureTitle: "The five commercial signals behind the score",
+      measureTitle: "What the report measures",
       measureIntro:
-        "The PDF is the source of truth: the same five axes, the same scores, and the same diagnosis order now drive this page.",
+        "BrandMirror reads the brand the way a sharp buyer reads the first screen: before the copy has fully explained itself, before the proof has earned trust, before the click has happened. This report measures five signals that shape that decision: clarity, AI visibility, credibility, specificity, and readiness to act.",
       signalRead: "Signal read",
       signalTitle: "What is missing and where the signal starts to drift",
       surface: "Website surface",
@@ -765,9 +672,9 @@ function PdfAlignedReportSections({
       firstDiagnosis: "Primer diagnóstico",
       currentState: "Estado actual",
       measure: "Qué medimos",
-      measureTitle: "Las cinco señales comerciales detrás de la puntuación",
+      measureTitle: "Qué mide el reporte",
       measureIntro:
-        "El PDF es la fuente de verdad: los mismos cinco ejes, las mismas puntuaciones y el mismo orden de diagnóstico ahora controlan esta página.",
+        "BrandMirror lee la marca como la lee un comprador agudo en la primera pantalla: antes de que el copy termine de explicarse, antes de que la prueba gane confianza, antes del clic. Este reporte mide cinco señales que modelan esa decisión: claridad, visibilidad de IA, credibilidad, especificidad y preparación para convertir.",
       signalRead: "Lectura de señal",
       signalTitle: "Qué falta y dónde empieza a desviarse la señal",
       surface: "Superficie del sitio",
@@ -807,9 +714,9 @@ function PdfAlignedReportSections({
       firstDiagnosis: "Первый диагноз",
       currentState: "Текущее состояние",
       measure: "Что мы измеряем",
-      measureTitle: "Пять коммерческих сигналов, из которых складывается оценка",
+      measureTitle: "Что измеряет отчёт",
       measureIntro:
-        "PDF теперь источник правды: те же пять осей, те же оценки и тот же порядок диагностики управляют этой страницей.",
+        "BrandMirror читает бренд так, как его читает внимательный покупатель на первом экране: до того, как текст всё объяснил, до того, как доказательство заслужило доверие, до клика. Этот отчёт измеряет пять сигналов, которые формируют это решение: ясность, видимость в ИИ, убедительность, конкретность и готовность к действию.",
       signalRead: "Считывание сигнала",
       signalTitle: "Чего не хватает и где сигнал начинает расходиться",
       surface: "Поверхность сайта",
@@ -847,6 +754,29 @@ function PdfAlignedReportSections({
 
   const overallScore = getCanonicalOverallScore(report);
   const scorePages = buildPdfAlignedScorePages(report);
+  const measureCards = {
+    en: [
+      { title: "Positioning Clarity", body: "Does the buyer know what you are within one read?" },
+      { title: "AI Visibility", body: "Can AI tools find, read, and recommend the brand clearly and consistently?" },
+      { title: "Visual Credibility", body: "Does the design earn the price and the promise?" },
+      { title: "Offer Specificity", body: "Could someone repeat what you sell without your help?" },
+      { title: "Conversion Readiness", body: "When someone is ready, is there a door to walk through?" },
+    ],
+    es: [
+      { title: "Claridad de posicionamiento", body: "¿El comprador entiende qué eres en una sola lectura?" },
+      { title: "Visibilidad en IA", body: "¿Las herramientas de IA pueden encontrar, leer y recomendar la marca con claridad?" },
+      { title: "Credibilidad visual", body: "¿El diseño sostiene el precio y la promesa?" },
+      { title: "Especificidad de la oferta", body: "¿Alguien podría repetir lo que vendes sin tu ayuda?" },
+      { title: "Preparación para convertir", body: "Cuando alguien está listo, ¿hay una puerta clara por la que avanzar?" },
+    ],
+    ru: [
+      { title: "Ясность позиционирования", body: "Понимает ли покупатель, что это за бренд, с первого считывания?" },
+      { title: "Видимость в ИИ", body: "Могут ли инструменты ИИ найти, прочитать и рекомендовать бренд ясно и последовательно?" },
+      { title: "Визуальная убедительность", body: "Зарабатывает ли дизайн заявленную цену и обещание?" },
+      { title: "Точность предложения", body: "Сможет ли человек повторить, что вы продаёте, без вашей помощи?" },
+      { title: "Готовность к конверсии", body: "Когда человек готов, есть ли понятная дверь для следующего шага?" },
+    ],
+  }[locale];
   const scoreAverage = scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
   const currentSignalSummary =
     scoreAverage < 65
@@ -928,18 +858,14 @@ function PdfAlignedReportSections({
             {copy.measureIntro}
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {scorePages.map((item) => {
-              const band = bandFor(item.score.score);
+            {measureCards.map((item) => {
               return (
-                <article key={item.label} className="rounded-[1.35rem] border border-[rgba(237,237,242,0.12)] bg-[rgba(237,237,242,0.045)] p-4">
+                <article key={item.title} className="rounded-[1.35rem] border border-[rgba(237,237,242,0.12)] bg-[rgba(237,237,242,0.045)] p-4">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.56)]">
-                    {scoreLabels[item.label] || item.title}
-                  </p>
-                  <p className="mt-3 font-serif text-5xl leading-none tracking-[-0.06em]" style={{ color: band.color }}>
-                    {item.score.score}
+                    {item.title}
                   </p>
                   <p className="mt-2 text-xs leading-6 text-[rgba(237,237,242,0.68)]">
-                    {item.score.note || firstSentence(item.diagnosis)}
+                    {item.body}
                   </p>
                 </article>
               );
@@ -1794,6 +1720,11 @@ export function FullReportExperience({
       : locale === "es"
         ? { offer: "Oferta", proof: "Prueba", cta: "Acción", decision: "Decisión" }
         : { offer: "Offer", proof: "Proof", cta: "CTA", decision: "Decision" };
+  const canonicalOverallScore = report ? getCanonicalOverallScore(report) : 0;
+  const canonicalScoreBand = report ? bandFor(canonicalOverallScore).label : "";
+  const canonicalScorecard = report
+    ? buildPdfAlignedScorePages(report).map((item) => item.score)
+    : [];
 
   return (
     <main className="page-shell report-shell min-h-screen bg-[color:var(--background)] px-6 py-4 sm:px-8 lg:px-12">
@@ -1886,8 +1817,8 @@ export function FullReportExperience({
               frameLabels={boardFrameLabels}
               scores={
                 report
-                  ? report.scorecard.slice(0, 3).map((row) => ({
-                      label: row.label,
+                  ? canonicalScorecard.slice(0, 3).map((row) => ({
+                      label: scoreLabels[row.label] || row.label,
                       value: String(row.score),
                       note: row.note,
                     }))
@@ -1963,20 +1894,17 @@ export function FullReportExperience({
               whatItDoes={report.whatItDoes}
               snapshot={report.snapshot}
               reportId={reportId}
-              locale={locale}
-            />
-
-            <HowWeReadBrandsBlock
-              brandName={report.brandName}
-              genre={report.genre}
+              overallScore={canonicalOverallScore}
+              scoreBand={canonicalScoreBand}
               locale={locale}
             />
 
             <ScoreDashboardBlock
-              posterScore={getCanonicalOverallScore(report)}
-              scoreBand={bandFor(getCanonicalOverallScore(report)).label}
+              posterScore={canonicalOverallScore}
+              scoreBand={canonicalScoreBand}
               scoreModifier={report.scoreModifier}
-              scorecard={report.scorecard}
+              scorecard={canonicalScorecard}
+              scoreLabels={scoreLabels}
               locale={locale}
             />
 
