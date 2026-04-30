@@ -2363,21 +2363,41 @@ function competitorFallbackCandidates(report: BrandReport): CompetitorCandidate[
     ];
   }
 
+  if (/(brandmirror|brand audit|brand report|ai visibility|website audit|positioning|homepage audit|conversion audit|competitor analysis|messaging audit)/i.test(fingerprint)) {
+    return [
+      {
+        name: "Branding5",
+        url: "https://www.branding5.com/competitor-analysis",
+        reason: "AI competitor and positioning analysis with clearer benchmarking language and a familiar report promise.",
+      },
+      {
+        name: "FrictionlessHQ",
+        url: "https://frictionlesshq.com/software/competitor-analysis/",
+        reason: "AI competitor audit product that names positioning, design, content, and performance as concrete analysis areas.",
+      },
+      {
+        name: "RankFast AI Brand Visibility Audit",
+        url: "https://rankfast.co/ai-brand-visibility-audit/",
+        reason: "AI visibility audit offer with explicit search, entity, competitor, and technical readability language.",
+      },
+    ];
+  }
+
   return [
     {
-      name: "Category leader",
-      url: "https://www.google.com/search?q=category+leader",
-      reason: "Represents the clearest brand in the category: sharp claim, visible proof, and easier conversion path.",
+      name: "Semrush Site Audit",
+      url: "https://www.semrush.com/siteaudit/",
+      reason: "Recognized audit platform with clear category language, proof, and a direct product path.",
     },
     {
-      name: "Specialist competitor",
-      url: "https://www.google.com/search?q=specialist+competitor",
-      reason: "Represents a narrower player that wins by naming one buyer problem more explicitly.",
+      name: "Ahrefs Site Audit",
+      url: "https://ahrefs.com/site-audit",
+      reason: "Category-known audit product with simple problem language and strong trust cues.",
     },
     {
-      name: "Local alternative",
-      url: "https://www.google.com/search?q=local+alternative",
-      reason: "Represents a geographically relevant alternative with simpler buyer language.",
+      name: "Screaming Frog SEO Spider",
+      url: "https://www.screamingfrog.co.uk/seo-spider/",
+      reason: "Specialist audit tool with a concrete use case, clear technical promise, and strong practitioner recognition.",
     },
   ];
 }
@@ -4931,7 +4951,7 @@ export async function generateBrandReportPdf(
 
     const drawGauge = (centerX: number, centerY: number, radius: number, score: number, color: string) => {
       const drawArc = (start: number, end: number, strokeColor: string, thickness: number) => {
-        const steps = 32;
+        const steps = 96;
         let prevX = centerX + Math.cos(start) * radius;
         let prevY = centerY + Math.sin(start) * radius;
         for (let i = 1; i <= steps; i += 1) {
@@ -4945,8 +4965,9 @@ export async function generateBrandReportPdf(
         }
       };
 
-      drawArc(Math.PI, 0, colors.rule, 8);
-      drawArc(Math.PI, Math.PI * (1 - score / 100), color, 8);
+      const start = -Math.PI / 2;
+      drawArc(start, start + Math.PI * 2, colors.rule, 8);
+      drawArc(start, start + Math.PI * 2 * (score / 100), color, 8);
     };
 
     const drawCenteredText = (
@@ -5265,48 +5286,96 @@ export async function generateBrandReportPdf(
       },
     }[language];
 
-    const aiVisibilityRead = /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
-      ? report.toneCheck
-      : [
-          report.toneCheck,
-          dynamicCopy.aiVisibilityFallback,
-        ].filter(Boolean).join(" ");
+    const aiVisibilityRead = [
+      "This axis measures whether external AI systems can identify, describe, and recommend the brand without flattening it into a generic category.",
+      dynamicCopy.aiVisibilityFallback,
+    ].filter(Boolean).join(" ");
+
+    const axisScoreNote = (label: string) => scoreByLabel(label)?.note || "";
+    const axisRevealingLine = (label: string) => {
+      if (label === "Positioning clarity") {
+        return firstSentence(
+          report.strongestSignal && report.mainFriction
+            ? `${report.strongestSignal} ${report.mainFriction}`
+            : report.positioningRead,
+          "The brand creates interest before the exact commercial promise lands.",
+        );
+      }
+      if (label === "AI visibility") {
+        return firstSentence(
+          axisScoreNote(label),
+          "AI systems can find the domain, but the entity, category, and offer signals are still too thin to describe it confidently.",
+        );
+      }
+      if (label === "Visual credibility") {
+        return firstSentence(
+          report.whatWorks[0] || report.visualIdentityRead,
+          "The visual system is doing real trust work before the copy explains the offer.",
+        );
+      }
+      if (label === "Offer specificity") {
+        return firstSentence(
+          report.offerOpportunities[0] || report.namingFit.correction || report.whatIsMissing,
+          "The product is visible, but the paid deliverable needs a cleaner name and outcome.",
+        );
+      }
+      return firstSentence(
+        axisScoreNote(label),
+        "The next step exists, but it needs stronger proof, expectation-setting, and commitment fit around it.",
+      );
+    };
+
+    const axisMeaning = (label: string) => {
+      if (label === "Positioning clarity") {
+        return "Lead with category, buyer, problem, and outcome before atmosphere. The page can stay premium, but the first screen needs to remove the visitor's guessing work.";
+      }
+      if (label === "AI visibility") {
+        return "This is not a tone problem. It is a retrievability problem: LLMs need repeated category nouns, metadata, schema, FAQ support, and consistent naming before they can recommend the brand accurately.";
+      }
+      if (label === "Visual credibility") {
+        return "Keep the restraint and polish. The fix is to move proof, specificity, and authority cues closer to the visual moment that already earns attention.";
+      }
+      if (label === "Offer specificity") {
+        return "Turn the offer into something a buyer can repeat: what is included, who it is for, what changes, and why it matters now.";
+      }
+      return "Do not add a louder button by default. Match the CTA to the business model, then place proof and next-step expectations around it so the action feels earned.";
+    };
 
     const scorePages = [
       {
         label: "Positioning clarity",
         title: dynamicCopy.axisTitles.positioning,
         diagnosis: report.positioningRead,
-        quote: report.whatsBroken[0] || report.aboveTheFold,
-        implication: report.headlineCorrection.currentProblem,
+        quote: axisRevealingLine("Positioning clarity"),
+        implication: axisMeaning("Positioning clarity"),
       },
       {
         label: "AI visibility",
         title: dynamicCopy.axisTitles.aiVisibility,
         diagnosis: aiVisibilityRead,
-        quote: report.audienceMismatch[1] || aiVisibilityRead,
-        implication: report.verbalImage.firstScreenTone,
+        quote: axisRevealingLine("AI visibility"),
+        implication: axisMeaning("AI visibility"),
       },
       {
         label: "Visual credibility",
         title: dynamicCopy.axisTitles.visual,
         diagnosis: report.visualIdentityRead,
-        quote: report.whatWorks[0] || report.visualIdentityRead,
-        implication: report.mixedSignals,
+        quote: axisRevealingLine("Visual credibility"),
+        implication: axisMeaning("Visual credibility"),
       },
       {
         label: "Offer specificity",
         title: dynamicCopy.axisTitles.offer,
         diagnosis: report.aboveTheFold,
-        quote: report.namingFit.correction,
-        implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
+        quote: axisRevealingLine("Offer specificity"),
+        implication: axisMeaning("Offer specificity"),
       },
       {
         label: "Conversion readiness",
         title: dynamicCopy.axisTitles.conversion,
       diagnosis: report.conversionRead,
-      quote: report.whyNotConverting[1] || report.conversionRead,
-      implication: dynamicCopy.conversionImplication,
+      quote: axisRevealingLine("Conversion readiness"),
+      implication: axisMeaning("Conversion readiness"),
     },
     ].map((item) => ({
       ...item,
@@ -5358,8 +5427,8 @@ export async function generateBrandReportPdf(
         mid: "Clarify who the offer is for and what changes after someone buys. The transformation still lands too late.",
       },
       "Conversion Readiness": {
-        low: "Choose the one action the visitor should take next: book, enquire, buy, register, or request a call. Put that route in the hero and repeat it after proof.",
-        mid: "Make the CTA operational, not decorative: say what happens after the click and remove competing paths that dilute the decision.",
+        low: "Match the action to the business model, then say what happens after the click and why the commitment is safe.",
+        mid: "Make the CTA operational, not decorative: connect it to proof, expected outcome, and the next step after the click.",
       },
     } as const;
 
@@ -5388,7 +5457,7 @@ export async function generateBrandReportPdf(
         title: "Conversion",
         axis: "Conversion Readiness",
         body:
-          "Define the primary conversion route: Book, Enquire, Buy, Register, or Request a call. Put that CTA in the hero, repeat it after the first proof block, and add one line explaining what happens after the click.",
+          "Match the CTA to the business model, then support it with proof and expectation-setting: what the visitor gets, what happens next, and why the commitment is low-risk.",
       },
       {
         title: "Visual",
@@ -5451,7 +5520,7 @@ export async function generateBrandReportPdf(
       en: {
         now: [
           "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
-          "Choose the primary conversion event and make the CTA explicit: Book, Enquire, Buy, Register, or Request a call.",
+          "Make the existing CTA carry more context: what happens after the click, who it is for, and why this is the right level of commitment.",
           "Remove vague mood copy that does not explain what is being sold.",
         ],
         next: [
@@ -5468,7 +5537,7 @@ export async function generateBrandReportPdf(
       es: {
         now: [
           "Reescribir la promesa inicial para que nombre comprador, oferta y resultado en una sola lectura.",
-          "Elegir el evento principal de conversión y hacer explícito el CTA: reservar, consultar, comprar, registrarse o solicitar una llamada.",
+          "Hacer que el CTA existente cargue más contexto: qué pasa después del clic, para quién es y por qué ese compromiso tiene sentido.",
           "Eliminar copy de ambiente que no explica qué se vende.",
         ],
         next: [
@@ -5485,7 +5554,7 @@ export async function generateBrandReportPdf(
       ru: {
         now: [
           "Переписать первое обещание так, чтобы в одном считывании были покупатель, предложение и результат.",
-          "Выбрать главное конверсионное действие и сделать CTA явным: забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок.",
+          "Дать существующему CTA больше контекста: что будет после клика, для кого это действие и почему такой уровень обязательства уместен.",
           "Убрать атмосферный текст, который не объясняет, что именно продаётся.",
         ],
         next: [
@@ -5501,9 +5570,35 @@ export async function generateBrandReportPdf(
       },
     }[language];
 
-    const sprintNow = uniqueItems(sprintCopy.now, 3);
-    const sprintNext = uniqueItems(sprintCopy.next, 3);
-    const sprintThen = uniqueItems(sprintCopy.then, 3);
+    const competitorBorrowLine =
+      report.competitiveLandscape?.competitors?.length
+        ? `Borrow from ${report.competitiveLandscape.competitors[0].name}: ${firstSentence(report.competitiveLandscape.competitors[0].strengths[0] || report.competitiveLandscape.competitors[0].snapshot || "clearer category language").toLowerCase()}`
+        : "Borrow the category pattern that helps buyers compare faster: name the problem, show proof early, and make the next step feel lower-risk.";
+
+    const sprintNow = uniqueItems(
+      [
+        implementationRows[0]?.fix,
+        implementationRows[0]?.impact,
+        sprintCopy.now[0],
+      ].filter(Boolean) as string[],
+      3,
+    );
+    const sprintNext = uniqueItems(
+      [
+        implementationRows[1]?.fix,
+        implementationRows[2]?.fix,
+        competitorBorrowLine,
+      ].filter(Boolean) as string[],
+      3,
+    );
+    const sprintThen = uniqueItems(
+      [
+        implementationRows[3]?.fix,
+        implementationRows[4]?.fix,
+        sprintCopy.then[1],
+      ].filter(Boolean) as string[],
+      3,
+    );
 
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
@@ -5575,7 +5670,6 @@ export async function generateBrandReportPdf(
           body:
             "The commercial read uses the current scores, visible market signal, and category context. Competitor benchmarks only appear when direct peers are clean enough to compare.",
         };
-
     const websiteSurfaceFindings = uniqueItems(
       [
         `${dynamicCopy.surfaceFindingLabels.hero}: ${firstSentence(stripAiLayerSentences(heroCallout?.body || report.aboveTheFold || "The first screen needs to name the buyer, offer, and payoff faster."))}`,
@@ -5595,9 +5689,10 @@ export async function generateBrandReportPdf(
           "For manufacturers, facilities, and operators who need connected systems built around real conditions - not another one-size-fits-all platform.",
         genericSubheadline:
           "A clearer first screen should name the buyer, the problem, the proof, and the next step before the visitor has to assemble the story alone.",
-        shopCta: "Book the right session",
-        iotCta: "Request an IoT fit call",
-        genericCta: "Request a fit call",
+        shopCta: "View the offer",
+        auditCta: "Read My Brand",
+        iotCta: "Request an implementation consult",
+        genericCta: "Choose the next step",
         currentFallback: "Current hero language",
         where: "Homepage H1 or subheadline. LinkedIn/About first line. Google Business or directory description.",
         why:
@@ -5610,9 +5705,10 @@ export async function generateBrandReportPdf(
           "Para fabricantes, instalaciones y operadores que necesitan sistemas conectados construidos alrededor de condiciones reales, no otra plataforma genérica.",
         genericSubheadline:
           "Un primer pantallazo más claro debe nombrar comprador, problema, prueba y siguiente paso antes de que el visitante tenga que armar la historia solo.",
-        shopCta: "Reserva la sesión correcta",
-        iotCta: "Solicita una llamada de encaje IoT",
-        genericCta: "Solicita una llamada de encaje",
+        shopCta: "Ver la oferta",
+        auditCta: "Leer mi marca",
+        iotCta: "Solicitar una consulta de implementación",
+        genericCta: "Elegir el siguiente paso",
         currentFallback: "Lenguaje actual del hero",
         where: "H1 o subtítulo de la homepage. Primera línea de LinkedIn/About. Descripción en Google Business o directorios.",
         why:
@@ -5625,9 +5721,10 @@ export async function generateBrandReportPdf(
           "Для производителей, объектов и операторов, которым нужны подключённые системы под реальные условия, а не ещё одна универсальная платформа.",
         genericSubheadline:
           "Более ясный первый экран должен назвать покупателя, проблему, доказательство и следующий шаг до того, как посетителю придётся самому собирать историю.",
-        shopCta: "Забронировать подходящую сессию",
-        iotCta: "Запросить IoT fit call",
-        genericCta: "Запросить fit call",
+        shopCta: "Посмотреть предложение",
+        auditCta: "Прочитать мой бренд",
+        iotCta: "Запросить консультацию по внедрению",
+        genericCta: "Выбрать следующий шаг",
         currentFallback: "Текущий текст hero-блока",
         where: "H1 или подзаголовок главной страницы. Первая строка LinkedIn/About. Описание в Google Business или каталогах.",
         why:
@@ -5653,11 +5750,13 @@ export async function generateBrandReportPdf(
           ? rewriteFallbackCopy.iotSubheadline
           : rewriteFallbackCopy.genericSubheadline);
     const generatedCta = bodyCopy(report.rewriteSuggestions?.cta || report.beforeAfterHero?.rewrittenFrame?.cta || "");
-    const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started|book the right session)$/i.test(generatedCta);
+    const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started|book the right session|request a fit call|request fit call)$/i.test(generatedCta);
     const suggestedCta =
       useGeneratedCta
         ? generatedCta
-        : (/(shop|product|store|wellness|healing|therapy|course)/i.test(fingerprint)
+        : (/(brandmirror|brand audit|website audit|ai visibility|homepage audit|report)/i.test(fingerprint)
+        ? rewriteFallbackCopy.auditCta
+        : /(shop|product|store|wellness|healing|therapy|course)/i.test(fingerprint)
         ? rewriteFallbackCopy.shopCta
         : /(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)
           ? rewriteFallbackCopy.iotCta
@@ -5759,16 +5858,16 @@ export async function generateBrandReportPdf(
       lineGap: scanTitle.lineGap,
     });
     drawCenteredText(displayUrl.toUpperCase(), "Helvetica", 8.2, centerX, 146, colors.mutedOnDark);
-    drawGauge(centerX, 238, 50, overallScore, bandColor(overallScore));
-    drawCenteredText(String(overallScore), "Helvetica", 36, centerX, 225, bandColor(overallScore));
-    drawCenteredText("/ 100", "Helvetica", 9.2, centerX, 272, colors.mutedOnDark);
-    drawCenteredText(getBandForScore(overallScore), "Helvetica", 10, centerX, 300, bandColor(overallScore));
+    drawGauge(centerX, 240, 40, overallScore, bandColor(overallScore));
+    drawCenteredText(String(overallScore), "Helvetica", 34, centerX, 226, bandColor(overallScore));
+    drawCenteredText("/ 100", "Helvetica", 9.2, centerX, 266, colors.mutedOnDark);
+    drawCenteredText(getBandForScore(overallScore), "Helvetica", 10, centerX, 302, bandColor(overallScore));
     const liveScanTagline = buildSignalTaglineFromScores(
       scorePages.map((item) => ({ label: item.label, score: item.score.score })),
       truncate(report.tagline || "", 120),
     );
-    const liveTagline = fitTextToBox(liveScanTagline, contentWidth - 150, 38, 13.8, 11.8, 3.6, "Times-Roman");
-    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 75, 332, {
+    const liveTagline = fitTextToBox(liveScanTagline, contentWidth - 150, 32, 12.8, 11.2, 3.0, "Times-Roman");
+    doc.fillColor(colors.textOnDark).font(liveTagline.font).fontSize(liveTagline.size).text(liveTagline.text, contentLeft + 75, 338, {
       width: contentWidth - 150,
       align: "center",
       lineGap: liveTagline.lineGap,
@@ -5902,7 +6001,7 @@ export async function generateBrandReportPdf(
         },
         {
           label: "02 / AFTER CORE FIXES",
-          title: "What becomes easier after the priority fixes",
+          title: "What becomes easier",
           accent: colors.amber,
           body: "The offer lands sooner, proof sits closer to the decision, and AI-readable signals become cleaner.",
           metrics: [
@@ -5915,7 +6014,7 @@ export async function generateBrandReportPdf(
           label: "03 / COMMERCIAL LIFT",
           title: "What that can unlock",
           accent: colors.mint,
-          body: "More of the right people understand what is sold and what to do next. That is where demand lift comes from.",
+          body: "More buyers understand the offer. LLM/search systems can read and surface the brand.",
           metrics: [
             { label: "Qualified demand", value: afterFixImpactBand },
             { label: "After-fix demand", value: afterFixInquiryBand },
@@ -6129,10 +6228,12 @@ export async function generateBrandReportPdf(
     report.competitiveLandscape?.competitors.slice(0, 3).forEach((competitor, index) => {
       const y = 214 + index * 150;
       drawPanel(contentLeft, y, contentWidth, 132, colors.panelSoft);
-      doc.fillColor(colors.mint).font("Helvetica").fontSize(13.8).text(competitor.name, contentLeft + 20, y + 20, {
+      const nameFit = fitTextToBox(competitor.name, 132, 34, 13.8, 10.6, 2.2, "Helvetica");
+      doc.fillColor(colors.mint).font(nameFit.font).fontSize(nameFit.size).text(nameFit.text, contentLeft + 20, y + 20, {
         width: 132,
+        lineGap: nameFit.lineGap,
       });
-      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.8).text(competitor.url.replace(/^https?:\/\//, ""), contentLeft + 20, y + 44, {
+      doc.fillColor(colors.textMuted).font("Helvetica").fontSize(8.2).text(competitor.url.replace(/^https?:\/\//, ""), contentLeft + 20, y + 58, {
         width: 132,
       });
       drawSectionTag("WHERE THEY LEAD", contentLeft + 164, y + 20, colors.amber);
@@ -6168,11 +6269,11 @@ export async function generateBrandReportPdf(
       drawParagraph(report.competitiveLandscape.analysis.quickestWin.message, contentLeft + 192, 656, contentWidth - 212, 8.8, 3);
     }
 
-    // Page 14: Recommendations
+    // Page 14: Implementation Playbook / Recommendations
     addBasePage();
     const recommendationsTitleBottom = drawPageLabel(
-      "RECOMMENDATIONS",
-      `Your BrandMirror Score: ${overallScore}/100 - ${getBandForScore(overallScore)}`,
+      "IMPLEMENTATION PLAYBOOK",
+      `Start with the three fixes that can move the ${overallScore}/100 score fastest`,
       {
         width: 430,
         maxFont: 27,
@@ -6182,11 +6283,11 @@ export async function generateBrandReportPdf(
     );
     const recommendationsIntro = {
       en:
-        "You have a real product and a clear niche. What is holding the brand back is not the offer itself - it is how quickly buyers, algorithms, and AI systems can understand it.",
+        "This is the working section of the report. It turns the audit into edits a founder, marketer, or developer can actually use: clearer buyer language, stronger LLM readability, and a more earned next step.",
       es:
-        "Tienes un producto real y un nicho claro. Lo que frena a la marca no es la oferta en sí, sino la velocidad con la que compradores, algoritmos y sistemas de IA pueden entenderla.",
+        "Esta es la sección de trabajo del reporte. Convierte la auditoría en cambios que un founder, marketer o desarrollador puede usar: lenguaje de comprador más claro, mejor lectura por LLMs y un siguiente paso mejor ganado.",
       ru:
-        "У бренда есть реальное предложение и понятная ниша. Его сдерживает не само предложение, а то, насколько быстро покупатели, алгоритмы и ИИ-системы могут его понять.",
+        "Это рабочая часть отчёта. Она превращает аудит в правки, которые реально может использовать founder, маркетолог или разработчик: более ясный язык для покупателя, лучшая читаемость для LLM и более заслуженный следующий шаг.",
     }[language];
     drawParagraph(
       recommendationsIntro,
@@ -6220,9 +6321,9 @@ export async function generateBrandReportPdf(
           title: "Conversion Logic",
           cardTitle: "CTA Path",
           body:
-            "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
+            "Interest can arrive before the path forward feels fully earned. The next step has to match the business model and explain the commitment.",
           fix:
-            "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
+            "Keep the CTA flexible by business type: buy, book, enquire, start, register, or apply. Put proof and what-happens-next beside it.",
         },
       ],
       es: [
@@ -6246,9 +6347,9 @@ export async function generateBrandReportPdf(
           title: "Lógica de conversión",
           cardTitle: "Ruta CTA",
           body:
-            "El interés puede llegar antes de que el camino hacia delante se sienta obvio. La página necesita una acción principal que domine la zona de decisión.",
+            "El interés puede llegar antes de que el camino hacia delante esté ganado. El siguiente paso debe encajar con el modelo de negocio y explicar el compromiso.",
           fix:
-            "Elegir una ruta - reservar, consultar, comprar, registrarse o solicitar una llamada. Ponerla en el hero, repetirla después de la prueba y explicar qué ocurre después.",
+            "Mantener el CTA flexible según el negocio: comprar, reservar, consultar, empezar, registrarse o aplicar. Poner prueba y qué ocurre después junto a él.",
         },
       ],
       ru: [
@@ -6272,9 +6373,9 @@ export async function generateBrandReportPdf(
           title: "Логика конверсии",
           cardTitle: "Путь CTA",
           body:
-            "Интерес может появиться раньше, чем путь вперёд станет очевидным. Странице нужно одно главное действие, которое ведёт зону решения.",
+            "Интерес может появиться раньше, чем следующий шаг будет достаточно заслужен. Действие должно соответствовать бизнес-модели и объяснять уровень обязательства.",
           fix:
-            "Выбрать один путь - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок. Поставить его в hero, повторить после доказательств и объяснить, что будет дальше.",
+            "Оставить CTA гибким под бизнес: купить, забронировать, оставить заявку, начать, зарегистрироваться или податься. Рядом поставить доказательство и объяснение следующего шага.",
         },
       ],
     }[language];
@@ -6315,17 +6416,17 @@ export async function generateBrandReportPdf(
         workingLabel: "WHAT IS WORKING",
         workingBody: `Positioning (${scoreLookup("Positioning clarity")}) gives the brand a real niche to sharpen. Visual credibility (${scoreLookup("Visual credibility")}) already creates some professional trust. Build on those signals instead of rebuilding from zero.`,
         priorityLabel: "PRIORITY FIX STACK",
-        priorityTitle: "The editing order before the 30-day implementation map",
+        priorityTitle: "What to fix first, what to borrow, and what to keep",
         priorityIntro:
-          "This page turns the diagnosis into an editing order. It is not another summary: it tells the team where to spend attention first.",
-        briefLabel: "ONE PAGE BRAND BRIEF",
+          "This page turns the diagnosis into a working stack. It shows what should change first and which competitive cues are worth borrowing.",
+        briefLabel: "HOMEPAGE REWRITE BRIEF",
         headline: "HEADLINE",
         support: "SUPPORT",
         cta: "CTA",
         playbookLabel: "IMPLEMENTATION PLAYBOOK",
-        playbookTitle: "How to execute the priority stack without repeating it",
+        playbookTitle: "The 30-day map from diagnosis to visible change",
         playbookIntro:
-          "Use this sequence as the working order: fix the announcement first, strengthen the proof around it, then make the brand easier for buyers and AI systems to repeat.",
+          "Use this sequence as the implementation order: sharpen the first-screen promise, strengthen proof around the decision, then make the brand easier for buyers and LLM systems to repeat.",
         steps: [
           { label: "NOW", days: "DAYS 1-7" },
           { label: "NEXT", days: "DAYS 8-21" },
@@ -6342,17 +6443,17 @@ export async function generateBrandReportPdf(
         workingLabel: "QUÉ YA FUNCIONA",
         workingBody: `El posicionamiento (${scoreLookup("Positioning clarity")}) da a la marca un nicho real para afilar. La credibilidad visual (${scoreLookup("Visual credibility")}) ya genera parte de la confianza profesional. Construye sobre esas señales en lugar de empezar desde cero.`,
         priorityLabel: "STACK DE CORRECCIONES PRIORITARIAS",
-        priorityTitle: "El orden de edición antes del mapa de implementación de 30 días",
+        priorityTitle: "Qué corregir primero, qué tomar prestado y qué conservar",
         priorityIntro:
-          "Esta página convierte el diagnóstico en un orden de edición. No es otro resumen: le dice al equipo dónde poner atención primero.",
-        briefLabel: "BRIEF DE MARCA EN UNA PÁGINA",
+          "Esta página convierte el diagnóstico en un stack de trabajo. Muestra qué debe cambiar primero y qué señales competitivas conviene tomar prestadas.",
+        briefLabel: "BRIEF DE REESCRITURA DE HOMEPAGE",
         headline: "TITULAR",
         support: "SOPORTE",
         cta: "CTA",
         playbookLabel: "PLAYBOOK DE IMPLEMENTACIÓN",
-        playbookTitle: "Cómo ejecutar el stack prioritario sin repetirlo",
+        playbookTitle: "El mapa de 30 días del diagnóstico al cambio visible",
         playbookIntro:
-          "Usa esta secuencia como orden de trabajo: corrige primero la promesa principal, fortalece la prueba alrededor y luego haz que la marca sea más fácil de repetir para compradores y sistemas de IA.",
+          "Usa esta secuencia como orden de implementación: afila la promesa del primer pantallazo, refuerza la prueba alrededor de la decisión y haz que la marca sea más fácil de repetir para compradores y sistemas LLM.",
         steps: [
           { label: "AHORA", days: "DÍAS 1-7" },
           { label: "LUEGO", days: "DÍAS 8-21" },
@@ -6369,17 +6470,17 @@ export async function generateBrandReportPdf(
         workingLabel: "ЧТО УЖЕ РАБОТАЕТ",
         workingBody: `Позиционирование (${scoreLookup("Positioning clarity")}) даёт бренду реальную нишу, которую можно заострить. Визуальная убедительность (${scoreLookup("Visual credibility")}) уже создаёт часть профессионального доверия. Усиливайте эти сигналы, а не начинайте с нуля.`,
         priorityLabel: "СТЕК ПРИОРИТЕТНЫХ ИСПРАВЛЕНИЙ",
-        priorityTitle: "Порядок редактирования до карты внедрения на 30 дней",
+        priorityTitle: "Что исправить первым, что позаимствовать и что сохранить",
         priorityIntro:
-          "Эта страница превращает диагноз в порядок редактирования. Это не ещё одно резюме: она показывает команде, куда направить внимание первым делом.",
-        briefLabel: "БРЕНД-БРИФ НА ОДНУ СТРАНИЦУ",
+          "Эта страница превращает диагноз в рабочий стек. Она показывает, что менять первым и какие конкурентные сигналы стоит позаимствовать.",
+        briefLabel: "БРИФ ДЛЯ ПЕРЕПИСЫВАНИЯ HOMEPAGE",
         headline: "ЗАГОЛОВОК",
         support: "ПОДДЕРЖКА",
         cta: "CTA",
         playbookLabel: "ПЛЕЙБУК ВНЕДРЕНИЯ",
-        playbookTitle: "Как выполнить приоритетный стек без повторов",
+        playbookTitle: "30-дневная карта от диагноза к видимым изменениям",
         playbookIntro:
-          "Используйте эту последовательность как рабочий порядок: сначала исправить главное обещание, затем усилить доказательства вокруг него, потом сделать бренд проще для повторения покупателями и ИИ-системами.",
+          "Используйте это как порядок внедрения: сначала заострить обещание первого экрана, затем усилить доказательства вокруг решения и сделать бренд проще для повторения покупателями и LLM-системами.",
         steps: [
           { label: "СЕЙЧАС", days: "ДНИ 1-7" },
           { label: "ДАЛЬШЕ", days: "ДНИ 8-21" },
@@ -6448,26 +6549,26 @@ export async function generateBrandReportPdf(
       });
     });
 
-    drawPanel(contentLeft, 522, contentWidth, 198, colors.panel);
-    drawSectionTag(closingCopy.briefLabel, contentLeft + 18, 548, colors.mint);
-    const briefColW = (contentWidth - 60) / 3;
-    [
-      { label: closingCopy.headline, value: suggestedHeadline, color: colors.textOnDark },
-      { label: closingCopy.support, value: suggestedSubheadline, color: colors.mutedOnDark },
-      { label: closingCopy.cta, value: suggestedCta, color: colors.amber },
-    ].forEach((block, index) => {
-      const x = contentLeft + 18 + index * (briefColW + 12);
-      drawSectionTag(block.label, x, 580, colors.textMuted);
-      const fit = fitTextToBox(block.value, briefColW, 88, index === 0 ? 11.8 : 10, index === 0 ? 9.8 : 8.8, 3.2, index === 0 ? "Times-Bold" : "Helvetica");
-      doc.fillColor(block.color).font(fit.font).fontSize(fit.size).text(fit.text, x, 606, {
-        width: briefColW,
-        lineGap: fit.lineGap,
-      });
+    drawPanel(contentLeft, 506, contentWidth, 218, colors.panel);
+    drawSectionTag(closingCopy.briefLabel, contentLeft + 18, 532, colors.mint);
+    drawSectionTag(closingCopy.headline, contentLeft + 18, 570, colors.textMuted);
+    const headlineFit = fitTextToBox(suggestedHeadline, 210, 48, 12.2, 10.0, 3.2, "Times-Bold");
+    doc.fillColor(colors.textOnDark).font(headlineFit.font).fontSize(headlineFit.size).text(headlineFit.text, contentLeft + 18, 594, {
+      width: 210,
+      lineGap: headlineFit.lineGap,
     });
-    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9).text(priorityRewrite.why, contentLeft + 18, 700, {
-      width: contentWidth - 36,
-      lineGap: 2.8,
+    drawSectionTag(closingCopy.support, contentLeft + 18, 638, colors.textMuted);
+    const supportFit = fitTextToBox(suggestedSubheadline, 250, 52, 9.5, 8.0, 2.5);
+    drawParagraph(supportFit.text, contentLeft + 18, 660, 250, supportFit.size, supportFit.lineGap);
+    drawSectionTag(closingCopy.cta, contentLeft + 302, 570, colors.textMuted);
+    const ctaFit = fitTextToBox(suggestedCta, 166, 30, 12.4, 10.0, 2.4, "Helvetica");
+    doc.fillColor(colors.amber).font(ctaFit.font).fontSize(ctaFit.size).text(ctaFit.text, contentLeft + 302, 594, {
+      width: 166,
+      lineGap: ctaFit.lineGap,
     });
+    drawSectionTag("COMPETITIVE CUE TO BORROW", contentLeft + 302, 638, colors.textMuted);
+    const borrowFit = fitTextToBox(competitorBorrowLine, 166, 52, 8.8, 7.6, 2.3);
+    drawParagraph(borrowFit.text, contentLeft + 302, 660, 166, borrowFit.size, borrowFit.lineGap);
 
     // Page 16: Implementation Playbook + SAHAR CTA
     addBasePage();
