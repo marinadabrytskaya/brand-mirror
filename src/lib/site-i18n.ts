@@ -221,9 +221,9 @@ export const siteCopy = {
     firstRead: {
       back: "Back to BrandMirror",
       title: "First signal. Free.",
-      mechanicLabel: "Live engine",
+      mechanicLabel: "Live read",
       mechanicBody:
-        "Active. Enter any brand URL to begin. BrandMirror reads your homepage as a cold buyer — no context, no charity, no assumptions.",
+        "Enter any brand URL to begin. BrandMirror reads your homepage as a cold buyer: no context, no charity, no assumptions.",
       startLabel: "Start here",
       startTitle: "Drop your homepage URL. The scan takes 60 seconds.",
       startHelper: "Drop your homepage URL. The scan takes 60 seconds.",
@@ -294,13 +294,13 @@ export const siteCopy = {
       title: "Full report",
       fallbackLabel: "Full report",
       fallbackTitle: "Loading the BrandMirror report surface.",
-      mechanicLabel: "Paid layer mechanic",
+      mechanicLabel: "Paid diagnostic",
       mechanicBody:
-        "This route is the transferred second layer: the fuller report that sits behind the first read and supports PDF export.",
-      unlockLabel: "Unlock logic",
-      unlockTitle: "Generate the full BrandMirror report for the paid layer.",
+        "The full report turns the first read into a sharper commercial diagnosis with evidence, priorities, and a downloadable PDF.",
+      unlockLabel: "Report builder",
+      unlockTitle: "Generate the full BrandMirror report.",
       unlockBody:
-        "Right now this is the transferred mechanic. Next we can attach it to checkout so this route becomes the post-payment result surface.",
+        "Use the same website from the first read, then export the full diagnosis once the report is ready.",
       websiteUrl: "Website URL",
       urlPlaceholder: "yourbrand.com",
       submitIdle: "Generate full report",
@@ -576,9 +576,9 @@ export const siteCopy = {
     firstRead: {
       back: "Volver a BrandMirror",
       title: "Primera lectura gratis",
-      mechanicLabel: "Mecánica en vivo",
+      mechanicLabel: "Lectura en vivo",
       mechanicBody:
-        "Esta página ahora usa la lógica transferida de la revisión de marca para leer un sitio real y producir la capa gratuita de BrandMirror.",
+        "Ingresa cualquier sitio web de marca. BrandMirror lee la página principal como un comprador frío: sin contexto, sin indulgencia y sin suposiciones.",
       startLabel: "Empieza aquí",
       startTitle: "Ingresa un sitio web y deja que BrandMirror lea la primera señal.",
       startBody:
@@ -713,13 +713,13 @@ export const siteCopy = {
       title: "Reporte completo",
       fallbackLabel: "Reporte completo",
       fallbackTitle: "Cargando la superficie del reporte BrandMirror.",
-      mechanicLabel: "Mecánica de la capa pagada",
+      mechanicLabel: "Diagnóstico pagado",
       mechanicBody:
-        "Esta ruta es la segunda capa transferida: el reporte más completo que se sitúa detrás de la primera lectura y soporta exportación PDF.",
-      unlockLabel: "Lógica de desbloqueo",
-      unlockTitle: "Genera el reporte completo de BrandMirror para la capa pagada.",
+        "El reporte completo convierte la primera lectura en un diagnóstico comercial más profundo, con evidencia, prioridades y PDF descargable.",
+      unlockLabel: "Generador de reporte",
+      unlockTitle: "Genera el reporte completo de BrandMirror.",
       unlockBody:
-        "Ahora mismo esta es la mecánica transferida. Lo siguiente es conectarla al pago para que esta ruta se convierta en la superficie posterior al pago.",
+        "Usa el mismo sitio de la primera lectura y exporta el diagnóstico completo cuando el reporte esté listo.",
       websiteUrl: "URL del sitio web",
       urlPlaceholder: "tu-marca.com",
       submitIdle: "Generar reporte completo",
@@ -995,9 +995,9 @@ export const siteCopy = {
     firstRead: {
       back: "Назад в BrandMirror",
       title: "Бесплатный первый разбор",
-      mechanicLabel: "Живая механика",
+      mechanicLabel: "Живой разбор",
       mechanicBody:
-        "Эта страница уже использует перенесённую логику проверки бренда, чтобы читать реальный сайт и выдавать бесплатный слой BrandMirror.",
+        "Введите любой сайт бренда. BrandMirror читает главную страницу как холодный покупатель: без контекста, поблажек и допущений.",
       startLabel: "Начни здесь",
       startTitle: "Введи сайт и позволь BrandMirror прочитать первый сигнал.",
       startBody:
@@ -1131,13 +1131,13 @@ export const siteCopy = {
       title: "Полный отчёт",
       fallbackLabel: "Полный отчёт",
       fallbackTitle: "Загружается поверхность отчёта BrandMirror.",
-      mechanicLabel: "Механика платного слоя",
+      mechanicLabel: "Платный диагноз",
       mechanicBody:
-        "Этот маршрут — перенесённый второй слой: более полный отчёт, который стоит за первым разбором и поддерживает экспорт в PDF.",
-      unlockLabel: "Логика разблокировки",
-      unlockTitle: "Сгенерируй полный отчёт BrandMirror для платного слоя.",
+        "Полный отчёт превращает первый разбор в более глубокий коммерческий диагноз: с доказательствами, приоритетами и PDF для скачивания.",
+      unlockLabel: "Сборка отчёта",
+      unlockTitle: "Сгенерируй полный отчёт BrandMirror.",
       unlockBody:
-        "Пока это перенесённая механика. Следующим шагом можно привязать оплату, чтобы этот маршрут стал результатом после оплаты.",
+        "Используй тот же сайт из первого разбора и экспортируй полный диагноз, когда отчёт будет готов.",
       websiteUrl: "URL сайта",
       urlPlaceholder: "vashbrand.com",
       submitIdle: "Сгенерировать полный отчёт",

@@ -8,6 +8,7 @@ import { type BrandReadResult } from "@/lib/brand-read";
 import { getSiteLocale } from "@/lib/site-i18n";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 async function parseRequestBody(request: Request): Promise<{

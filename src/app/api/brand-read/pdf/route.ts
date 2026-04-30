@@ -26,6 +26,7 @@ import {
 import { sendBrandReadEmail } from "@/lib/report-email";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const PAGE = {
