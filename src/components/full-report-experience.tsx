@@ -543,13 +543,33 @@ function firstSentence(text = "", fallback = "") {
   return cleaned.match(/[^.!?]+[.!?]/)?.[0]?.trim() || cleaned;
 }
 
-function buildPdfAlignedScorePages(report: BrandReport) {
+function buildPdfAlignedScorePages(report: BrandReport, locale: SiteLocale = "en") {
   const overallScore = getCanonicalOverallScore(report);
+  const fallbackCopy = {
+    en: {
+      aiVisibility:
+        "AI visibility also depends on clear category nouns, metadata, schema, FAQ support, and consistent naming across the page.",
+      conversion:
+        "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
+    },
+    es: {
+      aiVisibility:
+        "La visibilidad en IA también depende de categorías claras, metadatos, datos estructurados, FAQs y naming consistente en toda la página.",
+      conversion:
+        "Elige una acción principal - reservar, consultar, comprar, registrarse o solicitar una llamada - y explica qué ocurre después del clic.",
+    },
+    ru: {
+      aiVisibility:
+        "Видимость в ИИ также зависит от ясных названий категории, метаданных, структурированных данных, FAQ и единого нейминга по всей странице.",
+      conversion:
+        "Выбери одно главное действие - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок - и объясни, что происходит после клика.",
+    },
+  }[locale];
   const aiVisibilityRead = /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
     ? report.toneCheck
     : [
         report.toneCheck,
-        "AI visibility also depends on clear category nouns, metadata, schema, FAQ support, and consistent naming across the page.",
+        fallbackCopy.aiVisibility,
       ].filter(Boolean).join(" ");
 
   return [
@@ -586,8 +606,7 @@ function buildPdfAlignedScorePages(report: BrandReport) {
       title: "Conversion Readiness",
       diagnosis: report.conversionRead,
       quote: report.whyNotConverting[1] || report.conversionRead,
-      implication:
-        "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
+      implication: fallbackCopy.conversion,
     },
   ].map((item) => ({
     ...item,
@@ -753,7 +772,7 @@ function PdfAlignedReportSections({
   }[locale];
 
   const overallScore = getCanonicalOverallScore(report);
-  const scorePages = buildPdfAlignedScorePages(report);
+  const scorePages = buildPdfAlignedScorePages(report, locale);
   const measureCards = {
     en: [
       { title: "Positioning Clarity", body: "Does the buyer know what you are within one read?" },
@@ -778,53 +797,166 @@ function PdfAlignedReportSections({
     ],
   }[locale];
   const scoreAverage = scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
+  const localizedFlowCopy = {
+    en: {
+      currentSignal: [
+        "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand.",
+        "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough.",
+        "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.",
+      ],
+      recommendations: [
+        {
+          title: scoreLabels["AI visibility"] || "AI Visibility",
+          body:
+            "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
+          fix:
+            "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
+        },
+        {
+          title: scoreLabels["Offer specificity"] || "Offer Clarity",
+          body:
+            "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
+          fix:
+            "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
+        },
+        {
+          title: scoreLabels["Conversion readiness"] || "Conversion Logic",
+          body:
+            "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
+          fix:
+            "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
+        },
+      ],
+      sprintNow: [
+        "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
+        "Choose the primary conversion event and make the CTA explicit.",
+        "Remove vague mood copy that does not explain what is being sold.",
+      ],
+      sprintNext: [
+        "Add exact category nouns to the H1, title tag, meta description, and schema.",
+        "Tighten section hierarchy so each block earns trust before asking for action.",
+        "Turn broad service language into 2-3 concrete use cases or deliverables.",
+      ],
+      sprintThen: [
+        "Turn the sharpened message into service pages, proof blocks, and sales assets.",
+        "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+        "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
+      ],
+    },
+    es: {
+      currentSignal: [
+        "Ahora mismo la homepage pierde demasiada claridad como para convertir atención débil en demanda cualificada constante.",
+        "La señal actual es creíble, pero la oferta, la prueba y el CTA todavía no trabajan juntos con suficiente precisión.",
+        "La página ya sostiene cierta confianza, pero el potencial solo se vuelve real si el mensaje afinado se repite más allá de la homepage.",
+      ],
+      recommendations: [
+        {
+          title: scoreLabels["AI visibility"] || "Visibilidad en IA",
+          body:
+            "Si alguien pregunta a ChatGPT, Perplexity o Google AI Overview sobre esta categoría, la marca necesita señales de entidad más claras para aparecer con facilidad.",
+          fix:
+            "Añadir definición de entidad, soporte de FAQ/datos estructurados, nombres de categoría consistentes, metadatos y señales técnicas fáciles de rastrear.",
+        },
+        {
+          title: scoreLabels["Offer specificity"] || "Claridad de oferta",
+          body:
+            "Los servicios existen, pero no están nombrados con suficiente precisión. El lenguaje de categoría describe el espacio, no lo que el comprador puede comprar.",
+          fix:
+            "Nombrar las ofertas principales, dar a cada una una promesa de resultado y hacer que la homepage responda: qué recibo y qué cambia para mí.",
+        },
+        {
+          title: scoreLabels["Conversion readiness"] || "Lógica de conversión",
+          body:
+            "El interés puede llegar antes de que el camino hacia delante se sienta obvio. La página necesita una acción principal que domine la zona de decisión.",
+          fix:
+            "Elegir una ruta - reservar, consultar, comprar, registrarse o solicitar una llamada. Ponerla en el hero, repetirla después de la prueba y explicar qué ocurre después.",
+        },
+      ],
+      sprintNow: [
+        "Reescribir la promesa inicial para que nombre comprador, oferta y resultado en una sola lectura.",
+        "Elegir el evento principal de conversión y hacer explícito el CTA.",
+        "Eliminar copy de ambiente que no explica qué se vende.",
+      ],
+      sprintNext: [
+        "Añadir nombres exactos de categoría en H1, title tag, meta description y datos estructurados.",
+        "Ajustar la jerarquía de secciones para que cada bloque gane confianza antes de pedir acción.",
+        "Convertir lenguaje amplio de servicios en 2-3 casos de uso o entregables concretos.",
+      ],
+      sprintThen: [
+        "Convertir el mensaje afinado en páginas de servicio, bloques de prueba y activos de venta.",
+        "Publicar FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
+        "Revisar clics de CTA, calidad de consultas y orden de prueba; ajustar lo que aún crea duda.",
+      ],
+    },
+    ru: {
+      currentSignal: [
+        "Сейчас главная страница, скорее всего, теряет слишком много ясности, чтобы превращать слабое внимание в стабильный квалифицированный спрос.",
+        "Текущий сигнал выглядит убедительно, но предложение, доказательства и CTA всё ещё не работают вместе достаточно точно.",
+        "Страница уже несёт часть доверия, но рост станет реальным только если уточнённое сообщение начнёт повторяться за пределами главной страницы.",
+      ],
+      recommendations: [
+        {
+          title: scoreLabels["AI visibility"] || "Видимость в ИИ",
+          body:
+            "Если человек спросит ChatGPT, Perplexity или Google AI Overview об этой категории, бренду нужны более ясные сигналы сущности, чтобы его было легче найти.",
+          fix:
+            "Добавить определение сущности, FAQ/структурированные данные, единые названия категории, метаданные и технические сигналы, доступные для поисковых роботов.",
+        },
+        {
+          title: scoreLabels["Offer specificity"] || "Ясность предложения",
+          body:
+            "Услуги есть, но они названы недостаточно точно. Категорийный язык описывает пространство, а не то, что покупатель может купить.",
+          fix:
+            "Назвать ключевые предложения, дать каждому обещание результата и сделать так, чтобы главная страница отвечала: что я получаю и что для меня меняется.",
+        },
+        {
+          title: scoreLabels["Conversion readiness"] || "Логика конверсии",
+          body:
+            "Интерес может появиться раньше, чем путь вперёд станет очевидным. Странице нужно одно главное действие, которое ведёт зону решения.",
+          fix:
+            "Выбрать один путь - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок. Поставить его в hero, повторить после доказательств и объяснить, что будет дальше.",
+        },
+      ],
+      sprintNow: [
+        "Переписать первое обещание так, чтобы в одном считывании были покупатель, предложение и результат.",
+        "Выбрать главное конверсионное действие и сделать CTA явным.",
+        "Убрать атмосферный текст, который не объясняет, что именно продаётся.",
+      ],
+      sprintNext: [
+        "Добавить точные названия категории в H1, title tag, meta description и структурированные данные.",
+        "Уточнить иерархию секций, чтобы каждый блок зарабатывал доверие до просьбы о действии.",
+        "Превратить широкий язык услуг в 2-3 конкретных сценария использования или результата.",
+      ],
+      sprintThen: [
+        "Развернуть уточнённое сообщение в страницы услуг, блоки доказательств и материалы продаж.",
+        "Опубликовать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
+        "Проверить клики по CTA, качество заявок и порядок доказательств; усилить то, что всё ещё вызывает сомнение.",
+      ],
+    },
+  }[locale];
   const currentSignalSummary =
     scoreAverage < 65
-      ? "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand."
+      ? localizedFlowCopy.currentSignal[0]
       : scoreAverage < 78
-        ? "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough."
-        : "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.";
+        ? localizedFlowCopy.currentSignal[1]
+        : localizedFlowCopy.currentSignal[2];
   const recommendationRows = [
     {
-      title: scoreLabels["AI visibility"] || "AI Visibility",
+      ...localizedFlowCopy.recommendations[0],
       score: getScoreByLabel(report, "AI visibility", overallScore).score,
-      body:
-        "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
-      fix:
-        "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
     },
     {
-      title: scoreLabels["Offer specificity"] || "Offer Clarity",
+      ...localizedFlowCopy.recommendations[1],
       score: getScoreByLabel(report, "Offer specificity", overallScore).score,
-      body:
-        "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
-      fix:
-        "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
     },
     {
-      title: scoreLabels["Conversion readiness"] || "Conversion Logic",
+      ...localizedFlowCopy.recommendations[2],
       score: getScoreByLabel(report, "Conversion readiness", overallScore).score,
-      body:
-        "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
-      fix:
-        "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
     },
   ];
-  const sprintNow = [
-    "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
-    "Choose the primary conversion event and make the CTA explicit.",
-    "Remove vague mood copy that does not explain what is being sold.",
-  ];
-  const sprintNext = [
-    "Add exact category nouns to the H1, title tag, meta description, and schema.",
-    "Tighten section hierarchy so each block earns trust before asking for action.",
-    "Turn broad service language into 2-3 concrete use cases or deliverables.",
-  ];
-  const sprintThen = [
-    "Turn the sharpened message into service pages, proof blocks, and sales assets.",
-    "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
-    "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
-  ];
+  const sprintNow = localizedFlowCopy.sprintNow;
+  const sprintNext = localizedFlowCopy.sprintNext;
+  const sprintThen = localizedFlowCopy.sprintThen;
 
   return (
     <>
@@ -1723,7 +1855,7 @@ export function FullReportExperience({
   const canonicalOverallScore = report ? getCanonicalOverallScore(report) : 0;
   const canonicalScoreBand = report ? bandFor(canonicalOverallScore).label : "";
   const canonicalScorecard = report
-    ? buildPdfAlignedScorePages(report).map((item) => item.score)
+    ? buildPdfAlignedScorePages(report, locale).map((item) => item.score)
     : [];
 
   return (

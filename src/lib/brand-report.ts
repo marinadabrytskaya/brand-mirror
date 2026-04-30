@@ -2498,46 +2498,78 @@ function collectTechnicalAeoFindings(values: unknown[]) {
   return Array.from(new Set(findings.map((item) => truncate(item, 220))));
 }
 
-function technicalAeoFixesFromFindings(findings: string[]) {
+function technicalAeoFixesFromFindings(findings: string[], language: SiteLocale = "en") {
   if (!findings.length) return [];
 
   const text = findings.join(" ").toLowerCase();
   const fixes: string[] = [];
+  const copy = {
+    en: {
+      metadata:
+        "Developer fix: tighten the title tag, meta description, H1, and visible category nouns so AI summaries can name the offer without guessing.",
+      schema:
+        "Developer fix: add or clean Organization/LocalBusiness schema and keep the business name, category, services, and URL consistent with the page copy.",
+      llms:
+        "Developer fix: consider adding an llms.txt file that points AI tools to the homepage, core service pages, FAQs, and strongest proof pages.",
+      crawler:
+        "Developer fix: check robots.txt, sitemap, canonical URLs, and crawler access so search and AI systems can reach the important pages.",
+      faq:
+        "Developer fix: add concise FAQ or answer sections that explain who the offer is for, what is included, how it works, and what result to expect.",
+      fallback:
+        "Developer fix: make the page easier for AI systems to read by clarifying category language, service names, proof, and the main next step.",
+    },
+    es: {
+      metadata:
+        "Corrección para desarrollo: ajustar title tag, meta description, H1 y nombres de categoría visibles para que los resúmenes de IA puedan nombrar la oferta sin adivinar.",
+      schema:
+        "Corrección para desarrollo: añadir o limpiar el schema Organization/LocalBusiness y mantener el nombre del negocio, categoría, servicios y URL coherentes con el texto de la página.",
+      llms:
+        "Corrección para desarrollo: considerar un archivo llms.txt que apunte a la homepage, páginas de servicio, FAQs y páginas de prueba más fuertes.",
+      crawler:
+        "Corrección para desarrollo: revisar robots.txt, sitemap, URLs canónicas y acceso para rastreadores para que buscadores y sistemas de IA puedan llegar a las páginas importantes.",
+      faq:
+        "Corrección para desarrollo: añadir secciones breves de FAQ o respuestas que expliquen para quién es la oferta, qué incluye, cómo funciona y qué resultado esperar.",
+      fallback:
+        "Corrección para desarrollo: hacer que la página sea más fácil de leer para sistemas de IA aclarando categoría, nombres de servicios, prueba y siguiente paso principal.",
+    },
+    ru: {
+      metadata:
+        "Задача для разработчика: уточнить title tag, meta description, H1 и видимые названия категории, чтобы ИИ-резюме могли назвать предложение без догадок.",
+      schema:
+        "Задача для разработчика: добавить или привести в порядок schema Organization/LocalBusiness и согласовать название бизнеса, категорию, услуги и URL с текстом страницы.",
+      llms:
+        "Задача для разработчика: рассмотреть файл llms.txt со ссылками на главную страницу, ключевые страницы услуг, FAQ и самые сильные страницы с доказательствами.",
+      crawler:
+        "Задача для разработчика: проверить robots.txt, sitemap, canonical URL и доступ для поисковых роботов, чтобы поисковые системы и ИИ могли дойти до важных страниц.",
+      faq:
+        "Задача для разработчика: добавить короткие FAQ или блоки ответов, где ясно сказано, для кого предложение, что входит, как всё работает и какого результата ждать.",
+      fallback:
+        "Задача для разработчика: сделать страницу понятнее для ИИ-систем через ясную категорию, названия услуг, доказательства и основной следующий шаг.",
+    },
+  }[language];
 
   if (/metadata|meta description|title tag|category nouns?/.test(text)) {
-    fixes.push(
-      "Developer fix: tighten the title tag, meta description, H1, and visible category nouns so AI summaries can name the offer without guessing.",
-    );
+    fixes.push(copy.metadata);
   }
 
   if (/schema|structured data|localbusiness|organization schema/.test(text)) {
-    fixes.push(
-      "Developer fix: add or clean Organization/LocalBusiness schema and keep the business name, category, services, and URL consistent with the page copy.",
-    );
+    fixes.push(copy.schema);
   }
 
   if (/llms\.txt/.test(text)) {
-    fixes.push(
-      "Developer fix: consider adding an llms.txt file that points AI tools to the homepage, core service pages, FAQs, and strongest proof pages.",
-    );
+    fixes.push(copy.llms);
   }
 
   if (/crawler|crawlers|crawlable|robots\.txt|sitemap|blocked|access/.test(text)) {
-    fixes.push(
-      "Developer fix: check robots.txt, sitemap, canonical URLs, and crawler access so search and AI systems can reach the important pages.",
-    );
+    fixes.push(copy.crawler);
   }
 
   if (/faq|answer sections?/.test(text)) {
-    fixes.push(
-      "Developer fix: add concise FAQ or answer sections that explain who the offer is for, what is included, how it works, and what result to expect.",
-    );
+    fixes.push(copy.faq);
   }
 
   if (!fixes.length) {
-    fixes.push(
-      "Developer fix: make the page easier for AI systems to read by clarifying category language, service names, proof, and the main next step.",
-    );
+    fixes.push(copy.fallback);
   }
 
   return fixes;
@@ -2579,7 +2611,11 @@ function prependLimitedTechnicalFixes(
   );
 }
 
-function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandReport {
+function normalizeReport(
+  raw: RawBrandReport,
+  fallback: BrandReport,
+  language: SiteLocale = "en",
+): BrandReport {
   const scorecardSource =
     raw.scorecard && raw.scorecard.length > 0 ? raw.scorecard : fallback.scorecard;
 
@@ -2599,7 +2635,7 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
     fallback.toneCheck,
     fallback.scorecard,
   ]);
-  const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings);
+  const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings, language);
 
   const normalized: BrandReport = {
     url: fallback.url,
@@ -3779,6 +3815,33 @@ async function localizeBrandReport(report: BrandReport, language: SiteLocale) {
   };
 }
 
+function normalizeStaticLanguageLabels(report: BrandReport, language: SiteLocale) {
+  if (language === "en") return report;
+
+  const copy = {
+    es: {
+      hero: "Promesa principal",
+      proof: "Zona de prueba y CTA",
+    },
+    ru: {
+      hero: "Главное обещание",
+      proof: "Зона доказательств и CTA",
+    },
+  }[language];
+
+  report.screenshotCallouts = report.screenshotCallouts.map((item) => {
+    if (item.zone === "hero-promise" && /hero|promise|обещ|promesa/i.test(item.title)) {
+      return { ...item, title: copy.hero };
+    }
+    if (item.zone === "proof-cta" && /proof|cta|prueba|доказ/i.test(item.title)) {
+      return { ...item, title: copy.proof };
+    }
+    return item;
+  });
+
+  return report;
+}
+
 export async function generateBrandReport(
   urlInput: string,
   language: SiteLocale = "en",
@@ -3850,7 +3913,7 @@ export async function generateBrandReport(
     language,
   ).catch(() => null);
 
-  const report = normalizeReport(modelReport || {}, fallback);
+  const report = normalizeReport(modelReport || {}, fallback, language);
   const primarySurface = {
     ...fallback.surfaceCaptures[0],
     note: report.surfaceCaptures[0]?.note || fallback.surfaceCaptures[0].note,
@@ -4010,8 +4073,13 @@ export async function generateBrandReport(
     report.competitiveLandscape = buildManualCompetitiveLandscape(report);
   }
 
+  normalizeStaticLanguageLabels(report, language);
+
   if (!modelReport && language !== "en") {
-    return localizeBrandReport(report, language);
+    return normalizeStaticLanguageLabels(
+      await localizeBrandReport(report, language),
+      language,
+    );
   }
 
   return report;
@@ -4285,18 +4353,18 @@ export async function generateBrandReportPdf(
         ctaCalloutLabel: "ZONA DE PRUEBA Y CTA",
         methodologyBullets: [
           "Positioning Clarity mide qué tan rápido la homepage hace legible la oferta.",
-          "AI Visibility mide si las herramientas de IA pueden encontrar, leer y recomendar la marca. Pesa 60% capa técnica AEO - metadatos, schema, acceso para crawlers y estructura legible por IA - y 40% claridad semántica de marca.",
+          "AI Visibility mide si las herramientas de IA pueden encontrar, leer y recomendar la marca. Combina preparación técnica - metadatos, datos estructurados, acceso para rastreadores y estructura legible por IA - con claridad semántica: categoría, oferta y naming consistente.",
           "Visual Credibility mide si el diseño comunica calidad y control.",
           "Offer Specificity mide qué tan directo es el sitio al explicar lo que hace y por qué importa.",
           "Conversion Readiness mide si la página ya ganó el derecho a pedir el siguiente paso.",
         ],
         readingScale: "CÓMO LEER LA ESCALA",
         legend: [
-          { title: "0-30", body: "Flatlining. La señal está rota, ausente o destruye confianza." },
-          { title: "30-50", body: "Fragile. Hay base, pero no sostiene la confianza." },
-          { title: "50-70", body: "Developing. Funciona por momentos, pero sigue perdiendo impulso." },
-          { title: "70-85", body: "Stable. La página sostiene claridad y confianza, con margen para afilar." },
-          { title: "85-100", body: "Leading. La marca vende antes de tener que explicarse." },
+          { title: "0-30", body: "Sin tracción. La señal está rota, ausente o destruye confianza." },
+          { title: "30-50", body: "Frágil. Hay base, pero no sostiene la confianza." },
+          { title: "50-70", body: "En desarrollo. Funciona por momentos, pero sigue perdiendo impulso." },
+          { title: "70-85", body: "Estable. La página sostiene claridad y confianza, con margen para afilar." },
+          { title: "85-100", body: "Líder. La marca vende antes de tener que explicarse." },
         ],
         whatScoreTells: "Qué nos está diciendo este score",
         revealingLine: "LÍNEA MÁS REVELADORA",
@@ -4330,7 +4398,7 @@ export async function generateBrandReportPdf(
         directionCues: "PISTAS DE DIRECCIÓN",
         nextLabel: "QUÉ VIENE DESPUÉS",
         nextTitle: "Tres formas de actuar sobre este reporte mientras el diagnóstico sigue fresco",
-        playbookLabel: "IMPLEMENTATION PLAYBOOK",
+        playbookLabel: "PLAYBOOK DE IMPLEMENTACIÓN",
         playbookTitle: "Mapa de implementación a 30 días",
         playbookIntro:
           "Convierte el diagnóstico en una secuencia clara. Primero corrige la claridad con más apalancamiento, luego fortalece la prueba y la visibilidad, y después escala la página como un sistema comercial más fuerte.",
@@ -4350,79 +4418,79 @@ export async function generateBrandReportPdf(
       },
       ru: {
         coverSub: "ТВОЙ ОТЧЁТ BRANDMIRROR",
-        powered: "Powered by SAHAR / saharstudio.com",
+        powered: "Создано SAHAR / saharstudio.com",
         footer: "Твой бренд уже говорит. Вот что он говорит.",
         whatThisIsLabel: "ЧТО МЫ ИЗМЕРЯЕМ",
         whatThisIsTitle:
           "Пять коммерческих сигналов, которые решают, поймут ли бренд, поверят ли ему и выберут ли его",
         whatThisIsIntro: [
-          `BrandMirror читает бренд так, как его читает внимательный покупатель на первом экране: до того, как текст всё объяснил, до того, как proof заслужил доверие, до клика.`,
-          "Этот отчёт измеряет пять сигналов, которые формируют это решение: clarity, AI visibility, credibility, specificity и readiness to act.",
+          `BrandMirror читает бренд так, как его читает внимательный покупатель на первом экране: до того, как текст всё объяснил, до того, как доказательства заслужили доверие, до клика.`,
+          "Этот отчёт измеряет пять сигналов, которые формируют это решение: ясность, видимость в ИИ, убедительность, конкретность предложения и готовность к действию.",
           "Задача не в том, чтобы оценить вкус. Задача — показать, где страница помогает продаже, где тормозит её и что чинить первым.",
         ],
         reportSnapshot: "СНИМОК ОТЧЁТА",
         overallReadiness: "Общая готовность бренда",
-        scoreDashboardLabel: "ПАНЕЛЬ SCORES",
+        scoreDashboardLabel: "ПАНЕЛЬ ОЦЕНОК",
         scoreDashboardTitle:
           "Увидь точно, что работает, что сломано и почему клиент всё ещё сомневается",
         scoreSentence: `Твой бренд получает ${overallScore}/100.`,
         scoreSub:
           "Визуальный слой уже делает много работы. Коммерческий слой всё ещё должен его догнать.",
         methodologyLabel: "КАК BRANDMIRROR ОЦЕНИВАЕТ БРЕНД",
-        methodologyTitle: "Что измеряет каждый score и почему этим цифрам можно доверять",
+        methodologyTitle: "Что измеряет каждая оценка и почему этим цифрам можно доверять",
         roiLabel: "КОММЕРЧЕСКИЙ ЭФФЕКТ",
-        roiTitle: "Что текущий сигнал, скорее всего, поддерживает сейчас — и что меняется после фиксов",
+        roiTitle: "Что текущий сигнал, скорее всего, поддерживает сейчас — и что меняется после исправлений",
         roiIntro:
-          "На основе внешних сигналов видимости и текущих BrandMirror scores эта страница показывает, где бренд, скорее всего, находится сейчас, какой спрос сайт способен удерживать сегодня и что становится реалистичнее после внедрения самых сильных фиксов.",
+          "На основе внешних сигналов видимости и текущих оценок BrandMirror эта страница показывает, где бренд, скорее всего, находится сейчас, какой спрос сайт способен удерживать сегодня и что становится реалистичнее после внедрения самых сильных исправлений.",
         roiRecommended: "ТЕКУЩИЙ ВНЕШНИЙ СИГНАЛ",
         roiConservative: "НИЗКАЯ ВИДИМОСТЬ",
         roiRealistic: "СРЕДНЯЯ ВИДИМОСТЬ",
         roiOptimistic: "БОЛЕЕ СИЛЬНАЯ ВИДИМОСТЬ",
         roiScale1: "Осторожный план",
         roiScale2: "Рабочая база",
-        roiScale3: "Upside-сценарий",
+        roiScale3: "Сценарий роста",
         roiVisitors: "Вероятный трафик",
         roiAov: "Квалифицированные визиты",
-        roiCurrentRevenue: "Вероятные inquiries",
-        roiProjectedLift: "МОДЕЛИРУЕМЫЙ UPSIDE",
+        roiCurrentRevenue: "Вероятные заявки",
+        roiProjectedLift: "МОДЕЛИРУЕМЫЙ РОСТ",
         roiMonthlyLift: "Вероятный рост спроса",
         roiAnnualLift: "Иллюстративный диапазон выручки",
         roiImplementation: "УРОВЕНЬ УВЕРЕННОСТИ",
-        roiCost: "Уровень confidence",
+        roiCost: "Уровень уверенности",
         roiPayback: "Как лучше использовать модель",
         roiAnnualRoi: "ROI за год",
         roiFootnote:
-          "Это направленная оценка на основе внешних сигналов видимости, benchmarks категории и priority fixes из отчёта. Это не first-party analytics и не обещание выручки.",
+          "Это направленная оценка на основе внешних сигналов видимости, ориентиров категории и приоритетных исправлений из отчёта. Это не собственная аналитика сайта и не обещание выручки.",
         competitiveLabel: "КОНКУРЕНТНАЯ ПОЗИЦИЯ",
         competitiveTitle: "Где бренд стоит внутри своей категории прямо сейчас",
         competitiveAverage: "Среднее по конкурентам",
         competitiveLeader: "Лидер",
         competitiveQuickestWin: "САМЫЙ БЫСТРЫЙ КОНКУРЕНТНЫЙ ВЫИГРЫШ",
         competitiveNoData:
-          "Конкурентный benchmarking недоступен для этого запуска, но ROI-сценарии выше всё равно показывают наиболее вероятный коммерческий upside от priority fixes.",
+          "Конкурентное сравнение недоступно для этого запуска, но ROI-сценарии выше всё равно показывают наиболее вероятный коммерческий рост от приоритетных исправлений.",
         websiteEvidenceLabel: "ТЕКУЩАЯ ПОВЕРХНОСТЬ САЙТА",
         websiteEvidenceTitle:
           "Что видит покупатель до того, как текст успевает заслужить доверие",
         websiteEvidenceCaption:
-          "Это текущая above-the-fold поверхность, которую BrandMirror использует как главный визуальный слой диагноза.",
-        heroCalloutLabel: "HERO-ОБЕЩАНИЕ",
-        ctaCalloutLabel: "ЗОНА PROOF И CTA",
+          "Это текущая зона первого экрана, которую BrandMirror использует как главный визуальный слой диагноза.",
+        heroCalloutLabel: "ГЛАВНОЕ ОБЕЩАНИЕ",
+        ctaCalloutLabel: "ЗОНА ДОКАЗАТЕЛЬСТВ И CTA",
         methodologyBullets: [
-          "Positioning Clarity измеряет, насколько быстро homepage делает оффер понятным.",
-          "AI Visibility измеряет, могут ли AI tools найти бренд, корректно прочитать его и рекомендовать. Вес: 60% technical AEO layer - metadata, schema, crawler access и AI-readable structure - и 40% semantic brand clarity.",
-          "Visual Credibility измеряет, сигналит ли дизайн качество и контроль.",
-          "Offer Specificity измеряет, насколько прямо страница объясняет, что она делает и почему это важно.",
-          "Conversion Readiness измеряет, заслужила ли страница право попросить следующий шаг.",
+          "Ясность позиционирования измеряет, насколько быстро главная страница делает предложение понятным.",
+          "Видимость в ИИ измеряет, могут ли ИИ-инструменты найти бренд, корректно прочитать его и рекомендовать. Оценка объединяет техническую готовность - метаданные, структурированные данные, доступ для поисковых роботов и понятную для ИИ структуру - с ясностью смысла: категория, предложение и единое название.",
+          "Визуальная убедительность измеряет, сообщает ли дизайн качество и контроль.",
+          "Точность предложения измеряет, насколько прямо страница объясняет, что бренд делает и почему это важно.",
+          "Готовность к конверсии измеряет, заслужила ли страница право попросить следующий шаг.",
         ],
         readingScale: "КАК ЧИТАТЬ ШКАЛУ",
         legend: [
-          { title: "0-30", body: "Flatlining. Сигнал сломан, отсутствует или уже ломает доверие." },
-          { title: "30-50", body: "Fragile. Основа есть, но она не держит доверие." },
-          { title: "50-70", body: "Developing. Что-то работает, но уверенность всё ещё утекает." },
-          { title: "70-85", body: "Stable. Страница держит ясность и доверие, но её можно усилить." },
-          { title: "85-100", body: "Leading. Бренд продаёт ещё до того, как начинает объяснять." },
+          { title: "0-30", body: "Без тяги. Сигнал сломан, отсутствует или уже ломает доверие." },
+          { title: "30-50", body: "Хрупко. Основа есть, но она не держит доверие." },
+          { title: "50-70", body: "В развитии. Что-то работает, но уверенность всё ещё утекает." },
+          { title: "70-85", body: "Стабильно. Страница держит ясность и доверие, но её можно усилить." },
+          { title: "85-100", body: "Лидерский уровень. Бренд продаёт ещё до того, как начинает объяснять." },
         ],
-        whatScoreTells: "Что нам говорит этот score",
+        whatScoreTells: "Что нам говорит эта оценка",
         revealingLine: "САМАЯ ПОКАЗАТЕЛЬНАЯ ЛИНИЯ",
         forBrand: "ТЕКУЩИЙ КОНТЕКСТ",
         benchmark: "ПРАКТИЧЕСКОЕ ЧТЕНИЕ",
@@ -4435,38 +4503,38 @@ export async function generateBrandReportPdf(
           "Чего не хватает, где сигнал распадается и что вообще может понять AI-слой",
         brandPromises: "ЧЕГО НЕ ХВАТАЕТ",
         pageDelivers: "СМЕШАННЫЕ СИГНАЛЫ",
-        commercialCost: "AI VISIBILITY CHECK",
-        fixesLabel: "СТЕК ПРИОРИТЕТНЫХ FIXES",
+        commercialCost: "ПРОВЕРКА ВИДИМОСТИ В ИИ",
+        fixesLabel: "СТЕК ПРИОРИТЕТНЫХ ИСПРАВЛЕНИЙ",
         fixesTitle:
           "Что исправить сейчас, что может подождать и что уже работает на бренд",
         fixNow: "ИСПРАВИТЬ СЕЙЧАС",
         fixNext: "ИСПРАВИТЬ СЛЕДОМ",
         keep: "ОСТАВИТЬ",
-        plan7Label: "FIRST READ",
+        plan7Label: "ПЕРВОЕ СЧИТЫВАНИЕ",
         plan7Title:
           "Что делает компания, что она сигналит и как страница считывается до того, как заслужено доверие",
         day: "ДЕНЬ",
-        headlineCorrection: "КОРРЕКЦИЯ HEADLINE",
+        headlineCorrection: "КОРРЕКЦИЯ ЗАГОЛОВКА",
         plan30Label: "ПЛАН НА 30 ДНЕЙ",
         plan30Title: "Структурные изменения, которые делают бренд легче для выбора",
         next30: "Следующие 30 дней",
         campaignDirection: "Направление кампании",
-        directionCues: "DIRECTION CUES",
+        directionCues: "НАПРАВЛЯЮЩИЕ СИГНАЛЫ",
         nextLabel: "ЧТО ДАЛЬШЕ",
         nextTitle: "Три пути, как использовать этот отчёт, пока диагноз ещё свежий",
-        playbookLabel: "IMPLEMENTATION PLAYBOOK",
-        playbookTitle: "30-day implementation map",
+        playbookLabel: "ПЛЕЙБУК ВНЕДРЕНИЯ",
+        playbookTitle: "Карта внедрения на 30 дней",
         playbookIntro:
-          "Превратите диагноз в понятную последовательность действий. Сначала исправьте самые прибыльные вещи в ясности оффера, затем усилите proof и visibility, а потом дособерите страницу в более сильную коммерческую систему.",
-        playbookNow: "NOW",
-        playbookNext: "NEXT",
-        playbookThen: "THEN",
-        playbookCtaLabel: "WORK WITH SAHAR",
+          "Превратите диагноз в понятную последовательность действий. Сначала исправьте самые сильные точки в ясности предложения, затем усилите доказательства и видимость, а потом дособерите страницу в более сильную коммерческую систему.",
+        playbookNow: "СЕЙЧАС",
+        playbookNext: "ДАЛЬШЕ",
+        playbookThen: "ЗАТЕМ",
+        playbookCtaLabel: "РАБОТАТЬ С SAHAR",
         playbookCtaBody:
-          "Используйте это как self-guided implementation map, или работайте с SAHAR, чтобы превратить диагноз в более острое positioning, более ясный copy, более сильный proof и homepage, который конвертит с меньшим сопротивлением.",
+          "Используйте это как самостоятельную карту внедрения или работайте с SAHAR, чтобы превратить диагноз в более точное позиционирование, ясный текст, сильные доказательства и главную страницу, которая конвертирует с меньшим сопротивлением.",
         nextCards: [
-          { icon: "DIY", title: "Сделать самому", body: "Используй stack fixes и action plan из этого отчёта как дорожную карту.", price: "Включено" },
-          { icon: "REVIEWED", title: "BrandMirror - Reviewed", body: "Получи guided Loom-разбор диагноза и следующих шагов.", price: "$197" },
+          { icon: "DIY", title: "Сделать самому", body: "Используй стек исправлений и план действий из этого отчёта как дорожную карту.", price: "Включено" },
+          { icon: "REVIEWED", title: "Разбор BrandMirror", body: "Получи Loom-разбор диагноза и следующих шагов с комментариями.", price: "$197" },
           { icon: "SAHAR", title: "Работать с Sahar", body: "Преврати диагноз в полноценную пересборку бренда и сайта.", price: "По проекту" },
         ],
         backCover:
@@ -5004,50 +5072,178 @@ export async function generateBrandReportPdf(
     const scoreByLabel = (label: string) =>
       report.scorecard.find((item) => item.label.toLowerCase() === label.toLowerCase());
 
+    const dynamicCopy = {
+      en: {
+        aiVisibilityFallback:
+          "AI visibility also depends on clear category nouns, metadata, schema, FAQ support, and consistent naming across the page.",
+        conversionImplication:
+          "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
+        metricCards: [
+          { title: "Positioning Clarity", body: "Does the buyer know what you are within one read?" },
+          { title: "AI Visibility", body: "Can AI tools find, read, and recommend the brand clearly and consistently?" },
+          { title: "Visual Credibility", body: "Does the design earn the price and the promise?" },
+          { title: "Offer Specificity", body: "Could someone repeat what you sell without your help?" },
+          { title: "Conversion Readiness", body: "When someone is ready, is there a door to walk through?" },
+        ],
+        aiRubric: [
+          "0-40: AI tools cannot find or describe the brand at all.",
+          "40-70: AI tools find the brand but summarize it generically or incorrectly.",
+          "70-85: AI tools can accurately describe and recommend the brand.",
+          "85-100: The brand is structured for AI with clear claims, naming, and data.",
+        ],
+        currentSignal: [
+          "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand.",
+          "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough.",
+          "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.",
+        ],
+        axisTitles: {
+          positioning: "Positioning Clarity",
+          aiVisibility: "AI Visibility",
+          visual: "Visual Credibility",
+          offer: "Offer Specificity",
+          conversion: "Conversion Readiness",
+        },
+        surfaceFindingLabels: {
+          hero: "Hero",
+          offer: "Offer",
+          proof: "Proof",
+          cta: "CTA",
+          aiVisibility: "AI visibility",
+          fallbackTitle: "FIRST SCREEN DIAGNOSIS",
+          fallbackBody:
+            "Screenshot capture was not available for this run, so this page uses a text-first first-screen diagnosis instead of a placeholder image.",
+          findingsTitle: "5 ABOVE-THE-FOLD FINDINGS",
+        },
+      },
+      es: {
+        aiVisibilityFallback:
+          "La visibilidad en IA también depende de categorías claras, metadatos, datos estructurados, FAQs y naming consistente en toda la página.",
+        conversionImplication:
+          "Elige una acción principal - reservar, consultar, comprar, registrarse o solicitar una llamada - y explica qué ocurre después del clic.",
+        metricCards: [
+          { title: "Claridad de posicionamiento", body: "¿El comprador entiende qué eres en una sola lectura?" },
+          { title: "Visibilidad en IA", body: "¿Las herramientas de IA pueden encontrar, leer y recomendar la marca con claridad y consistencia?" },
+          { title: "Credibilidad visual", body: "¿El diseño sostiene el precio y la promesa?" },
+          { title: "Especificidad de la oferta", body: "¿Alguien podría repetir lo que vendes sin tu ayuda?" },
+          { title: "Preparación para convertir", body: "Cuando alguien está listo, ¿hay una puerta clara por la que avanzar?" },
+        ],
+        aiRubric: [
+          "0-40: las herramientas de IA no pueden encontrar ni describir la marca.",
+          "40-70: encuentran la marca, pero la resumen de forma genérica o incorrecta.",
+          "70-85: pueden describir y recomendar la marca con precisión.",
+          "85-100: la marca está estructurada para IA con claims, naming y datos claros.",
+        ],
+        currentSignal: [
+          "Ahora mismo la homepage pierde demasiada claridad como para convertir atención débil en demanda cualificada constante.",
+          "La señal actual es creíble, pero la oferta, la prueba y el CTA todavía no trabajan juntos con suficiente precisión.",
+          "La página ya sostiene cierta confianza, pero el potencial solo se vuelve real si el mensaje afinado se repite más allá de la homepage.",
+        ],
+        axisTitles: {
+          positioning: "Claridad de posicionamiento",
+          aiVisibility: "Visibilidad en IA",
+          visual: "Credibilidad visual",
+          offer: "Especificidad de la oferta",
+          conversion: "Preparación para convertir",
+        },
+        surfaceFindingLabels: {
+          hero: "Hero",
+          offer: "Oferta",
+          proof: "Prueba",
+          cta: "CTA",
+          aiVisibility: "Visibilidad en IA",
+          fallbackTitle: "DIAGNÓSTICO DEL PRIMER PANTALLAZO",
+          fallbackBody:
+            "No hubo captura de pantalla disponible para esta ejecución, así que esta página usa un diagnóstico textual del primer pantallazo en lugar de una imagen de relleno.",
+          findingsTitle: "5 HALLAZGOS DEL PRIMER PANTALLAZO",
+        },
+      },
+      ru: {
+        aiVisibilityFallback:
+          "Видимость в ИИ также зависит от ясных названий категории, метаданных, структурированных данных, FAQ и единого нейминга по всей странице.",
+        conversionImplication:
+          "Выбери одно главное действие - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок - и объясни, что происходит после клика.",
+        metricCards: [
+          { title: "Ясность позиционирования", body: "Понимает ли покупатель, что это за бренд, с первого считывания?" },
+          { title: "Видимость в ИИ", body: "Могут ли ИИ-инструменты найти, прочитать и рекомендовать бренд ясно и последовательно?" },
+          { title: "Визуальная убедительность", body: "Зарабатывает ли дизайн заявленную цену и обещание?" },
+          { title: "Точность предложения", body: "Сможет ли человек повторить, что вы продаёте, без вашей помощи?" },
+          { title: "Готовность к конверсии", body: "Когда человек готов, есть ли понятная дверь для следующего шага?" },
+        ],
+        aiRubric: [
+          "0-40: ИИ-инструменты не могут найти или описать бренд.",
+          "40-70: ИИ-инструменты находят бренд, но описывают его слишком общо или неточно.",
+          "70-85: ИИ-инструменты могут точно описать и рекомендовать бренд.",
+          "85-100: бренд структурирован для ИИ через ясные утверждения, единый нейминг и данные.",
+        ],
+        currentSignal: [
+          "Сейчас главная страница, скорее всего, теряет слишком много ясности, чтобы превращать слабое внимание в стабильный квалифицированный спрос.",
+          "Текущий сигнал выглядит убедительно, но предложение, доказательства и CTA всё ещё не работают вместе достаточно точно.",
+          "Страница уже несёт часть доверия, но рост станет реальным только если уточнённое сообщение начнёт повторяться за пределами главной страницы.",
+        ],
+        axisTitles: {
+          positioning: "Ясность позиционирования",
+          aiVisibility: "Видимость в ИИ",
+          visual: "Визуальная убедительность",
+          offer: "Точность предложения",
+          conversion: "Готовность к конверсии",
+        },
+        surfaceFindingLabels: {
+          hero: "Hero",
+          offer: "Предложение",
+          proof: "Доказательства",
+          cta: "CTA",
+          aiVisibility: "Видимость в ИИ",
+          fallbackTitle: "ДИАГНОЗ ПЕРВОГО ЭКРАНА",
+          fallbackBody:
+            "Снимок экрана недоступен для этого запуска, поэтому страница использует текстовый диагноз первого экрана вместо изображения-заглушки.",
+          findingsTitle: "5 НАБЛЮДЕНИЙ ПО ПЕРВОМУ ЭКРАНУ",
+        },
+      },
+    }[language];
+
     const aiVisibilityRead = /ai|schema|metadata|crawler|llms|visibility|discoverability|aeo/i.test(report.toneCheck)
       ? report.toneCheck
       : [
           report.toneCheck,
-          "AI visibility also depends on clear category nouns, metadata, schema, FAQ support, and consistent naming across the page.",
+          dynamicCopy.aiVisibilityFallback,
         ].filter(Boolean).join(" ");
 
     const scorePages = [
       {
         label: "Positioning clarity",
-        title: "Positioning Clarity",
+        title: dynamicCopy.axisTitles.positioning,
         diagnosis: report.positioningRead,
         quote: report.whatsBroken[0] || report.aboveTheFold,
         implication: report.headlineCorrection.currentProblem,
       },
       {
         label: "AI visibility",
-        title: "AI Visibility",
+        title: dynamicCopy.axisTitles.aiVisibility,
         diagnosis: aiVisibilityRead,
         quote: report.audienceMismatch[1] || aiVisibilityRead,
         implication: report.verbalImage.firstScreenTone,
       },
       {
         label: "Visual credibility",
-        title: "Visual Credibility",
+        title: dynamicCopy.axisTitles.visual,
         diagnosis: report.visualIdentityRead,
         quote: report.whatWorks[0] || report.visualIdentityRead,
         implication: report.mixedSignals,
       },
       {
         label: "Offer specificity",
-        title: "Offer Specificity",
+        title: dynamicCopy.axisTitles.offer,
         diagnosis: report.aboveTheFold,
         quote: report.namingFit.correction,
         implication: report.offerOpportunities[0] || report.whatsBroken[1] || report.aboveTheFold,
       },
       {
         label: "Conversion readiness",
-        title: "Conversion Readiness",
-        diagnosis: report.conversionRead,
-        quote: report.whyNotConverting[1] || report.conversionRead,
-        implication:
-          "Choose one primary action - Book, Enquire, Buy, Register, or Request a call - and explain what happens after the click.",
-      },
+        title: dynamicCopy.axisTitles.conversion,
+      diagnosis: report.conversionRead,
+      quote: report.whyNotConverting[1] || report.conversionRead,
+      implication: dynamicCopy.conversionImplication,
+    },
     ].map((item) => ({
       ...item,
       score: scoreByLabel(item.label) ?? { label: item.label, score: overallScore, note: "" },
@@ -5076,20 +5272,9 @@ export async function generateBrandReportPdf(
       3,
     );
 
-    const metricCards = [
-      { title: "Positioning Clarity", body: "Does the buyer know what you are within one read?" },
-      { title: "AI Visibility", body: "Can AI tools find, read, and recommend the brand clearly and consistently?" },
-      { title: "Visual Credibility", body: "Does the design earn the price and the promise?" },
-      { title: "Offer Specificity", body: "Could someone repeat what you sell without your help?" },
-      { title: "Conversion Readiness", body: "When someone is ready, is there a door to walk through?" },
-    ];
+    const metricCards = dynamicCopy.metricCards;
 
-    const aiRubric = [
-      "0-40: AI tools cannot find or describe the brand at all.",
-      "40-70: AI tools find the brand but summarize it generically or incorrectly.",
-      "70-85: AI tools can accurately describe and recommend the brand.",
-      "85-100: The brand is structured for AI with clear claims, naming, and data.",
-    ];
+    const aiRubric = dynamicCopy.aiRubric;
 
     const practicalMoves = {
       "Positioning Clarity": {
@@ -5198,41 +5383,72 @@ export async function generateBrandReportPdf(
       .map((axis) => allImplementationRows.find((row) => row.axis === axis))
       .filter((row): row is (typeof allImplementationRows)[number] => Boolean(row));
 
-    const sprintNow = uniqueItems(
-      [
-        "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
-        "Choose the primary conversion event and make the CTA explicit: Book, Enquire, Buy, Register, or Request a call.",
-        "Remove vague mood copy that does not explain what is being sold.",
-      ],
-      3,
-    );
+    const sprintCopy = {
+      en: {
+        now: [
+          "Rewrite the opening promise so it names the buyer, offer, and outcome in one read.",
+          "Choose the primary conversion event and make the CTA explicit: Book, Enquire, Buy, Register, or Request a call.",
+          "Remove vague mood copy that does not explain what is being sold.",
+        ],
+        next: [
+          "Add exact category nouns to the H1, title tag, meta description, and schema.",
+          "Tighten section hierarchy so each block earns trust before asking for action.",
+          "Turn broad service language into 2-3 concrete use cases or deliverables.",
+        ],
+        then: [
+          "Turn the sharpened message into service pages, proof blocks, and sales assets.",
+          "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
+          "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
+        ],
+      },
+      es: {
+        now: [
+          "Reescribir la promesa inicial para que nombre comprador, oferta y resultado en una sola lectura.",
+          "Elegir el evento principal de conversión y hacer explícito el CTA: reservar, consultar, comprar, registrarse o solicitar una llamada.",
+          "Eliminar copy de ambiente que no explica qué se vende.",
+        ],
+        next: [
+          "Añadir nombres exactos de categoría en H1, title tag, meta description y datos estructurados.",
+          "Ajustar la jerarquía de secciones para que cada bloque gane confianza antes de pedir acción.",
+          "Convertir lenguaje amplio de servicios en 2-3 casos de uso o entregables concretos.",
+        ],
+        then: [
+          "Convertir el mensaje afinado en páginas de servicio, bloques de prueba y activos de venta.",
+          "Publicar FAQs y naming consistente para que los sistemas externos puedan leer la marca con claridad.",
+          "Revisar clics de CTA, calidad de consultas y orden de prueba; ajustar lo que aún crea duda.",
+        ],
+      },
+      ru: {
+        now: [
+          "Переписать первое обещание так, чтобы в одном считывании были покупатель, предложение и результат.",
+          "Выбрать главное конверсионное действие и сделать CTA явным: забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок.",
+          "Убрать атмосферный текст, который не объясняет, что именно продаётся.",
+        ],
+        next: [
+          "Добавить точные названия категории в H1, title tag, meta description и структурированные данные.",
+          "Уточнить иерархию секций, чтобы каждый блок зарабатывал доверие до просьбы о действии.",
+          "Превратить широкий язык услуг в 2-3 конкретных сценария использования или результата.",
+        ],
+        then: [
+          "Развернуть уточнённое сообщение в страницы услуг, блоки доказательств и материалы продаж.",
+          "Опубликовать FAQ и единый нейминг, чтобы внешние системы могли ясно прочитать бренд.",
+          "Проверить клики по CTA, качество заявок и порядок доказательств; усилить то, что всё ещё вызывает сомнение.",
+        ],
+      },
+    }[language];
 
-    const sprintNext = uniqueItems(
-      [
-        "Add exact category nouns to the H1, title tag, meta description, and schema.",
-        "Tighten section hierarchy so each block earns trust before asking for action.",
-        "Turn broad service language into 2-3 concrete use cases or deliverables.",
-      ],
-      3,
-    );
-
-    const sprintThen = uniqueItems(
-      [
-        "Turn the sharpened message into service pages, proof blocks, and sales assets.",
-        "Publish FAQ support and consistent naming so external systems can read the brand clearly.",
-        "Review CTA clicks, enquiry quality, and proof order; tighten what still creates hesitation.",
-      ],
-      3,
-    );
+    const sprintNow = uniqueItems(sprintCopy.now, 3);
+    const sprintNext = uniqueItems(sprintCopy.next, 3);
+    const sprintThen = uniqueItems(sprintCopy.then, 3);
 
     const scoreAverage =
       scorePages.reduce((sum, item) => sum + item.score.score, 0) / Math.max(scorePages.length, 1);
     const currentSignalSummary =
       scoreAverage < 65
-        ? "Right now the homepage likely leaks too much clarity to convert weak attention into steady qualified demand."
+        ? dynamicCopy.currentSignal[0]
         : scoreAverage < 78
-          ? "The current signal is credible, but the offer, proof, and CTA still are not working together tightly enough."
-          : "The page already carries some trust, but the upside only becomes real if the sharpened message gets repeated beyond the homepage.";
+          ? dynamicCopy.currentSignal[1]
+          : dynamicCopy.currentSignal[2];
     const currentTrafficBand =
       scoreAverage < 65
         ? "Low hundreds/mo"
@@ -5298,23 +5514,70 @@ export async function generateBrandReportPdf(
 
     const websiteSurfaceFindings = uniqueItems(
       [
-        `Hero: ${firstSentence(stripAiLayerSentences(heroCallout?.body || report.aboveTheFold || "The first screen needs to name the buyer, offer, and payoff faster."))}`,
-        `Offer: ${firstSentence(stripAiLayerSentences(report.whatIsMissing || report.offerOpportunities[0] || "The offer needs to be repeatable in one sentence."))}`,
-        `Proof: ${firstSentence(stripAiLayerSentences(report.trustGaps[0] || "Visible proof needs to appear before the page asks for action."))}`,
-        `CTA: ${firstSentence(report.conversionRead || "The next step needs to say exactly what happens after the click.")}`,
-        "AI visibility: add clearer category nouns, metadata, schema, and crawler-readable structure.",
+        `${dynamicCopy.surfaceFindingLabels.hero}: ${firstSentence(stripAiLayerSentences(heroCallout?.body || report.aboveTheFold || "The first screen needs to name the buyer, offer, and payoff faster."))}`,
+        `${dynamicCopy.surfaceFindingLabels.offer}: ${firstSentence(stripAiLayerSentences(report.whatIsMissing || report.offerOpportunities[0] || "The offer needs to be repeatable in one sentence."))}`,
+        `${dynamicCopy.surfaceFindingLabels.proof}: ${firstSentence(stripAiLayerSentences(report.trustGaps[0] || "Visible proof needs to appear before the page asks for action."))}`,
+        `${dynamicCopy.surfaceFindingLabels.cta}: ${firstSentence(report.conversionRead || "The next step needs to say exactly what happens after the click.")}`,
+        `${dynamicCopy.surfaceFindingLabels.aiVisibility}: ${dynamicCopy.aiVisibilityFallback}`,
       ],
       5,
     );
     const generatedHeadline = bodyCopy(report.rewriteSuggestions?.heroLine || report.headlineCorrection?.rewrittenDirection || "");
+    const rewriteFallbackCopy = {
+      en: {
+        iotHeadline: "Tailored IoT infrastructure for operations that off-the-shelf platforms could not solve.",
+        genericHeadline: `${report.brandName} makes the offer easier to understand, trust, and act on.`,
+        iotSubheadline:
+          "For manufacturers, facilities, and operators who need connected systems built around real conditions - not another one-size-fits-all platform.",
+        genericSubheadline:
+          "A clearer first screen should name the buyer, the problem, the proof, and the next step before the visitor has to assemble the story alone.",
+        shopCta: "Book the right session",
+        iotCta: "Request an IoT fit call",
+        genericCta: "Request a fit call",
+        currentFallback: "Current hero language",
+        where: "Homepage H1 or subheadline. LinkedIn/About first line. Google Business or directory description.",
+        why:
+          "This filters in the right buyer earlier, makes the offer easier to repeat, and gives both humans and AI systems a cleaner sentence to carry.",
+      },
+      es: {
+        iotHeadline: "Infraestructura IoT a medida para operaciones donde las plataformas estándar no alcanzan.",
+        genericHeadline: `${report.brandName} hace que la oferta sea más fácil de entender, confiar y elegir.`,
+        iotSubheadline:
+          "Para fabricantes, instalaciones y operadores que necesitan sistemas conectados construidos alrededor de condiciones reales, no otra plataforma genérica.",
+        genericSubheadline:
+          "Un primer pantallazo más claro debe nombrar comprador, problema, prueba y siguiente paso antes de que el visitante tenga que armar la historia solo.",
+        shopCta: "Reserva la sesión correcta",
+        iotCta: "Solicita una llamada de encaje IoT",
+        genericCta: "Solicita una llamada de encaje",
+        currentFallback: "Lenguaje actual del hero",
+        where: "H1 o subtítulo de la homepage. Primera línea de LinkedIn/About. Descripción en Google Business o directorios.",
+        why:
+          "Esto filtra antes al comprador correcto, hace que la oferta sea más fácil de repetir y da a humanos y sistemas de IA una frase más clara que puedan llevar.",
+      },
+      ru: {
+        iotHeadline: "Индивидуальная IoT-инфраструктура для задач, где стандартные платформы не справляются.",
+        genericHeadline: `${report.brandName} делает предложение понятнее, убедительнее и проще для выбора.`,
+        iotSubheadline:
+          "Для производителей, объектов и операторов, которым нужны подключённые системы под реальные условия, а не ещё одна универсальная платформа.",
+        genericSubheadline:
+          "Более ясный первый экран должен назвать покупателя, проблему, доказательство и следующий шаг до того, как посетителю придётся самому собирать историю.",
+        shopCta: "Забронировать подходящую сессию",
+        iotCta: "Запросить IoT fit call",
+        genericCta: "Запросить fit call",
+        currentFallback: "Текущий текст hero-блока",
+        where: "H1 или подзаголовок главной страницы. Первая строка LinkedIn/About. Описание в Google Business или каталогах.",
+        why:
+          "Это раньше отсеивает подходящего покупателя, делает предложение легче для повторения и даёт людям и ИИ-системам более ясную фразу, которую можно перенести дальше.",
+      },
+    }[language];
     const useGeneratedHeadline =
       generatedHeadline &&
       !/(understand the value faster|premium feel|sharper headline|clearer offer|more immediate certainty|convert more effectively)/i.test(generatedHeadline);
     const suggestedHeadline = useGeneratedHeadline
       ? generatedHeadline
       : (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(categoryFingerprint(report))
-          ? "Tailored IoT infrastructure for operations that off-the-shelf platforms could not solve."
-          : `${report.brandName} makes the offer easier to understand, trust, and act on.`);
+          ? rewriteFallbackCopy.iotHeadline
+          : rewriteFallbackCopy.genericHeadline);
     const fingerprint = categoryFingerprint(report);
     const generatedSubheadline = bodyCopy(report.rewriteSuggestions?.subheadline || report.beforeAfterHero?.rewrittenFrame?.subheadline || "");
     const useGeneratedSubheadline =
@@ -5323,26 +5586,28 @@ export async function generateBrandReportPdf(
     const suggestedSubheadline = useGeneratedSubheadline
       ? generatedSubheadline
       : (/(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)
-          ? "For manufacturers, facilities, and operators who need connected systems built around real conditions - not another one-size-fits-all platform."
-          : "A clearer first screen should name the buyer, the problem, the proof, and the next step before the visitor has to assemble the story alone.");
+          ? rewriteFallbackCopy.iotSubheadline
+          : rewriteFallbackCopy.genericSubheadline);
     const generatedCta = bodyCopy(report.rewriteSuggestions?.cta || report.beforeAfterHero?.rewrittenFrame?.cta || "");
     const useGeneratedCta = generatedCta && !/^(see how it works|learn more|get started|book the right session)$/i.test(generatedCta);
     const suggestedCta =
       useGeneratedCta
         ? generatedCta
         : (/(shop|product|store|wellness|healing|therapy|course)/i.test(fingerprint)
-        ? "Book the right session"
+        ? rewriteFallbackCopy.shopCta
         : /(iot|internet of things|sensor|firmware|smart city|industrial|manufactur|iuniverse|iutech)/i.test(fingerprint)
-          ? "Request an IoT fit call"
-          : "Request a fit call");
+          ? rewriteFallbackCopy.iotCta
+          : rewriteFallbackCopy.genericCta);
     const priorityRewrite = {
       problem:
         "The opening currently speaks to the category before it speaks to the buyer state. A cold visitor cannot tell fast enough whether this is built for their problem.",
-      current: firstSentence(report.headlineCorrection?.currentProblem || report.whatItDoes || "Current hero language", "Current hero language"),
+      current: firstSentence(
+        report.headlineCorrection?.currentProblem || report.whatItDoes || rewriteFallbackCopy.currentFallback,
+        rewriteFallbackCopy.currentFallback,
+      ),
       proposed: suggestedHeadline,
-      where: "Homepage H1 or subheadline. LinkedIn/About first line. Google Business or directory description.",
-      why:
-        "This filters in the right buyer earlier, makes the offer easier to repeat, and gives both humans and AI systems a cleaner sentence to carry.",
+      where: rewriteFallbackCopy.where,
+      why: rewriteFallbackCopy.why,
     };
 
     const displayUrl = report.url.replace(/^https?:\/\//, "");
@@ -5698,12 +5963,12 @@ export async function generateBrandReportPdf(
       });
     } else {
       drawPanel(contentLeft, page8ImageY, contentWidth, websiteImageHeight, colors.panelSoft);
-      drawSectionTag("FIRST SCREEN DIAGNOSIS", contentLeft + 18, page8ImageY + 22, colors.mint);
+      drawSectionTag(dynamicCopy.surfaceFindingLabels.fallbackTitle, contentLeft + 18, page8ImageY + 22, colors.mint);
         doc.fillColor(colors.textOnDark).font("Helvetica").fontSize(14).text(displayUrl, contentLeft + 18, page8ImageY + 42, {
         width: contentWidth - 36,
       });
       doc.fillColor(colors.textMuted).font("Helvetica").fontSize(10.2).text(
-        "Screenshot capture was not available for this run, so this page uses a text-first first-screen diagnosis instead of a placeholder image.",
+        dynamicCopy.surfaceFindingLabels.fallbackBody,
         contentLeft + 18,
         page8ImageY + 74,
         { width: contentWidth - 36, lineGap: 4 },
@@ -5711,7 +5976,7 @@ export async function generateBrandReportPdf(
     }
     const findingsY = page8ImageY + websiteImageHeight + 22;
     drawPanel(contentLeft, findingsY, contentWidth, 346, colors.panel);
-    drawSectionTag("5 ABOVE-THE-FOLD FINDINGS", contentLeft + 20, findingsY + 24, colors.accent);
+    drawSectionTag(dynamicCopy.surfaceFindingLabels.findingsTitle, contentLeft + 20, findingsY + 24, colors.accent);
     drawBulletItems(websiteSurfaceFindings, contentLeft + 20, findingsY + 58, contentWidth - 40, {
       maxItems: 5,
       fontSize: 10.8,
@@ -5851,8 +6116,16 @@ export async function generateBrandReportPdf(
         maxHeight: 104,
       },
     );
+    const recommendationsIntro = {
+      en:
+        "You have a real product and a clear niche. What is holding the brand back is not the offer itself - it is how quickly buyers, algorithms, and AI systems can understand it.",
+      es:
+        "Tienes un producto real y un nicho claro. Lo que frena a la marca no es la oferta en sí, sino la velocidad con la que compradores, algoritmos y sistemas de IA pueden entenderla.",
+      ru:
+        "У бренда есть реальное предложение и понятная ниша. Его сдерживает не само предложение, а то, насколько быстро покупатели, алгоритмы и ИИ-системы могут его понять.",
+    }[language];
     drawParagraph(
-      "You have a real product and a clear niche. What is holding the brand back is not the offer itself - it is how quickly buyers, algorithms, and AI systems can understand it.",
+      recommendationsIntro,
       contentLeft,
       Math.max(recommendationsTitleBottom + 14, 164),
       contentWidth,
@@ -5861,37 +6134,96 @@ export async function generateBrandReportPdf(
     );
 
     const scoreLookup = (label: string) => scoreByLabel(label)?.score ?? overallScore;
+    const recommendationCopy = {
+      en: [
+        {
+          title: "AI Visibility",
+          cardTitle: "AI Visibility",
+          body:
+            "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
+          fix:
+            "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
+        },
+        {
+          title: "Offer Clarity",
+          cardTitle: "Offer Clarity",
+          body:
+            "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
+          fix:
+            "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
+        },
+        {
+          title: "Conversion Logic",
+          cardTitle: "CTA Path",
+          body:
+            "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
+          fix:
+            "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
+        },
+      ],
+      es: [
+        {
+          title: "Visibilidad en IA",
+          cardTitle: "Visibilidad IA",
+          body:
+            "Si alguien pregunta a ChatGPT, Perplexity o Google AI Overview sobre esta categoría, la marca necesita señales de entidad más claras para aparecer con facilidad.",
+          fix:
+            "Añadir definición de entidad, soporte de FAQ/datos estructurados, nombres de categoría consistentes, metadatos y señales técnicas fáciles de rastrear.",
+        },
+        {
+          title: "Claridad de oferta",
+          cardTitle: "Oferta",
+          body:
+            "Los servicios existen, pero no están nombrados con suficiente precisión. El lenguaje de categoría describe el espacio, no lo que el comprador puede comprar.",
+          fix:
+            "Nombrar las ofertas principales, dar a cada una una promesa de resultado y hacer que la homepage responda: qué recibo y qué cambia para mí.",
+        },
+        {
+          title: "Lógica de conversión",
+          cardTitle: "Ruta CTA",
+          body:
+            "El interés puede llegar antes de que el camino hacia delante se sienta obvio. La página necesita una acción principal que domine la zona de decisión.",
+          fix:
+            "Elegir una ruta - reservar, consultar, comprar, registrarse o solicitar una llamada. Ponerla en el hero, repetirla después de la prueba y explicar qué ocurre después.",
+        },
+      ],
+      ru: [
+        {
+          title: "Видимость в ИИ",
+          cardTitle: "Видимость ИИ",
+          body:
+            "Если человек спросит ChatGPT, Perplexity или Google AI Overview об этой категории, бренду нужны более ясные сигналы сущности, чтобы его было легче найти.",
+          fix:
+            "Добавить определение сущности, FAQ/структурированные данные, единые названия категории, метаданные и технические сигналы, доступные для поисковых роботов.",
+        },
+        {
+          title: "Ясность предложения",
+          cardTitle: "Предложение",
+          body:
+            "Услуги есть, но они названы недостаточно точно. Категорийный язык описывает пространство, а не то, что покупатель может купить.",
+          fix:
+            "Назвать ключевые предложения, дать каждому обещание результата и сделать так, чтобы главная страница отвечала: что я получаю и что для меня меняется.",
+        },
+        {
+          title: "Логика конверсии",
+          cardTitle: "Путь CTA",
+          body:
+            "Интерес может появиться раньше, чем путь вперёд станет очевидным. Странице нужно одно главное действие, которое ведёт зону решения.",
+          fix:
+            "Выбрать один путь - забронировать, оставить заявку, купить, зарегистрироваться или запросить звонок. Поставить его в hero, повторить после доказательств и объяснить, что будет дальше.",
+        },
+      ],
+    }[language];
     const recommendationRows = [
-      {
-        title: "AI Visibility",
-        score: scoreLookup("AI visibility"),
-        body:
-          "If someone asks ChatGPT, Perplexity, or Google AI Overview about this category, the brand needs clearer entity signals before it becomes easy to surface.",
-        fix:
-          "Add entity definition, FAQ/schema support, consistent category nouns, metadata, and crawler-friendly technical signals.",
-      },
-      {
-        title: "Offer Clarity",
-        score: scoreLookup("Offer specificity"),
-        body:
-          "The services exist, but they are not named sharply enough. Category language describes the space, not the thing a buyer can purchase.",
-        fix:
-          "Name the core offers, give each one an outcome statement, and make the homepage answer: what do I get, and what changes for me?",
-      },
-      {
-        title: "Conversion Logic",
-        score: scoreLookup("Conversion readiness"),
-        body:
-          "Interest can arrive before the path forward feels obvious. The page needs one primary action that dominates the decision zone.",
-        fix:
-          "Choose one route - Book, Enquire, Buy, Register, or Request a call. Place it in the hero, repeat it after proof, and explain what happens next.",
-      },
+      { ...recommendationCopy[0], score: scoreLookup("AI visibility") },
+      { ...recommendationCopy[1], score: scoreLookup("Offer specificity") },
+      { ...recommendationCopy[2], score: scoreLookup("Conversion readiness") },
     ];
 
     recommendationRows.forEach((row, index) => {
       const y = 224 + index * 138;
       const rowColor = bandColor(row.score);
-      const scoreCardTitle = row.title === "Conversion Logic" ? "CTA Path" : row.title;
+      const scoreCardTitle = row.cardTitle;
       drawPanel(contentLeft, y, contentWidth, 122, colors.panelSoft);
       doc.roundedRect(contentLeft, y, 112, 122, 16).fill(rowColor);
       doc.fillColor(row.score >= 70 ? colors.dark : colors.textOnDark)
@@ -5914,10 +6246,94 @@ export async function generateBrandReportPdf(
       drawParagraph(recFix.text, contentLeft + 330, y + 42, 136, recFix.size, recFix.lineGap);
     });
 
+    const closingCopy = {
+      en: {
+        workingLabel: "WHAT IS WORKING",
+        workingBody: `Positioning (${scoreLookup("Positioning clarity")}) gives the brand a real niche to sharpen. Visual credibility (${scoreLookup("Visual credibility")}) already creates some professional trust. Build on those signals instead of rebuilding from zero.`,
+        priorityLabel: "PRIORITY FIX STACK",
+        priorityTitle: "The editing order before the 30-day implementation map",
+        priorityIntro:
+          "This page turns the diagnosis into an editing order. It is not another summary: it tells the team where to spend attention first.",
+        briefLabel: "ONE PAGE BRAND BRIEF",
+        headline: "HEADLINE",
+        support: "SUPPORT",
+        cta: "CTA",
+        playbookLabel: "IMPLEMENTATION PLAYBOOK",
+        playbookTitle: "How to execute the priority stack without repeating it",
+        playbookIntro:
+          "Use this sequence as the working order: fix the announcement first, strengthen the proof around it, then make the brand easier for buyers and AI systems to repeat.",
+        steps: [
+          { label: "NOW", days: "DAYS 1-7" },
+          { label: "NEXT", days: "DAYS 8-21" },
+          { label: "THEN", days: "DAYS 22-30" },
+        ],
+        saharLabel: "WORK WITH SAHAR",
+        saharTitle: "Want the sharper version built with you?",
+        saharBody:
+          "Bring this report into a working session. We will turn the highest-leverage fixes into sharper positioning, cleaner proof, stronger AI visibility, and one next step buyers understand.",
+        saharCta: "Book a SAHAR Discovery Call",
+        saharFootnote: "30 minutes. No pitch. Clear next move.",
+      },
+      es: {
+        workingLabel: "QUÉ YA FUNCIONA",
+        workingBody: `El posicionamiento (${scoreLookup("Positioning clarity")}) da a la marca un nicho real para afilar. La credibilidad visual (${scoreLookup("Visual credibility")}) ya genera parte de la confianza profesional. Construye sobre esas señales en lugar de empezar desde cero.`,
+        priorityLabel: "STACK DE CORRECCIONES PRIORITARIAS",
+        priorityTitle: "El orden de edición antes del mapa de implementación de 30 días",
+        priorityIntro:
+          "Esta página convierte el diagnóstico en un orden de edición. No es otro resumen: le dice al equipo dónde poner atención primero.",
+        briefLabel: "BRIEF DE MARCA EN UNA PÁGINA",
+        headline: "TITULAR",
+        support: "SOPORTE",
+        cta: "CTA",
+        playbookLabel: "PLAYBOOK DE IMPLEMENTACIÓN",
+        playbookTitle: "Cómo ejecutar el stack prioritario sin repetirlo",
+        playbookIntro:
+          "Usa esta secuencia como orden de trabajo: corrige primero la promesa principal, fortalece la prueba alrededor y luego haz que la marca sea más fácil de repetir para compradores y sistemas de IA.",
+        steps: [
+          { label: "AHORA", days: "DÍAS 1-7" },
+          { label: "LUEGO", days: "DÍAS 8-21" },
+          { label: "DESPUÉS", days: "DÍAS 22-30" },
+        ],
+        saharLabel: "TRABAJA CON SAHAR",
+        saharTitle: "¿Quieres construir la versión más afilada con ayuda?",
+        saharBody:
+          "Trae este reporte a una sesión de trabajo. Convertiremos los arreglos de mayor palanca en posicionamiento más preciso, prueba más clara, mejor visibilidad en IA y un siguiente paso que los compradores entiendan.",
+        saharCta: "Reserva una llamada de descubrimiento con SAHAR",
+        saharFootnote: "30 minutos. Sin pitch. Próximo paso claro.",
+      },
+      ru: {
+        workingLabel: "ЧТО УЖЕ РАБОТАЕТ",
+        workingBody: `Позиционирование (${scoreLookup("Positioning clarity")}) даёт бренду реальную нишу, которую можно заострить. Визуальная убедительность (${scoreLookup("Visual credibility")}) уже создаёт часть профессионального доверия. Усиливайте эти сигналы, а не начинайте с нуля.`,
+        priorityLabel: "СТЕК ПРИОРИТЕТНЫХ ИСПРАВЛЕНИЙ",
+        priorityTitle: "Порядок редактирования до карты внедрения на 30 дней",
+        priorityIntro:
+          "Эта страница превращает диагноз в порядок редактирования. Это не ещё одно резюме: она показывает команде, куда направить внимание первым делом.",
+        briefLabel: "БРЕНД-БРИФ НА ОДНУ СТРАНИЦУ",
+        headline: "ЗАГОЛОВОК",
+        support: "ПОДДЕРЖКА",
+        cta: "CTA",
+        playbookLabel: "ПЛЕЙБУК ВНЕДРЕНИЯ",
+        playbookTitle: "Как выполнить приоритетный стек без повторов",
+        playbookIntro:
+          "Используйте эту последовательность как рабочий порядок: сначала исправить главное обещание, затем усилить доказательства вокруг него, потом сделать бренд проще для повторения покупателями и ИИ-системами.",
+        steps: [
+          { label: "СЕЙЧАС", days: "ДНИ 1-7" },
+          { label: "ДАЛЬШЕ", days: "ДНИ 8-21" },
+          { label: "ЗАТЕМ", days: "ДНИ 22-30" },
+        ],
+        saharLabel: "РАБОТАТЬ С SAHAR",
+        saharTitle: "Хочешь собрать более точную версию вместе?",
+        saharBody:
+          "Принеси этот отчёт на рабочую сессию. Мы превратим самые сильные исправления в более точное позиционирование, ясные доказательства, лучшую видимость в ИИ и следующий шаг, понятный покупателям.",
+        saharCta: "Забронировать discovery call с SAHAR",
+        saharFootnote: "30 минут. Без питча. Чёткий следующий шаг.",
+      },
+    }[language];
+
     drawPanel(contentLeft, 648, contentWidth, 76, colors.panel);
-    drawSectionTag("WHAT IS WORKING", contentLeft + 18, 668, colors.mint);
+    drawSectionTag(closingCopy.workingLabel, contentLeft + 18, 668, colors.mint);
     drawParagraph(
-      `Positioning (${scoreLookup("Positioning clarity")}) gives the brand a real niche to sharpen. Visual credibility (${scoreLookup("Visual credibility")}) already creates some professional trust. Build on those signals instead of rebuilding from zero.`,
+      closingCopy.workingBody,
       contentLeft + 18,
       690,
       contentWidth - 36,
@@ -5927,14 +6343,14 @@ export async function generateBrandReportPdf(
 
     // Page 15: Priority Fix Stack + One Page Brand Brief
     addBasePage();
-    const briefTitleBottom = drawPageLabel("PRIORITY FIX STACK", "The editing order before the 30-day implementation map", {
+    const briefTitleBottom = drawPageLabel(closingCopy.priorityLabel, closingCopy.priorityTitle, {
       width: 390,
       maxFont: 27,
       minFont: 21,
       maxHeight: 112,
     });
     drawParagraph(
-      "This page turns the diagnosis into an editing order. It is not another summary: it tells the team where to spend attention first.",
+      closingCopy.priorityIntro,
       contentLeft,
       Math.max(briefTitleBottom + 14, 160),
       contentWidth,
@@ -5969,12 +6385,12 @@ export async function generateBrandReportPdf(
     });
 
     drawPanel(contentLeft, 522, contentWidth, 198, colors.panel);
-    drawSectionTag("ONE PAGE BRAND BRIEF", contentLeft + 18, 548, colors.mint);
+    drawSectionTag(closingCopy.briefLabel, contentLeft + 18, 548, colors.mint);
     const briefColW = (contentWidth - 60) / 3;
     [
-      { label: "HEADLINE", value: suggestedHeadline, color: colors.textOnDark },
-      { label: "SUPPORT", value: suggestedSubheadline, color: colors.mutedOnDark },
-      { label: "CTA", value: suggestedCta, color: colors.amber },
+      { label: closingCopy.headline, value: suggestedHeadline, color: colors.textOnDark },
+      { label: closingCopy.support, value: suggestedSubheadline, color: colors.mutedOnDark },
+      { label: closingCopy.cta, value: suggestedCta, color: colors.amber },
     ].forEach((block, index) => {
       const x = contentLeft + 18 + index * (briefColW + 12);
       drawSectionTag(block.label, x, 580, colors.textMuted);
@@ -5991,14 +6407,14 @@ export async function generateBrandReportPdf(
 
     // Page 16: Implementation Playbook + SAHAR CTA
     addBasePage();
-    const nextStepTitleBottom = drawPageLabel("IMPLEMENTATION PLAYBOOK", "How to execute the priority stack without repeating it", {
+    const nextStepTitleBottom = drawPageLabel(closingCopy.playbookLabel, closingCopy.playbookTitle, {
       width: 430,
       maxFont: 27,
       minFont: 21,
       maxHeight: 112,
     });
     drawParagraph(
-      "Use this sequence as the working order: fix the announcement first, strengthen the proof around it, then make the brand easier for buyers and AI systems to repeat.",
+      closingCopy.playbookIntro,
       contentLeft,
       Math.max(nextStepTitleBottom + 14, 166),
       contentWidth,
@@ -6007,9 +6423,9 @@ export async function generateBrandReportPdf(
     );
 
     [
-      { label: "NOW", days: "DAYS 1-7", color: colors.terracotta, items: sprintNow },
-      { label: "NEXT", days: "DAYS 8-21", color: colors.amber, items: sprintNext },
-      { label: "THEN", days: "DAYS 22-30", color: colors.mint, items: sprintThen },
+      { ...closingCopy.steps[0], color: colors.terracotta, items: sprintNow },
+      { ...closingCopy.steps[1], color: colors.amber, items: sprintNext },
+      { ...closingCopy.steps[2], color: colors.mint, items: sprintThen },
     ].forEach((step, index) => {
       const y = 206 + index * 104;
       drawPanel(contentLeft, y, contentWidth, 92, colors.panelSoft);
@@ -6039,13 +6455,13 @@ export async function generateBrandReportPdf(
     });
 
     drawPanel(contentLeft, 540, contentWidth, 184, colors.panel);
-    drawSectionTag("WORK WITH SAHAR", contentLeft + 22, 566, colors.mint);
-    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text("Want the sharper version built with you?", contentLeft + 22, 596, {
+    drawSectionTag(closingCopy.saharLabel, contentLeft + 22, 566, colors.mint);
+    doc.fillColor(colors.textOnDark).font("Times-Bold").fontSize(20).text(closingCopy.saharTitle, contentLeft + 22, 596, {
       width: 270,
       lineGap: 2,
     });
     drawParagraph(
-      "Bring this report into a working session. We will turn the highest-leverage fixes into sharper positioning, cleaner proof, stronger AI visibility, and one next step buyers understand.",
+      closingCopy.saharBody,
       contentLeft + 22,
       650,
       270,
@@ -6053,13 +6469,13 @@ export async function generateBrandReportPdf(
       3.6,
     );
     const ctaX = contentRight - 150;
-    doc.fillColor(colors.mint).font("Helvetica").fontSize(16).text("Book a SAHAR Discovery Call", ctaX - 112, 624, {
+    doc.fillColor(colors.mint).font("Helvetica").fontSize(16).text(closingCopy.saharCta, ctaX - 112, 624, {
       width: 250,
       align: "right",
       link: "https://calendly.com/maryna-dabrytskaya/30min?month=2026-04",
       underline: true,
     });
-    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.2).text("30 minutes. No pitch. Clear next move.", ctaX - 64, 660, {
+    doc.fillColor(colors.textMuted).font("Helvetica").fontSize(9.2).text(closingCopy.saharFootnote, ctaX - 64, 660, {
       width: 202,
       align: "right",
     });
