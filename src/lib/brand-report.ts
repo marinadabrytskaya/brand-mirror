@@ -2581,6 +2581,8 @@ function normalizeReport(raw: RawBrandReport, fallback: BrandReport): BrandRepor
     raw.whatIsMissing,
     raw.whatToDoNext,
     raw.scorecard,
+    fallback.toneCheck,
+    fallback.scorecard,
   ]);
   const routedTechnicalFixes = technicalAeoFixesFromFindings(technicalAeoFindings);
 
