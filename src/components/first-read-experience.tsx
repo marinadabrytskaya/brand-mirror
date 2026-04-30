@@ -236,6 +236,19 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     value: result[d.key] as number,
   }));
   const brandReadParagraphs = buildBrandReadParagraphs(result, locale);
+  const isLeadingRead = posterBand.key === "leading";
+  const leadingBrandReadTitle =
+    locale === "es"
+      ? "La señal ya lidera. Ahora toca afinar la ventaja."
+      : locale === "ru"
+        ? "Сигнал уже лидирует. Теперь важно усилить преимущество."
+        : "The signal already leads. Now sharpen the advantage.";
+  const leadingBrandReadBody =
+    locale === "es"
+      ? "Cuando todo ya está en rango líder, el reporte no busca problemas básicos. Señala qué proteger, qué afinar y dónde todavía se puede ganar ventaja."
+      : locale === "ru"
+        ? "Когда всё уже в зоне Leading, отчёт не ищет базовые проблемы. Он показывает, что сохранить, что уточнить и где ещё можно усилить преимущество."
+        : "When the read is already in the leading range, the report is not hunting for basic problems. It shows what to protect, what to refine, and where the next advantage lives.";
   const nextMoveParagraphs = buildNextMoveCliffhanger(result, locale);
   const localizedFullReportIncludes = fullReportIncludesForLocale(locale);
   const localizedRefundLine = refundLineForLocale(locale);
@@ -920,14 +933,18 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 fontWeight: 500,
               }}
             >
-              {copy.brandReadTitle ?? "The symptom is visible. The commercial cost needs naming."}
+              {isLeadingRead
+                ? leadingBrandReadTitle
+                : copy.brandReadTitle ?? "The symptom is visible. The commercial cost needs naming."}
             </h3>
             <p
               className="mt-5 max-w-md leading-7"
               style={{ color: COLOR.textSoft, fontSize: "15px" }}
             >
-              {copy.brandReadBody ??
-                "The free read surfaces the signal. The full report names what it's costing you — and what to fix first."}
+              {isLeadingRead
+                ? leadingBrandReadBody
+                : copy.brandReadBody ??
+                  "The free read surfaces the signal. The full report names what it's costing you — and what to fix first."}
             </p>
           </div>
           <div

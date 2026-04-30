@@ -113,6 +113,32 @@ export function buildLiveScanTagline(
 
   const weakest = ranked[0]?.key;
   const second = ranked[1]?.key;
+  const values = ranked.map((item) => item.value);
+  const averageScore =
+    values.length > 0
+      ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+      : 0;
+  const lowestScore = values[0] ?? 0;
+
+  if (averageScore >= 85 && lowestScore >= 85) {
+    if (locale === "es") {
+      return "La señal ya lidera. El siguiente avance es precisión, no reparación.";
+    }
+    if (locale === "ru") {
+      return "Сигнал уже лидирует. Следующая работа — точность, а не ремонт.";
+    }
+    return "The signal already leads. The next work is precision, not repair.";
+  }
+
+  if (averageScore >= 85) {
+    if (locale === "es") {
+      return "La página ya vende. La siguiente ventaja está en afinar la señal.";
+    }
+    if (locale === "ru") {
+      return "Страница уже продаёт. Следующее преимущество — точнее настроить сигнал.";
+    }
+    return "The page already sells. The next advantage is sharper signal.";
+  }
 
   if (locale === "es") {
     if (weakest === "toneCoherence" && second === "offerSpecificity") {
@@ -262,6 +288,35 @@ export function buildBrandReadParagraphs(result: BrandReadResult, locale: SiteLo
   const weakest = ranked[0];
   const strongestAxis = ranked[ranked.length - 1]?.key ?? "positioningClarity";
   const consequence = scoreConsequence(weakest.key, weakest.value);
+  const values = ranked.map((item) => item.value);
+  const averageScore =
+    values.length > 0
+      ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+      : 0;
+
+  if (averageScore >= 85 && weakest.value >= 85) {
+    if (locale === "es") {
+      return [
+        `${brand} ya está operando en rango líder: ${strongest}. La página no está intentando ganar confianza básica; ya está haciendo ese trabajo.`,
+        `La puntuación más baja es ${weakest.value} en ${localizedDimensionLabel(weakest.key, locale)}, y eso no es un punto débil. Es el borde más estrecho de un sistema que ya funciona con mucha fuerza.`,
+        "Este es un resultado fuerte. La lectura útil aquí no es reparación; es optimización: proteger lo que ya vende y afinar las señales que pueden hacer que el descubrimiento, la recomendación y la conversión sean todavía más fáciles.",
+      ];
+    }
+
+    if (locale === "ru") {
+      return [
+        `${brand} уже работает на уровне лидера: ${strongest}. Страница не пытается заработать базовое доверие; она уже делает эту работу.`,
+        `Самая низкая оценка — ${weakest.value} по оси ${localizedDimensionLabel(weakest.key, locale)}, и это не слабое место. Это самый узкий край системы, которая уже работает очень сильно.`,
+        "Это сильный результат. Полезный разбор здесь — не про ремонт; это оптимизация: сохранить то, что уже продаёт, и точнее настроить сигналы, которые делают обнаружение, рекомендацию и конверсию ещё легче.",
+      ];
+    }
+
+    return [
+      `${brand} is already operating in a leading range: ${strongest}. The page is not trying to earn basic trust; it is already doing that work.`,
+      `The lowest axis is ${weakest.label} at ${weakest.value}, and that is not a weak point. It is the narrowest edge of an already strong system.`,
+      "This is a strong result. The useful read here is optimization, not repair: protect what already sells, then sharpen the signals that can make discovery, recommendation, and conversion even easier.",
+    ];
+  }
 
   if (locale === "es") {
     return [

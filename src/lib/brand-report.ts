@@ -438,6 +438,21 @@ function buildSignalTaglineFromScores(
   fallback: string,
 ) {
   const ranked = [...scores].sort((a, b) => a.score - b.score);
+  const values = ranked.map((item) => item.score);
+  const averageScore =
+    values.length > 0
+      ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+      : 0;
+  const lowestScore = values[0] ?? 0;
+
+  if (averageScore >= 85 && lowestScore >= 85) {
+    return "The signal already leads. The next work is precision.";
+  }
+
+  if (averageScore >= 85) {
+    return "The page already sells. The next advantage is sharper signal.";
+  }
+
   const weakest = ranked.slice(0, 2).map((item) => item.label.toLowerCase());
   const hasAI = weakest.includes("ai visibility");
   const hasOffer = weakest.includes("offer specificity");

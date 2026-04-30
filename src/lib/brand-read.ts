@@ -846,6 +846,21 @@ function buildTagline(
   ].sort((a, b) => a.score - b.score);
 
   const weakest = ranked.slice(0, 2).map((item) => item.key);
+  const scores = ranked.map((item) => item.score);
+  const averageScore =
+    scores.length > 0
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      : 0;
+  const lowestScore = scores[0] ?? 0;
+
+  if (averageScore >= 85 && lowestScore >= 85) {
+    return "The signal already leads. The next work is precision, not repair.";
+  }
+
+  if (averageScore >= 85) {
+    return "The page already sells. The next advantage is sharper signal.";
+  }
+
   const hasAI = weakest.includes("aiVisibility");
   const hasOffer = weakest.includes("offer");
   const hasPositioning = weakest.includes("positioning");
@@ -920,6 +935,12 @@ function buildScoreModifier(result: Pick<BrandReadResult, "positioningClarity" |
     { key: "toneCoherence" as const, value: result.toneCoherence, line: "The brand exists. AI tools still struggle to find it or describe it accurately." },
     { key: "visualCredibility" as const, value: result.visualCredibility, line: "The belief is there. The world around it has not fully caught up yet." },
   ];
+  const posterScore = computePosterScore(result);
+  const lowestScore = Math.min(...axes.map((a) => a.value));
+  if (posterScore >= 85 && lowestScore >= 85) {
+    return bandModifier(posterScore);
+  }
+
   const weakest = axes.reduce((acc, cur) => (cur.value < acc.value ? cur : acc), axes[0]);
   if (weakest.value <= Math.min(...axes.map((a) => a.value))) {
     return weakest.line;
