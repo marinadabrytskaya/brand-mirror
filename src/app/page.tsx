@@ -522,12 +522,19 @@ export default async function Home({
       </section>
 
       <footer className="px-6 pb-10 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-5 border-t border-[color:var(--line)] pt-6 text-xs uppercase tracking-[0.16em] text-[color:var(--foreground-soft)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-          <div className="max-w-3xl space-y-3 leading-6">
-            <p>{copy.footerAbout}</p>
-            <p>{copy.legalLine}</p>
+        <div className="mx-auto grid max-w-7xl gap-8 border-t border-[color:var(--line)] pt-7 text-[color:var(--foreground-soft)] lg:grid-cols-[minmax(18rem,0.72fr)_minmax(18rem,0.28fr)] lg:items-start">
+          <div className="max-w-2xl">
+            <p className="font-serif text-2xl tracking-[-0.04em] text-[color:var(--foreground)]">
+              BrandMirror by SAHAR
+            </p>
+            <p className="mt-3 max-w-xl text-sm leading-7">
+              {copy.footerAbout}
+            </p>
+            <p className="mt-5 max-w-3xl text-[0.72rem] leading-6 text-[rgba(237,237,242,0.42)]">
+              {copy.legalLine}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-3 lg:justify-end">
+          <div className="grid gap-3 text-sm leading-6 sm:grid-cols-2 lg:grid-cols-1 lg:justify-items-end">
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
@@ -546,6 +553,7 @@ export default async function Home({
             >
               LinkedIn
             </a>
+            <span className="hidden h-px w-full bg-[color:var(--line)] sm:block lg:my-1" />
             <Link
               href={siteI18n.withLang("/ai-brand-audit", locale)}
               className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
