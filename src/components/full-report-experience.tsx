@@ -1971,7 +1971,7 @@ export function FullReportExperience({
                         label: previewCopy.working,
                         title: previewCopy.workingTitle,
                         note: report.whatWorks[0] || previewCopy.workingFallback,
-                        x: 76,
+                        x: 64,
                         y: 14,
                       },
                       {
@@ -1984,7 +1984,7 @@ export function FullReportExperience({
                       },
                     ]
                   : [
-                      { id: "working", ...previewCopy.fallbackMarkers[0], x: 76, y: 14 },
+                      { id: "working", ...previewCopy.fallbackMarkers[0], x: 64, y: 14 },
                       { id: "broken", ...previewCopy.fallbackMarkers[1], x: 76, y: 62 },
                     ]
               }

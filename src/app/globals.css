@@ -980,6 +980,10 @@ button {
   width: clamp(10.5rem, 15vw, 12.5rem);
 }
 
+.homepage-board.diagnostic-board-compact .diagnostic-marker {
+  width: clamp(8.75rem, 12vw, 9.75rem);
+}
+
 .brandmirror-poster {
   position: relative;
   width: 100%;
