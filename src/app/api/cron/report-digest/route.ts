@@ -26,45 +26,58 @@ function recipientsFromEnv() {
 }
 
 export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
+  try {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+      return NextResponse.json(
+        { ok: false, error: "CRON_SECRET is not configured." },
+        { status: 500 },
+      );
+    }
+
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
+    }
+
+    const to = recipientsFromEnv();
+    if (!to.length) {
+      return NextResponse.json(
+        { ok: false, error: "REPORT_DIGEST_TO is not configured." },
+        { status: 500 },
+      );
+    }
+
+    const now = new Date();
+    const { since, until } = digestWindow(now);
+    const { firstReads, paidReports } = await getBrandMirrorDigest({ since, until });
+    const delivery = await sendBrandMirrorDigestEmail({
+      to,
+      since,
+      until,
+      firstReads,
+      paidReports,
+    });
+
+    return NextResponse.json({
+      ok: delivery.status === "sent",
+      since: since.toISOString(),
+      until: until.toISOString(),
+      firstReads: firstReads.length,
+      paidReports: paidReports.length,
+      recipients: to.length,
+      delivery,
+    });
+  } catch (error) {
     return NextResponse.json(
-      { ok: false, error: "CRON_SECRET is not configured." },
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to send BrandMirror digest.",
+      },
       { status: 500 },
     );
   }
-
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
-  }
-
-  const to = recipientsFromEnv();
-  if (!to.length) {
-    return NextResponse.json(
-      { ok: false, error: "REPORT_DIGEST_TO is not configured." },
-      { status: 500 },
-    );
-  }
-
-  const now = new Date();
-  const { since, until } = digestWindow(now);
-  const { firstReads, paidReports } = await getBrandMirrorDigest({ since, until });
-  const delivery = await sendBrandMirrorDigestEmail({
-    to,
-    since,
-    until,
-    firstReads,
-    paidReports,
-  });
-
-  return NextResponse.json({
-    ok: delivery.status === "sent",
-    since: since.toISOString(),
-    until: until.toISOString(),
-    firstReads: firstReads.length,
-    paidReports: paidReports.length,
-    recipients: to.length,
-    delivery,
-  });
 }
