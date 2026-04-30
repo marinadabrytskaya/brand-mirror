@@ -23,7 +23,7 @@ export default async function TermsPage({
   const copy = legalPageCopy[locale].terms;
 
   return (
-    <main className="page-shell min-h-screen bg-[color:var(--background)] px-6 py-6 sm:px-8 lg:px-12">
+    <main className="page-shell homepage-shell min-h-screen bg-[color:var(--background)] px-6 py-6 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-5xl">
         <header className="editorial-rule flex flex-col gap-5 py-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
