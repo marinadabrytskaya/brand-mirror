@@ -116,9 +116,9 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
           <div
             key={row.label}
             className="grid items-center gap-4 border-t border-[rgba(255,255,255,0.06)] pt-3"
-            style={{ gridTemplateColumns: "124px minmax(128px,1fr) 74px" }}
+            style={{ gridTemplateColumns: "150px minmax(128px,1fr) 74px" }}
           >
-            <span className="whitespace-nowrap font-mono text-[0.6rem] uppercase tracking-[0.24em] text-[rgba(237,237,242,0.52)]">
+            <span className="whitespace-nowrap font-mono text-[0.82rem] font-semibold uppercase tracking-[0.15em] text-[rgba(237,237,242,0.68)]">
               {row.label}
             </span>
             <span className="h-1 overflow-hidden rounded-full bg-white/[0.07]">

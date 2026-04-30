@@ -1511,7 +1511,7 @@ function ScannerReadout({
                 key={row.label}
                 className="grid items-center gap-5 py-4"
                 style={{
-                  gridTemplateColumns: "minmax(120px, 170px) minmax(0, 1fr) 94px",
+                  gridTemplateColumns: "minmax(132px, 190px) minmax(0, 1fr) 94px",
                   borderBottom:
                     idx === scoreRows.length - 1
                       ? "none"
@@ -1521,9 +1521,10 @@ function ScannerReadout({
                 <div
                   style={{
                     fontFamily: "var(--font-mono), ui-monospace, monospace",
-                    fontSize: "11px",
-                    letterSpacing: "0.24em",
-                    color: "rgba(237,237,242,0.58)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    letterSpacing: "0.16em",
+                    color: "rgba(237,237,242,0.68)",
                     lineHeight: 1.2,
                   }}
                 >
