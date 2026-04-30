@@ -34,8 +34,20 @@ export type BrandMirrorDigestPaidReport = {
 
 let adminClient: SupabaseClient | null = null;
 
+function cleanEnvValue(value?: string) {
+  return (value || "").trim();
+}
+
+function getSupabaseUrl() {
+  return cleanEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/rest\/v1\/?$/, "");
+}
+
+function getSupabaseServiceRoleKey() {
+  return cleanEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export function isSupabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(getSupabaseUrl() && getSupabaseServiceRoleKey());
 }
 
 export function getSupabaseAdmin() {
@@ -45,8 +57,8 @@ export function getSupabaseAdmin() {
 
   if (!adminClient) {
     adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+      getSupabaseUrl(),
+      getSupabaseServiceRoleKey(),
       {
         auth: {
           persistSession: false,
