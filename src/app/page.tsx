@@ -286,6 +286,12 @@ export default async function Home({
                   {copy.navSample}
                 </Link>
               </nav>
+              <a
+                href="https://saharstudio.com"
+                className="inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--foreground)] hover:bg-[color:var(--surface)] sm:px-4 sm:text-sm sm:normal-case sm:tracking-normal"
+              >
+                {copy.navSahar}
+              </a>
               <LanguageSwitcher locale={locale} />
             </div>
           </header>
@@ -449,40 +455,48 @@ export default async function Home({
               body={copy.offers.body}
             />
           <div className="editorial-rule mt-14 pt-2">
-            {copy.offers.rows.map((offer) => (
-              <div
-                key={offer.name}
-                className="grid gap-5 border-b border-[color:var(--line)] py-8 md:grid-cols-[1.1fr_9rem_1.35fr]"
-              >
-                <div>
-                  <h3 className="font-serif text-4xl leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
-                    {offer.name}
-                  </h3>
-                  <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
-                    {offer.layer}
+            {copy.offers.rows.map((offer) => {
+              const isFixedPrice = offer.price.startsWith("$");
+
+              return (
+                <div
+                  key={offer.name}
+                  className="grid gap-5 border-b border-[color:var(--line)] py-8 md:grid-cols-[minmax(0,1.05fr)_minmax(7.5rem,10rem)_minmax(0,1.55fr)] md:gap-8 lg:gap-10"
+                >
+                  <div>
+                    <h3 className="font-serif text-4xl leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+                      {offer.name}
+                    </h3>
+                    <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
+                      {offer.layer}
+                    </p>
+                  </div>
+                  <p
+                    className={`max-w-[10rem] font-serif leading-none tracking-[-0.04em] text-[color:var(--accent)] md:pr-4 ${
+                      isFixedPrice ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl"
+                    }`}
+                  >
+                    {offer.price}
                   </p>
+                  <div>
+                    <p className="text-base leading-7 text-[color:var(--foreground-soft)]">
+                      {offer.summary}
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--foreground-soft)]">
+                      {offer.detail}
+                    </p>
+                    {"actionHref" in offer && offer.actionHref ? (
+                      <a
+                        href={offer.actionHref}
+                        className="mt-5 inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                      >
+                        {offer.actionLabel}
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
-                <p className="font-serif text-5xl leading-none tracking-[-0.06em] text-[color:var(--accent)]">
-                  {offer.price}
-                </p>
-                <div>
-                  <p className="text-base leading-7 text-[color:var(--foreground-soft)]">
-                    {offer.summary}
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[color:var(--foreground-soft)]">
-                    {offer.detail}
-                  </p>
-                  {"actionHref" in offer && offer.actionHref ? (
-                    <a
-                      href={offer.actionHref}
-                      className="mt-5 inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
-                    >
-                      {offer.actionLabel}
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -565,6 +579,18 @@ export default async function Home({
           </div>
         </div>
       </section>
+
+      <footer className="px-6 pb-10 sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[color:var(--line)] pt-6 text-xs uppercase tracking-[0.16em] text-[color:var(--foreground-soft)] sm:flex-row sm:items-center sm:justify-between">
+          <p>{copy.legalLine}</p>
+          <a
+            href="https://saharstudio.com"
+            className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+          >
+            saharstudio.com
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -32,6 +32,7 @@ export const siteCopy = {
       navHow: "How it works",
       navOffer: "Offer",
       navSample: "Sample report",
+      navSahar: "SAHAR website",
       kicker: "BrandMirror shows what to fix first.",
       title: "AI Brand Audit for Any Website",
       body:
@@ -200,11 +201,11 @@ export const siteCopy = {
             detail: "Best for any website owner, team, founder, studio, consultant, or service brand that needs to know what to fix, why it matters, and what to do next.",
           },
           {
-            name: "Sahar Follow-Through",
+            name: "SAHAR Follow-Through",
             layer: "Implementation layer",
-            price: "Optional",
+            price: "By scope",
             summary:
-              "If you want help implementing the fixes, Sahar can sharpen the positioning, visibility signals, offer clarity, messaging, proof, CTA path, website structure, and broader brand strategy.",
+              "If you want help implementing the fixes, SAHAR can sharpen the positioning, visibility signals, offer clarity, messaging, proof, CTA path, website structure, and broader brand strategy.",
             detail: "Best when you want the diagnosis turned into visible changes, not just a report.",
             actionLabel: "Discuss implementation",
             actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
@@ -255,6 +256,8 @@ export const siteCopy = {
         primaryCta: "\u25B6 Read My Brand",
         secondaryCta: "See sample report \u2192",
       },
+      legalLine:
+        "Powered by SAHAR. BrandMirror is a proprietary diagnostic system by SAHAR Studio. © 2026 SAHAR Studio. All rights reserved.",
     },
     firstRead: {
       back: "Back to BrandMirror",
@@ -446,6 +449,7 @@ export const siteCopy = {
       navHow: "Cómo funciona",
       navOffer: "Oferta",
       navSample: "Reporte de muestra",
+      navSahar: "Sitio de SAHAR",
       kicker: "BrandMirror muestra qué corregir primero.",
       title: "Auditoría de marca con IA para cualquier sitio",
       body:
@@ -602,11 +606,11 @@ export const siteCopy = {
             detail: "Ideal para fundadores y marcas de servicios premium que necesitan saber qué corregir, por qué importa y qué hacer después.",
           },
           {
-            name: "Continuación con Sahar",
+            name: "Continuación con SAHAR",
             layer: "Capa de implementación",
-            price: "Opcional",
+            price: "Según alcance",
             summary:
-              "Si quieres ayuda para implementar las correcciones, Sahar puede afinar el posicionamiento, señales de visibilidad, claridad de oferta, mensaje, prueba, ruta de CTA, estructura del sitio y estrategia de marca más amplia.",
+              "Si quieres ayuda para implementar las correcciones, SAHAR puede afinar el posicionamiento, señales de visibilidad, claridad de oferta, mensaje, prueba, ruta de CTA, estructura del sitio y estrategia de marca más amplia.",
             detail: "Ideal cuando quieres convertir el diagnóstico en cambios visibles, no solo en un reporte.",
             actionLabel: "Hablar de implementación",
             actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
@@ -657,6 +661,8 @@ export const siteCopy = {
         primaryCta: "Lee mi marca",
         secondaryCta: "Ver reporte de muestra",
       },
+      legalLine:
+        "Powered by SAHAR. BrandMirror es un sistema diagnóstico propietario de SAHAR Studio. © 2026 SAHAR Studio. Todos los derechos reservados.",
     },
     firstRead: {
       back: "Volver a BrandMirror",
@@ -912,6 +918,7 @@ export const siteCopy = {
       navHow: "Как это работает",
       navOffer: "Предложение",
       navSample: "Пример отчёта",
+      navSahar: "Сайт SAHAR",
       kicker: "BrandMirror показывает, что исправить первым.",
       title: "AI-аудит бренда для любого сайта",
       body:
@@ -1068,11 +1075,11 @@ export const siteCopy = {
             detail: "Лучше всего для владельцев сайтов, команд, основателей, студий, консультантов и сервисных брендов, которым нужно понять, что исправлять, почему это важно и что делать дальше.",
           },
           {
-            name: "Сопровождение Sahar",
+            name: "Сопровождение SAHAR",
             layer: "Слой внедрения",
-            price: "Опционально",
+            price: "По объёму",
             summary:
-              "Если нужна помощь с внедрением правок, Sahar может усилить позиционирование, visibility-сигналы, ясность оффера, сообщение, proof, CTA-путь, структуру сайта и более широкую бренд-стратегию.",
+              "Если нужна помощь с внедрением правок, SAHAR может усилить позиционирование, visibility-сигналы, ясность оффера, сообщение, proof, CTA-путь, структуру сайта и более широкую бренд-стратегию.",
             detail: "Лучше всего, когда нужно превратить диагноз в видимые изменения, а не просто получить отчёт.",
             actionLabel: "Обсудить внедрение",
             actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
@@ -1123,6 +1130,8 @@ export const siteCopy = {
         primaryCta: "Прочитать мой бренд",
         secondaryCta: "Смотреть пример отчёта",
       },
+      legalLine:
+        "Powered by SAHAR. BrandMirror is a proprietary diagnostic system by SAHAR Studio. © 2026 SAHAR Studio. Все права защищены.",
     },
     firstRead: {
       back: "Назад в BrandMirror",
