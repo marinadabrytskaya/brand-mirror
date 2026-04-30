@@ -34,7 +34,7 @@ function buildHomeStructuredData(
     operatingSystem: "Web",
     url: SITE_URL,
     description:
-      "BrandMirror is an AI brand audit for founders, studios, and premium service brands. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
+      "BrandMirror is an AI website audit for any homepage that needs to explain value and convert. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
     offers: {
       "@type": "Offer",
       price: "197",

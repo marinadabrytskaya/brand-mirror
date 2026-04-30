@@ -36,17 +36,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: "BrandMirror",
   title: {
-    default: "BrandMirror | AI Brand Audit for Founders",
+    default: "BrandMirror | AI Website Audit for Any Website",
     template: "%s | BrandMirror",
   },
   description:
-    "BrandMirror is an AI brand audit that reads your positioning, AI visibility, offer, visual trust, and conversion readiness before buyers drift away.",
+    "BrandMirror is an AI website audit that reads any homepage for positioning, AI visibility, offer clarity, visual trust, and conversion readiness before buyers drift away.",
   keywords: [
+    "AI website audit",
     "AI brand audit",
+    "homepage audit",
     "brand positioning audit",
     "website conversion audit",
     "AI visibility audit",
-    "brand diagnosis for founders",
   ],
   authors: [{ name: "SAHAR Studio" }],
   creator: "SAHAR Studio",
@@ -55,15 +56,15 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "BrandMirror",
-    title: "BrandMirror | AI Brand Audit for Founders",
+    title: "BrandMirror | AI Website Audit for Any Website",
     description:
-      "See what your brand is making clear, what is leaking trust, and what to fix first across positioning, AI visibility, offer, visual credibility, and conversion.",
+      "See what any homepage is making clear, what is leaking trust, and what to fix first across positioning, AI visibility, offer, visual credibility, and conversion.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BrandMirror | AI Brand Audit for Founders",
+    title: "BrandMirror | AI Website Audit for Any Website",
     description:
-      "A fast AI-powered brand read for founders, studios, and premium service brands.",
+      "A fast AI-powered website read for any homepage that needs to explain value and convert.",
   },
   robots: {
     index: true,

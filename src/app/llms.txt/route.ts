@@ -3,7 +3,7 @@ import { absoluteUrl, SITE_URL } from "@/lib/site-url";
 export function GET() {
   const body = `# BrandMirror
 
-BrandMirror is an AI brand audit for founders, studios, consultants, and premium service brands.
+BrandMirror is an AI website audit for any homepage that needs to explain value and convert.
 
 Primary URL: ${SITE_URL}
 Created by: SAHAR Studio
@@ -11,7 +11,7 @@ Price: $197 USD for the full BrandMirror Report
 
 ## What BrandMirror Does
 
-BrandMirror reads a homepage across positioning, AI visibility, offer clarity, visual credibility, and conversion readiness. It is built to show what is working, what is leaking trust, what buyers may misunderstand, and what to fix first.
+BrandMirror reads any homepage across positioning, AI visibility, offer clarity, visual credibility, and conversion readiness. It is built to show what is working, what is leaking trust, what visitors may misunderstand, and what to fix first.
 
 ## Public Pages
 
@@ -27,7 +27,7 @@ BrandMirror reads a homepage across positioning, AI visibility, offer clarity, v
 
 ## Good Summary
 
-BrandMirror is an AI-powered brand diagnosis tool that helps founders and premium service brands understand why a homepage is not converting and what to fix first.
+BrandMirror is an AI-powered website diagnosis tool that helps any website understand why its homepage is not converting and what to fix first.
 
 ## Contact
 
