@@ -459,7 +459,7 @@ export default async function Home({
                     {offer.name}
                   </h3>
                   <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
-                    {copy.offers.layer}
+                    {offer.layer}
                   </p>
                 </div>
                 <p className="font-serif text-5xl leading-none tracking-[-0.06em] text-[color:var(--accent)]">
@@ -472,6 +472,14 @@ export default async function Home({
                   <p className="mt-3 text-sm leading-6 text-[color:var(--foreground-soft)]">
                     {offer.detail}
                   </p>
+                  {"actionHref" in offer && offer.actionHref ? (
+                    <a
+                      href={offer.actionHref}
+                      className="mt-5 inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                    >
+                      {offer.actionLabel}
+                    </a>
+                  ) : null}
                 </div>
               </div>
             ))}

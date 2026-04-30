@@ -185,6 +185,7 @@ export const siteCopy = {
         rows: [
           {
             name: "Free First Read",
+            layer: "Diagnostic layer",
             price: "$0",
             summary:
               "A fast outside read of the homepage: first-screen signal, 5 scores, strongest asset, main friction, and the first reason buyers may hesitate.",
@@ -192,6 +193,7 @@ export const siteCopy = {
           },
           {
             name: "BrandMirror Report",
+            layer: "Diagnostic layer",
             price: "$197",
             summary:
               "The paid diagnosis: score dashboard, website evidence, 5 commercial deep dives, AI visibility read, competitor intelligence, commercial impact, priority fix stack, one-page brand brief, and implementation playbook.",
@@ -199,10 +201,13 @@ export const siteCopy = {
           },
           {
             name: "Sahar Follow-Through",
+            layer: "Implementation layer",
             price: "Optional",
             summary:
               "If you want help implementing the fixes, Sahar can sharpen the positioning, visibility signals, offer clarity, messaging, proof, CTA path, website structure, and broader brand strategy.",
             detail: "Best when you want the diagnosis turned into visible changes, not just a report.",
+            actionLabel: "Discuss implementation",
+            actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
           },
         ],
         primaryCta: "\u25B6 UNLOCK FULL REPORT — $197",
@@ -571,6 +576,7 @@ export const siteCopy = {
         rows: [
           {
             name: "Primera lectura gratis",
+            layer: "Capa de diagnóstico",
             price: "$0",
             summary:
               "Una lectura externa rápida de la página principal: señal del primer pantallazo, 5 puntuaciones, activo más fuerte, fricción principal y la primera razón por la que un comprador puede dudar.",
@@ -578,6 +584,7 @@ export const siteCopy = {
           },
           {
             name: "Reporte BrandMirror",
+            layer: "Capa de diagnóstico",
             price: "$197",
             summary:
               "El diagnóstico pagado: panel de puntuaciones, evidencia del sitio, 5 análisis comerciales profundos, lectura de visibilidad en IA, inteligencia competitiva, impacto comercial, prioridades de corrección, brief de marca de una página y playbook de implementación.",
@@ -585,10 +592,13 @@ export const siteCopy = {
           },
           {
             name: "Continuación con Sahar",
+            layer: "Capa de implementación",
             price: "Opcional",
             summary:
               "Si quieres ayuda para implementar las correcciones, Sahar puede afinar el posicionamiento, señales de visibilidad, claridad de oferta, mensaje, prueba, ruta de CTA, estructura del sitio y estrategia de marca más amplia.",
             detail: "Ideal cuando quieres convertir el diagnóstico en cambios visibles, no solo en un reporte.",
+            actionLabel: "Hablar de implementación",
+            actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
           },
         ],
         primaryCta: "Empezar primera lectura gratis",
@@ -1021,6 +1031,7 @@ export const siteCopy = {
         rows: [
           {
             name: "Бесплатный первый разбор",
+            layer: "Диагностический слой",
             price: "$0",
             summary:
               "Быстрый внешний взгляд на главную страницу: сигнал первого экрана, 5 оценок, самый сильный актив, главная точка трения и первая причина, по которой покупатель может сомневаться.",
@@ -1028,6 +1039,7 @@ export const siteCopy = {
           },
           {
             name: "Отчёт BrandMirror",
+            layer: "Диагностический слой",
             price: "$197",
             summary:
               "Платный диагноз: панель оценок, доказательства с сайта, 5 глубоких коммерческих разборов, AI visibility, конкурентная разведка, коммерческий эффект, стек приоритетных правок, бренд-бриф на одну страницу и плейбук внедрения.",
@@ -1035,10 +1047,13 @@ export const siteCopy = {
           },
           {
             name: "Сопровождение Sahar",
+            layer: "Слой внедрения",
             price: "Опционально",
             summary:
               "Если нужна помощь с внедрением правок, Sahar может усилить позиционирование, visibility-сигналы, ясность оффера, сообщение, proof, CTA-путь, структуру сайта и более широкую бренд-стратегию.",
             detail: "Лучше всего, когда нужно превратить диагноз в видимые изменения, а не просто получить отчёт.",
+            actionLabel: "Обсудить внедрение",
+            actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
           },
         ],
         primaryCta: "Начать бесплатный первый разбор",
