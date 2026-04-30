@@ -20,6 +20,12 @@ type DiagnosticEvidenceBoardProps = {
   headline: string;
   subheadline: string;
   cta: string;
+  frameLabels?: {
+    offer: string;
+    proof: string;
+    cta: string;
+    decision: string;
+  };
   markers: DiagnosticMarker[];
   scores: DiagnosticScore[];
   verdicts?: string[];
@@ -34,6 +40,12 @@ export default function DiagnosticEvidenceBoard({
   headline,
   subheadline,
   cta,
+  frameLabels = {
+    offer: "Offer",
+    proof: "Proof",
+    cta: "CTA",
+    decision: "Decision",
+  },
   markers,
   scores,
   verdicts = [],
@@ -63,9 +75,9 @@ export default function DiagnosticEvidenceBoard({
               {brandName}
             </p>
             <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-[rgba(248,242,233,0.5)]">
-              <span>Offer</span>
-              <span>Proof</span>
-              <span>CTA</span>
+              <span>{frameLabels.offer}</span>
+              <span>{frameLabels.proof}</span>
+              <span>{frameLabels.cta}</span>
             </div>
           </div>
           <div className="diagnostic-site-body">
@@ -87,7 +99,7 @@ export default function DiagnosticEvidenceBoard({
             <div className="diagnostic-proof-zone">
               <div className="diagnostic-proof-card">
                 <p className="text-[9px] uppercase tracking-[0.18em] text-[rgba(248,242,233,0.48)]">
-                  Proof
+                  {frameLabels.proof}
                 </p>
                 <div className="mt-3 space-y-2">
                   <div className="h-2 rounded-full bg-[rgba(248,242,233,0.18)]" />
@@ -97,7 +109,7 @@ export default function DiagnosticEvidenceBoard({
               </div>
               <div className="diagnostic-proof-card">
                 <p className="text-[9px] uppercase tracking-[0.18em] text-[rgba(248,242,233,0.48)]">
-                  Decision
+                  {frameLabels.decision}
                 </p>
                 <div className="mt-3 h-20 rounded-[1rem] border border-[rgba(248,242,233,0.08)] bg-[rgba(248,242,233,0.04)]" />
               </div>

@@ -8,6 +8,30 @@ import { type SiteLocale } from "@/lib/site-i18n";
 
 type EmailStatus = "pending" | "sent" | "skipped" | "failed";
 
+export type BrandMirrorDigestFirstRead = {
+  id: string;
+  email: string;
+  url: string;
+  locale: string;
+  result: BrandReadResult;
+  created_at: string;
+};
+
+export type BrandMirrorDigestPaidReport = {
+  id: string;
+  email: string;
+  url: string;
+  locale: string;
+  provider: string;
+  payment_reference: string;
+  amount_total: number | null;
+  currency: string | null;
+  report: BrandReport;
+  email_status: EmailStatus;
+  email_error: string | null;
+  created_at: string;
+};
+
 let adminClient: SupabaseClient | null = null;
 
 export function isSupabaseConfigured() {
@@ -150,4 +174,45 @@ export async function savePaidReport({
 
   if (error) throw error;
   return { saved: true };
+}
+
+export async function getBrandMirrorDigest({
+  since,
+  until,
+}: {
+  since: Date;
+  until: Date;
+}) {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const supabase = getSupabaseAdmin();
+  const sinceIso = since.toISOString();
+  const untilIso = until.toISOString();
+
+  const [firstReadsResult, paidReportsResult] = await Promise.all([
+    supabase
+      .from("brandmirror_first_reads")
+      .select("id,email,url,locale,result,created_at")
+      .gte("created_at", sinceIso)
+      .lt("created_at", untilIso)
+      .order("created_at", { ascending: false })
+      .limit(500),
+    supabase
+      .from("brandmirror_paid_reports")
+      .select("id,email,url,locale,provider,payment_reference,amount_total,currency,report,email_status,email_error,created_at")
+      .gte("created_at", sinceIso)
+      .lt("created_at", untilIso)
+      .order("created_at", { ascending: false })
+      .limit(500),
+  ]);
+
+  if (firstReadsResult.error) throw firstReadsResult.error;
+  if (paidReportsResult.error) throw paidReportsResult.error;
+
+  return {
+    firstReads: (firstReadsResult.data || []) as BrandMirrorDigestFirstRead[],
+    paidReports: (paidReportsResult.data || []) as BrandMirrorDigestPaidReport[],
+  };
 }

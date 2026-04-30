@@ -119,7 +119,6 @@ button {
     0 0 0 1px rgba(111, 224, 194, 0.2),
     0 0 30px rgba(111, 224, 194, 0.3),
     0 16px 42px rgba(111, 224, 194, 0.18);
-  animation: brandmirrorButtonPulse 3.4s ease-in-out infinite;
 }
 
 .brandmirror-read-button-idle:hover {
@@ -225,17 +224,6 @@ button {
   49%,
   100% {
     opacity: 0.18;
-  }
-}
-
-@keyframes brandmirrorButtonPulse {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-1px);
   }
 }
 

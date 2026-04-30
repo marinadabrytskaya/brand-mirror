@@ -1788,6 +1788,12 @@ export function FullReportExperience({
   const reportId = report
     ? `BM-${(report.brandName || "BRAND").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3) || "BM"}-2026-001`
     : "";
+  const boardFrameLabels =
+    locale === "ru"
+      ? { offer: "Предложение", proof: "Доказательства", cta: "Действие", decision: "Решение" }
+      : locale === "es"
+        ? { offer: "Oferta", proof: "Prueba", cta: "Acción", decision: "Decisión" }
+        : { offer: "Offer", proof: "Proof", cta: "CTA", decision: "Decision" };
 
   return (
     <main className="page-shell report-shell min-h-screen bg-[color:var(--background)] px-6 py-4 sm:px-8 lg:px-12">
@@ -1877,6 +1883,7 @@ export function FullReportExperience({
                 copy.reportSubheadline
               }
               cta={report?.rewriteSuggestions.cta || copy.downloadIdle}
+              frameLabels={boardFrameLabels}
               scores={
                 report
                   ? report.scorecard.slice(0, 3).map((row) => ({

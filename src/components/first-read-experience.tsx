@@ -181,6 +181,9 @@ const terminalText: React.CSSProperties = {
 
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
   const copy = siteI18n.siteCopy[locale].firstRead;
+  const surfaceLabel =
+    locale === "ru" ? "ПЕРВЫЙ РАЗБОР" : locale === "es" ? "PRIMERA LECTURA" : "FIRST READ";
+  const liveLabel = locale === "ru" ? "В ЭФИРЕ" : locale === "es" ? "EN VIVO" : "LIVE";
   const searchParams = useSearchParams();
   const [url, setUrl] = useState(() => searchParams.get("url") || "");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
@@ -448,11 +451,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span>BRANDMIRROR</span>
             <span style={{ opacity: 0.4 }}>/</span>
-            <span>FIRST&nbsp;READ</span>
+            <span>{surfaceLabel}</span>
             <span className="hidden sm:inline" style={{ opacity: 0.4 }}>/</span>
             <span className="hidden items-center gap-2 sm:inline-flex">
               <LiveDot />
-              LIVE
+              {liveLabel}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -651,7 +654,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               <button
                 type="submit"
                 disabled={isPending}
-                className={`brandmirror-read-button inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`brandmirror-read-button inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   scannerMode === "idle" || scannerMode === "ready" ? "brandmirror-read-button-idle" : ""
                 }`}
                 style={{

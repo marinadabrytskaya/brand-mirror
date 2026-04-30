@@ -3,6 +3,10 @@ import "server-only";
 import { type BrandReadResult } from "@/lib/brand-read";
 import { type BrandReport } from "@/lib/brand-report";
 import { type SiteLocale } from "@/lib/site-i18n";
+import {
+  type BrandMirrorDigestFirstRead,
+  type BrandMirrorDigestPaidReport,
+} from "@/lib/supabase";
 
 type ReportEmailResult =
   | { status: "skipped"; reason: "not_configured" }
@@ -99,11 +103,11 @@ function firstReadHtmlFor(result: BrandReadResult, locale: SiteLocale, fullRepor
 }
 
 async function sendEmail(payload: {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
-  filename: string;
-  pdf: Buffer;
+  filename?: string;
+  pdf?: Buffer;
 }): Promise<ReportEmailResult> {
   if (!isReportEmailConfigured()) {
     return { status: "skipped", reason: "not_configured" };
@@ -121,12 +125,15 @@ async function sendEmail(payload: {
       bcc: process.env.REPORT_EMAIL_BCC ? [process.env.REPORT_EMAIL_BCC] : undefined,
       subject: payload.subject,
       html: payload.html,
-      attachments: [
-        {
-          filename: payload.filename,
-          content: payload.pdf.toString("base64"),
-        },
-      ],
+      attachments:
+        payload.filename && payload.pdf
+          ? [
+              {
+                filename: payload.filename,
+                content: payload.pdf.toString("base64"),
+              },
+            ]
+          : undefined,
     }),
   });
 
@@ -182,5 +189,129 @@ export async function sendBrandReadEmail({
     html: firstReadHtmlFor(result, locale, fullReportUrl),
     filename,
     pdf,
+  });
+}
+
+function formatDateTime(value: string | Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Africa/Johannesburg",
+  }).format(typeof value === "string" ? new Date(value) : value);
+}
+
+function formatMoney(amount: number | null, currency: string | null) {
+  if (amount === null || !currency) return "n/a";
+  const normalizedCurrency = currency.toUpperCase();
+  const divisor = ["ZAR", "USD", "EUR", "GBP"].includes(normalizedCurrency) ? 100 : 1;
+  return `${normalizedCurrency} ${(amount / divisor).toFixed(2)}`;
+}
+
+function tableRowsForFirstReads(firstReads: BrandMirrorDigestFirstRead[]) {
+  if (!firstReads.length) {
+    return `<tr><td colspan="5" style="padding: 14px; color: #777;">No free reads in this period.</td></tr>`;
+  }
+
+  return firstReads
+    .map((item) => {
+      const result = item.result || ({} as BrandReadResult);
+      return `
+        <tr>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(formatDateTime(item.created_at))}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.email)}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;"><a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a></td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(result.brandName || "n/a")}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(String(result.posterScore ?? "n/a"))}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function tableRowsForPaidReports(paidReports: BrandMirrorDigestPaidReport[]) {
+  if (!paidReports.length) {
+    return `<tr><td colspan="7" style="padding: 14px; color: #777;">No paid reports in this period.</td></tr>`;
+  }
+
+  return paidReports
+    .map((item) => {
+      const report = item.report || ({} as BrandReport);
+      return `
+        <tr>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(formatDateTime(item.created_at))}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.email)}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;"><a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a></td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(report.brandName || "n/a")}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.provider)}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(formatMoney(item.amount_total, item.currency))}</td>
+          <td style="padding: 10px; border-top: 1px solid #eee;">${escapeHtml(item.email_status)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+export async function sendBrandMirrorDigestEmail({
+  to,
+  since,
+  until,
+  firstReads,
+  paidReports,
+}: {
+  to: string | string[];
+  since: Date;
+  until: Date;
+  firstReads: BrandMirrorDigestFirstRead[];
+  paidReports: BrandMirrorDigestPaidReport[];
+}): Promise<ReportEmailResult> {
+  const subject = `BrandMirror digest: ${firstReads.length} free reads, ${paidReports.length} paid reports`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111; line-height: 1.5;">
+      <h1 style="font-size: 24px; margin: 0 0 8px;">BrandMirror digest</h1>
+      <p style="margin: 0 0 24px; color: #555;">
+        ${escapeHtml(formatDateTime(since))} - ${escapeHtml(formatDateTime(until))} Johannesburg time
+      </p>
+      <div style="display: grid; gap: 12px; margin-bottom: 24px;">
+        <p><strong>Free reads:</strong> ${firstReads.length}</p>
+        <p><strong>Paid reports:</strong> ${paidReports.length}</p>
+        <p><strong>Unique emails:</strong> ${new Set([...firstReads, ...paidReports].map((item) => item.email)).size}</p>
+      </div>
+
+      <h2 style="font-size: 18px; margin: 24px 0 8px;">Free First Reads</h2>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="text-align: left; color: #555;">
+            <th style="padding: 10px;">Created</th>
+            <th style="padding: 10px;">Email</th>
+            <th style="padding: 10px;">URL</th>
+            <th style="padding: 10px;">Brand</th>
+            <th style="padding: 10px;">Score</th>
+          </tr>
+        </thead>
+        <tbody>${tableRowsForFirstReads(firstReads)}</tbody>
+      </table>
+
+      <h2 style="font-size: 18px; margin: 28px 0 8px;">Paid Reports</h2>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="text-align: left; color: #555;">
+            <th style="padding: 10px;">Created</th>
+            <th style="padding: 10px;">Email</th>
+            <th style="padding: 10px;">URL</th>
+            <th style="padding: 10px;">Brand</th>
+            <th style="padding: 10px;">Provider</th>
+            <th style="padding: 10px;">Amount</th>
+            <th style="padding: 10px;">Email status</th>
+          </tr>
+        </thead>
+        <tbody>${tableRowsForPaidReports(paidReports)}</tbody>
+      </table>
+    </div>
+  `;
+
+  return sendEmail({
+    to,
+    subject,
+    html,
   });
 }
