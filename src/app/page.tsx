@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 };
 
 function buildHomeStructuredData(
-  faqItems: ReadonlyArray<{ question: string; answer: string }>,
 ) {
   return [
   {
@@ -59,18 +58,6 @@ function buildHomeStructuredData(
       name: "SAHAR Studio",
       url: SITE_URL,
     },
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
   },
   ];
 }
@@ -274,7 +261,7 @@ export default async function Home({
   const locale = siteI18n.getSiteLocale(params.lang);
   const copy = siteI18n.siteCopy[locale].landing;
   const refundLine = refundLineForLocale(locale);
-  const structuredData = buildHomeStructuredData(copy.faq.items);
+  const structuredData = buildHomeStructuredData();
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
@@ -302,6 +289,12 @@ export default async function Home({
                 <a href="#offers" className="hover:text-[color:var(--foreground)]">
                   {copy.navOffer}
                 </a>
+                <Link
+                  href={siteI18n.withLang("/ai-brand-audit", locale)}
+                  className="hover:text-[color:var(--foreground)]"
+                >
+                  AI Brand Audit
+                </Link>
                 <Link
                   href={siteI18n.withLang("/sample-report", locale)}
                   className="rounded-full border border-[color:var(--line-strong)] px-4 py-2 text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
@@ -553,6 +546,12 @@ export default async function Home({
             >
               LinkedIn
             </a>
+            <Link
+              href={siteI18n.withLang("/ai-brand-audit", locale)}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              AI Brand Audit
+            </Link>
             <Link
               href={siteI18n.withLang("/privacy", locale)}
               className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"

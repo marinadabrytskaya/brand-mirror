@@ -5,7 +5,15 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/first-read", "/sample-report", "/privacy", "/terms", "/llms.txt"],
+      allow: [
+        "/",
+        "/first-read",
+        "/ai-brand-audit",
+        "/sample-report",
+        "/privacy",
+        "/terms",
+        "/llms.txt",
+      ],
       disallow: ["/api/", "/full-report"],
     },
     sitemap: absoluteUrl("/sitemap.xml"),

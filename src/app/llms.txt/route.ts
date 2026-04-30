@@ -16,6 +16,7 @@ BrandMirror reads any homepage across positioning, AI visibility, offer clarity,
 ## Public Pages
 
 - Homepage: ${absoluteUrl("/")}
+- AI brand audit: ${absoluteUrl("/ai-brand-audit")}
 - Free first read: ${absoluteUrl("/first-read")}
 - Sample report: ${absoluteUrl("/sample-report")}
 - Privacy Policy: ${absoluteUrl("/privacy")}
