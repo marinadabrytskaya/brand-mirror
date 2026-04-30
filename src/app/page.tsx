@@ -5,6 +5,10 @@ import { refundLineForLocale } from "@/lib/free-report-copy";
 import { absoluteUrl, SITE_URL } from "@/lib/site-url";
 import siteI18n from "@/lib/site-i18n";
 
+const CONTACT_EMAIL = "hello@saharstudio.com";
+const SAHAR_WEBSITE_URL = "https://saharstudio.com";
+const LINKEDIN_URL = "https://www.linkedin.com/company/112570517/";
+
 export const metadata: Metadata = {
   alternates: {
     canonical: "/",
@@ -20,6 +24,14 @@ function buildHomeStructuredData(
     "@type": "Organization",
     name: "SAHAR Studio",
     url: SITE_URL,
+    email: CONTACT_EMAIL,
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: CONTACT_EMAIL,
+      contactType: "customer support",
+      availableLanguage: ["English", "Spanish", "Russian"],
+    },
+    sameAs: [SAHAR_WEBSITE_URL, LINKEDIN_URL],
     brand: {
       "@type": "Brand",
       name: "BrandMirror",
@@ -298,7 +310,7 @@ export default async function Home({
                 </Link>
               </nav>
               <a
-                href="https://saharstudio.com"
+                href={SAHAR_WEBSITE_URL}
                 className="inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--foreground)] hover:bg-[color:var(--surface)] sm:px-4 sm:text-sm sm:normal-case sm:tracking-normal"
               >
                 {copy.navSahar}
@@ -517,14 +529,28 @@ export default async function Home({
       </section>
 
       <footer className="px-6 pb-10 sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[color:var(--line)] pt-6 text-xs uppercase tracking-[0.16em] text-[color:var(--foreground-soft)] sm:flex-row sm:items-center sm:justify-between">
-          <p>{copy.legalLine}</p>
-          <a
-            href="https://saharstudio.com"
-            className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
-          >
-            saharstudio.com
-          </a>
+        <div className="mx-auto grid max-w-7xl gap-5 border-t border-[color:var(--line)] pt-6 text-xs uppercase tracking-[0.16em] text-[color:var(--foreground-soft)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <p className="max-w-3xl leading-6">{copy.legalLine}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-3 lg:justify-end">
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              {CONTACT_EMAIL}
+            </a>
+            <a
+              href={SAHAR_WEBSITE_URL}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              saharstudio.com
+            </a>
+            <a
+              href={LINKEDIN_URL}
+              className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
+            >
+              LinkedIn
+            </a>
+          </div>
         </div>
       </footer>
     </main>
