@@ -41,6 +41,18 @@ type CheckoutResponse = {
 };
 
 type FirstReadCopy = (typeof siteI18n.siteCopy)[SiteLocale]["firstRead"];
+type PromoPreview = {
+  code: string;
+  discountPercent: number;
+};
+type PromoPreviewResponse = {
+  ok: boolean;
+  valid?: boolean;
+  promoCode?: string;
+  discountPercent?: number;
+  error?: string;
+  detail?: string;
+};
 
 // ---------------------------------------------------------------------------
 // Scanner taxonomy lives in src/lib/score-band.ts. This component only imports
@@ -177,6 +189,13 @@ const terminalText: React.CSSProperties = {
   color: COLOR.textMuted,
 };
 
+const REPORT_PRICE_USD_CENTS = 19_700;
+
+function formatUsd(cents: number) {
+  const dollars = cents / 100;
+  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}
+
 // ---------------------------------------------------------------------------
 
 export default function FirstReadExperience({ locale }: { locale: SiteLocale }) {
@@ -188,6 +207,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [url, setUrl] = useState(() => searchParams.get("url") || "");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [promoCode, setPromoCode] = useState("");
+  const [promoPreview, setPromoPreview] = useState<PromoPreview | null>(null);
+  const [promoStatus, setPromoStatus] = useState<"idle" | "checking" | "applied" | "invalid">("idle");
+  const [promoMessage, setPromoMessage] = useState("");
   const [status, setStatus] = useState<string>(copy.statusInitial);
   const [pdfEmailStatus, setPdfEmailStatus] = useState("");
   const [error, setError] = useState("");
@@ -215,6 +237,24 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const nextMoveParagraphs = buildNextMoveCliffhanger(result, locale);
   const localizedFullReportIncludes = fullReportIncludesForLocale(locale);
   const localizedRefundLine = refundLineForLocale(locale);
+  const discountPercent = promoPreview?.discountPercent ?? 0;
+  const discountUsdCents = Math.round(REPORT_PRICE_USD_CENTS * (discountPercent / 100));
+  const amountDueUsdCents = Math.max(0, REPORT_PRICE_USD_CENTS - discountUsdCents);
+  const hasAppliedPromo = promoStatus === "applied" && Boolean(promoPreview);
+  const checkoutButtonLabel = isOpeningCheckout
+    ? (copy.checkoutBusy ?? "Opening checkout...")
+    : hasAppliedPromo && amountDueUsdCents === 0
+      ? (copy.promoFreeCta ?? "Open full report — $0")
+      : hasAppliedPromo
+        ? `${copy.promoPayCta ?? "Pay today"} — ${formatUsd(amountDueUsdCents)}`
+        : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197");
+
+  function handlePromoCodeChange(value: string) {
+    setPromoCode(value.toUpperCase());
+    setPromoPreview(null);
+    setPromoStatus("idle");
+    setPromoMessage("");
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -383,6 +423,54 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       );
     } finally {
       setIsOpeningCheckout(false);
+    }
+  }
+
+  async function handleApplyPromo() {
+    const code = promoCode.trim();
+    if (!code) {
+      setPromoPreview(null);
+      setPromoStatus("invalid");
+      setPromoMessage(copy.promoEmpty ?? "Enter a promo code first.");
+      return;
+    }
+
+    setPromoStatus("checking");
+    setPromoMessage("");
+
+    try {
+      const response = await fetch("/api/promo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ promoCode: code }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as PromoPreviewResponse;
+
+      if (!response.ok || !payload.valid || !payload.promoCode || !payload.discountPercent) {
+        throw new Error(payload.detail || payload.error || copy.promoInvalid || "Promo code is not valid.");
+      }
+
+      setPromoPreview({
+        code: payload.promoCode,
+        discountPercent: payload.discountPercent,
+      });
+      setPromoCode(payload.promoCode);
+      setPromoStatus("applied");
+      setPromoMessage(
+        (copy.promoApplied ?? "{code} applied. {percent}% discount added.")
+          .replace("{code}", payload.promoCode)
+          .replace("{percent}", String(payload.discountPercent)),
+      );
+    } catch (promoError) {
+      setPromoPreview(null);
+      setPromoStatus("invalid");
+      setPromoMessage(
+        promoError instanceof Error
+          ? promoError.message
+          : copy.promoInvalid || "Promo code is not valid.",
+      );
     }
   }
 
@@ -1012,10 +1100,18 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 <div
                   className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
                   style={{
-                    borderColor: promoCode.trim()
-                      ? "rgba(212,196,220,0.48)"
-                      : "rgba(255,255,255,0.16)",
-                    background: "rgba(255,255,255,0.018)",
+                    borderColor:
+                      promoStatus === "applied"
+                        ? "rgba(111,224,194,0.44)"
+                        : promoStatus === "invalid"
+                          ? "rgba(224,122,95,0.54)"
+                          : promoCode.trim()
+                            ? "rgba(212,196,220,0.48)"
+                            : "rgba(255,255,255,0.16)",
+                    background:
+                      promoStatus === "applied"
+                        ? "rgba(111,224,194,0.055)"
+                        : "rgba(255,255,255,0.018)",
                   }}
                 >
                   <span
@@ -1034,7 +1130,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     type="text"
                     autoComplete="off"
                     value={promoCode}
-                    onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
+                    onChange={(event) => handlePromoCodeChange(event.target.value)}
                     placeholder={copy.promoPlaceholder ?? "OPTIONAL"}
                     className="min-w-0 flex-1 bg-transparent uppercase outline-none"
                     style={{
@@ -1045,6 +1141,96 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       letterSpacing: "0.06em",
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={promoStatus === "checking" || promoStatus === "applied"}
+                    className="shrink-0 rounded-full px-3 py-1.5 transition disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{
+                      ...metaLabel,
+                      background: "rgba(212,196,220,0.12)",
+                      color: COLOR.text,
+                      fontSize: "9px",
+                      letterSpacing: "0.18em",
+                    }}
+                  >
+                    {promoStatus === "checking"
+                      ? (copy.promoChecking ?? "Checking").toUpperCase()
+                      : promoStatus === "applied"
+                        ? (copy.promoAppliedButton ?? "Applied").toUpperCase()
+                      : (copy.promoApply ?? "Apply").toUpperCase()}
+                  </button>
+                </div>
+                {promoMessage ? (
+                  <p
+                    className="leading-5"
+                    style={{
+                      color: promoStatus === "invalid" ? "#E07A5F" : "#6FE0C2",
+                      fontSize: "12.5px",
+                    }}
+                  >
+                    {promoMessage}
+                  </p>
+                ) : null}
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{
+                    borderColor: hasAppliedPromo
+                      ? "rgba(111,224,194,0.2)"
+                      : "rgba(255,255,255,0.1)",
+                    background: hasAppliedPromo
+                      ? "linear-gradient(135deg, rgba(111,224,194,0.07), rgba(212,196,220,0.04))"
+                      : "rgba(255,255,255,0.016)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span style={{ color: COLOR.textMuted, fontSize: "13px" }}>
+                      {copy.promoSubtotal ?? "BrandMirror Report"}
+                    </span>
+                    <span
+                      style={{
+                        color: COLOR.text,
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {formatUsd(REPORT_PRICE_USD_CENTS)}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-4">
+                    <span style={{ color: COLOR.textMuted, fontSize: "13px" }}>
+                      {hasAppliedPromo
+                        ? `${copy.promoDiscount ?? "Promo discount"} (${promoPreview?.discountPercent}%)`
+                        : copy.promoDiscount ?? "Promo discount"}
+                    </span>
+                    <span
+                      style={{
+                        color: hasAppliedPromo ? "#6FE0C2" : COLOR.textFaint,
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {hasAppliedPromo ? `-${formatUsd(discountUsdCents)}` : "$0"}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-3 flex items-center justify-between gap-4 border-t pt-3"
+                    style={{ borderColor: COLOR.lineSoft }}
+                  >
+                    <span style={{ ...metaLabel, color: COLOR.text }}>
+                      {(copy.promoDueToday ?? "Due today").toUpperCase()}
+                    </span>
+                    <span
+                      style={{
+                        color: hasAppliedPromo && amountDueUsdCents === 0 ? "#6FE0C2" : COLOR.accent,
+                        fontFamily: "var(--font-cormorant), Georgia, serif",
+                        fontSize: "2rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {formatUsd(amountDueUsdCents)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <a
@@ -1073,9 +1259,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       color: COLOR.text,
                     }}
                   >
-                    {isOpeningCheckout
-                      ? (copy.checkoutBusy ?? "Opening checkout...").toUpperCase()
-                      : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197").toUpperCase()}
+                    {checkoutButtonLabel.toUpperCase()}
                   </button>
                 </div>
               </div>
@@ -1167,9 +1351,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     color: COLOR.text,
                   }}
                 >
-                  {isOpeningCheckout
-                    ? (copy.checkoutBusy ?? "Opening checkout...").toUpperCase()
-                    : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197").toUpperCase()}
+                  {checkoutButtonLabel.toUpperCase()}
                 </button>
               </div>
             </div>
