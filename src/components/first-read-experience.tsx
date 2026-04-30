@@ -1510,7 +1510,9 @@ function ScannerReadout({
     <div
       className={`brandmirror-readout-panel relative overflow-hidden rounded-2xl border p-6 sm:p-8 ${
         mode === "idle" ? "brandmirror-readout-idle" : mode === "ready" ? "brandmirror-readout-ready" : ""
-      } ${mode === "scanning" ? "brandmirror-readout-scanning" : ""}`}
+      } ${mode === "scanning" ? "brandmirror-readout-scanning" : ""} ${
+        showLiveScores ? "brandmirror-readout-live" : ""
+      }`}
       style={{
         borderColor: COLOR.line,
         background: "rgba(255,255,255,0.015)",
@@ -1529,7 +1531,8 @@ function ScannerReadout({
           textTransform: "uppercase",
         }}
       >
-        <span>
+        <span className={showLiveScores ? "brandmirror-live-status" : ""}>
+          {showLiveScores ? <span className="brandmirror-live-dot" aria-hidden /> : null}
           {isLive
             ? scannerCopy.liveScan ?? "LIVE SCAN"
             : mode === "scanning"
@@ -1601,9 +1604,21 @@ function ScannerReadout({
             strokeWidth={13}
             strokeLinecap="round"
             strokeDasharray={`${fill} ${arcLen + 100}`}
-            className={showLiveScores ? "" : "brandmirror-gauge-probe"}
+            className={showLiveScores ? "brandmirror-gauge-live" : "brandmirror-gauge-probe"}
             style={{ transition: "stroke-dasharray 700ms ease, stroke 700ms ease" }}
           />
+          {showLiveScores ? (
+            <path
+              d="M 30 130 A 100 100 0 0 1 230 130"
+              fill="none"
+              stroke="rgba(255,255,255,0.72)"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeDasharray={`18 ${arcLen}`}
+              className="brandmirror-gauge-sweep"
+              aria-hidden
+            />
+          ) : null}
           <text
             x="130"
             y="100"
@@ -1700,9 +1715,9 @@ function ScannerReadout({
                 </div>
                 <div
                   className={`overflow-hidden rounded-full ${
-                    showLiveScores ? "" : "brandmirror-scorebar-idle"
+                    showLiveScores ? "brandmirror-scorebar-live" : "brandmirror-scorebar-idle"
                   }`}
-                  style={{ height: 4, background: "rgba(255,255,255,0.07)" }}
+                  style={{ height: 4, background: "rgba(255,255,255,0.07)", animationDelay: `${idx * 140}ms` }}
                 >
                   <div
                     style={{

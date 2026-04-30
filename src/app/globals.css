@@ -160,17 +160,110 @@ button {
     brandmirrorPanelPulse 1.2s ease-in-out infinite;
 }
 
+.brandmirror-readout-live::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(111, 224, 194, 0.11), transparent 26%),
+    linear-gradient(110deg, transparent 0%, rgba(111, 224, 194, 0.08) 44%, rgba(255, 255, 255, 0.1) 50%, rgba(111, 224, 194, 0.08) 56%, transparent 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.014) 0,
+      rgba(255, 255, 255, 0.014) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  background-size: 100% 100%, 220% 100%, 100% 100%;
+  background-position: 0 0, 150% 0, 0 0;
+  mix-blend-mode: screen;
+  opacity: 0.28;
+  animation:
+    brandmirrorLivePanelSweep 8s ease-in-out infinite,
+    brandmirrorReadoutNoise 7s steps(3, end) infinite;
+}
+
+.brandmirror-hero-live-scan::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(111, 224, 194, 0.12), transparent 28%),
+    linear-gradient(110deg, transparent 0%, rgba(111, 224, 194, 0.08) 44%, rgba(255, 255, 255, 0.12) 50%, rgba(111, 224, 194, 0.08) 56%, transparent 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.014) 0,
+      rgba(255, 255, 255, 0.014) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  background-size: 100% 100%, 230% 100%, 100% 100%;
+  background-position: 0 0, 150% 0, 0 0;
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  animation:
+    brandmirrorLivePanelSweep 8s ease-in-out infinite,
+    brandmirrorReadoutNoise 7s steps(3, end) infinite;
+}
+
+.brandmirror-hero-live-scan > * {
+  position: relative;
+  z-index: 1;
+}
+
+.brandmirror-hero-live-scan .brandmirror-live-status {
+  color: rgba(111, 224, 194, 0.72);
+}
+
+.brandmirror-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+.brandmirror-live-dot {
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 999px;
+  background: #6fe0c2;
+  box-shadow: 0 0 18px rgba(111, 224, 194, 0.72);
+  animation: brandmirrorLiveDot 1.8s ease-in-out infinite;
+}
+
 .brandmirror-scorebar-idle {
   position: relative;
 }
 
-.brandmirror-scorebar-idle::after {
+.brandmirror-scorebar-idle::after,
+.brandmirror-scorebar-live::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent, rgba(111, 224, 194, 0.26), transparent);
   transform: translateX(-120%);
   animation: brandmirrorBarProbe 3.2s ease-in-out infinite;
+}
+
+.brandmirror-scorebar-live {
+  position: relative;
+}
+
+.brandmirror-scorebar-live::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation-duration: 4.8s;
+  animation-delay: inherit;
+}
+
+.brandmirror-gauge-live {
+  filter: drop-shadow(0 0 10px rgba(244, 182, 63, 0.42));
+  animation: brandmirrorGaugeLive 3.8s ease-in-out infinite;
+}
+
+.brandmirror-gauge-sweep {
+  opacity: 0;
+  animation: brandmirrorGaugeSweep 4.8s ease-in-out infinite;
 }
 
 .brandmirror-gauge-probe {
@@ -259,6 +352,33 @@ button {
   }
 }
 
+@keyframes brandmirrorLivePanelSweep {
+  0%,
+  42%,
+  100% {
+    background-position: 0 0, 150% 0, 0 0;
+    opacity: 0.2;
+  }
+
+  64% {
+    background-position: 0 0, -70% 0, 0 0;
+    opacity: 0.34;
+  }
+}
+
+@keyframes brandmirrorLiveDot {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes brandmirrorBarProbe {
   0%,
   62% {
@@ -267,6 +387,34 @@ button {
 
   100% {
     transform: translateX(120%);
+  }
+}
+
+@keyframes brandmirrorGaugeLive {
+  0%,
+  100% {
+    opacity: 0.86;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes brandmirrorGaugeSweep {
+  0%,
+  48% {
+    opacity: 0;
+    stroke-dashoffset: 36;
+  }
+
+  58% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -314;
   }
 }
 
@@ -298,8 +446,14 @@ button {
   .brandmirror-readout-idle::before,
   .brandmirror-readout-ready::before,
   .brandmirror-readout-scanning::before,
+  .brandmirror-readout-live::before,
+  .brandmirror-hero-live-scan::before,
+  .brandmirror-live-dot,
+  .brandmirror-gauge-live,
+  .brandmirror-gauge-sweep,
   .brandmirror-gauge-probe,
   .brandmirror-scorebar-idle::after,
+  .brandmirror-scorebar-live::after,
   .brandmirror-scan-terminal span {
     animation: none !important;
   }

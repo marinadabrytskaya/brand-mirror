@@ -105,14 +105,17 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
     label: liveCopy.rows[index],
   }));
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(111,224,194,0.28)] bg-[#090A0D] p-5 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-7">
+    <div className="brandmirror-hero-live-scan relative overflow-hidden rounded-[2rem] border border-[rgba(111,224,194,0.28)] bg-[#090A0D] p-5 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-7">
       <span className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-[#6FE0C2]/70" />
       <span className="pointer-events-none absolute right-3 top-3 h-3 w-3 border-r border-t border-[#6FE0C2]/70" />
       <span className="pointer-events-none absolute bottom-3 left-3 h-3 w-3 border-b border-l border-[#6FE0C2]/70" />
       <span className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-[#6FE0C2]/70" />
 
       <div className="flex items-center justify-between gap-4 font-mono text-[0.62rem] uppercase tracking-[0.32em] text-[rgba(237,237,242,0.42)]">
-        <span>{liveCopy.status}</span>
+        <span className="brandmirror-live-status">
+          <span className="brandmirror-live-dot" aria-hidden />
+          {liveCopy.status}
+        </span>
         <span>BrandMirror</span>
       </div>
 
@@ -141,6 +144,16 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
             strokeDasharray="214 420"
             strokeLinecap="round"
             strokeWidth="14"
+            className="brandmirror-gauge-live"
+          />
+          <path
+            d="M 30 130 A 100 100 0 0 1 230 130"
+            fill="none"
+            stroke="rgba(255,255,255,0.72)"
+            strokeDasharray="18 314"
+            strokeLinecap="round"
+            strokeWidth="3"
+            className="brandmirror-gauge-sweep"
           />
           <text
             x="130"
@@ -172,7 +185,7 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
       </p>
 
       <div className="mt-8 space-y-3">
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <div
             key={row.label}
             className="grid grid-cols-[minmax(0,6.9rem)_minmax(4rem,1fr)_3.5rem] items-center gap-3 border-t border-[rgba(255,255,255,0.06)] pt-3 sm:grid-cols-[150px_minmax(128px,1fr)_74px] sm:gap-4"
@@ -180,7 +193,7 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
             <span className="truncate font-mono text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[rgba(237,237,242,0.68)] sm:text-[0.82rem] sm:tracking-[0.15em]">
               {row.label}
             </span>
-            <span className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
+            <span className="brandmirror-scorebar-live h-1 overflow-hidden rounded-full bg-white/[0.07]" style={{ animationDelay: `${index * 140}ms` }}>
               <span
                 className="block h-full rounded-full"
                 style={{ width: `${row.value}%`, background: row.color }}
