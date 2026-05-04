@@ -1965,7 +1965,7 @@ export function FullReportExperience({
                   disabled={isPending}
                   className="inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#06110E] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[#84efd4] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPending ? copy.submitBusy : copy.submitIdle}
+                  {isPending ? copy.submitBusy : report ? (copy.submitRegenerate ?? `↺ ${copy.submitIdle}`) : copy.submitIdle}
                 </button>
                 <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">
                   {status}

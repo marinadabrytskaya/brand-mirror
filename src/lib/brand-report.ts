@@ -2230,11 +2230,11 @@ Rules:
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || DEFAULT_MODEL || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL || DEFAULT_MODEL || "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are a competitive intelligence analyst. Return only valid JSON.",
+          content: "You are BrandMirror, a premium brand diagnostic tool with the precision of a sharp editor, not the softness of a consultant. You have already read this brand's website once — now you are writing the deep analysis. Every prose sentence must be specific to THIS brand — if it could appear unchanged in a report about any other company, rewrite it. Forbidden in all prose fields: 'slight', 'somewhat', 'may confuse', 'could benefit from', 'instills confidence', 'reflects expertise', 'compelling narratives', 'impactful', 'holistic', 'leverages', 'synergy', 'appears to', 'seems to', 'could', 'might'. Name specific page elements, specific copy choices, specific visual decisions. Always respond with valid JSON only, no markdown fences.",
         },
         {
           role: "user",
@@ -3679,11 +3679,11 @@ Return JSON with exactly these keys. Do not omit any scorecard item under any ci
     { "label": "Offer specificity", "score": 71, "note": "short note" },
     { "label": "Conversion readiness", "score": 74, "note": "short note" }
   ],
-  "positioningRead": "2-4 sentences, specific and human",
-  "toneCheck": "2-4 sentences, specific and human",
-  "visualIdentityRead": "2-4 sentences, specific and human",
-  "aboveTheFold": "2-4 sentences, specific and human",
-  "conversionRead": "2-4 sentences, specific and human",
+  "positioningRead": "2-4 sentences. State exactly what position this brand occupies and who it is for — quote or paraphrase their actual headline or tagline. Name the competitor set they are entering or ignoring. FORBIDDEN: 'slight disconnect', 'may confuse', 'could benefit from', 'seems to target'.",
+  "toneCheck": "2-4 sentences. Describe the actual voice — give a one-word label and back it with a specific phrase or sentence from their site. Then state whether that voice matches the price point and audience. FORBIDDEN: 'warm and approachable', 'professional yet friendly', 'resonates with', generic AI-visibility opener 'AI visibility also depends on…'.",
+  "visualIdentityRead": "2-4 sentences. Name specific visual choices: typeface style, primary color and what it signals, photography style or illustration style if present. Say whether these choices are consistent across sections or where they break. FORBIDDEN: 'instills confidence', 'reflects expertise', 'polished', 'clean aesthetic', 'visually appealing'.",
+  "aboveTheFold": "2-4 sentences. Describe exactly what a first-time visitor sees before scrolling — the headline, the sub-headline or CTA, any hero image. State the single biggest thing that is missing or wrong above the fold. FORBIDDEN: 'could be improved', 'may sometimes', 'occasionally', vague references to 'the page' without naming the element.",
+  "conversionRead": "2-4 sentences. Name the primary CTA and where it sits. State what friction exists between landing and converting — missing social proof, unclear next step, price visibility, form length. FORBIDDEN: 'user journey', 'seamless experience', 'could be more cohesive', softened friction like 'visitors may hesitate'.",
   "strategicDirection": "2-4 sentences, specific and human",
   "archetypeRead": {
     "primary": "string",

@@ -5,7 +5,7 @@ import { type SiteLocale } from "@/lib/site-i18n";
 import { translateTexts } from "@/lib/text-translate";
 import { scoreBandLabel, bandModifier } from "@/lib/score-band";
 
-export const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+export const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o";
 
 export const VISUAL_WORLDS = [
   "ruler",
@@ -1947,12 +1947,7 @@ function normalizeResult(
         truncate(normalizeWhitespace(data.mismatch || ""), 760) ||
         "Some parts feel polished and confident, while others still feel softer or less sure of themselves.",
       voice:
-        truncate(
-          normalizeWhitespace(
-            [data.voice || "", aiVisibilityNote].filter(Boolean).join(" "),
-          ),
-          900,
-        ) ||
+        truncate(normalizeWhitespace(data.voice || ""), 900) ||
         "AI visibility is directionally strong, but the brand still needs clearer machine-readable signals and more explicit category language.",
       direction:
         truncate(normalizeWhitespace(data.direction || ""), 900) ||
@@ -2018,14 +2013,7 @@ async function requestGeminiBrandRead(
       visualCredibility: benchmarkedScores.visualCredibility,
       offerSpecificity: benchmarkedScores.offerSpecificity,
       conversionReadiness: benchmarkedScores.conversionReadiness,
-      voice: truncate(
-        normalizeWhitespace(
-          [heuristic.voice, buildAiVisibilityTechnicalNote(aeoAudit)]
-            .filter(Boolean)
-            .join(" "),
-        ),
-        900,
-      ),
+      voice: truncate(normalizeWhitespace(heuristic.voice || ""), 900),
     }, inferCategoryLens(websiteContext));
   }
 
@@ -2145,30 +2133,30 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
   "title": "poster title",
   "genre": "poster genre, ideally 2-4 words",
   "tagline": "short elegant tagline, ideally 6-12 words",
-  "whatItDoes": "1-2 plain-language sentences explaining what the company appears to do and for whom",
-  "summary": "2 concise sentences in the requested language",
-  "current": "what the brand currently signals, 4-6 sentences",
-  "strength": "what already feels strong or convincing, 3-5 sentences",
-  "gap": "what is missing or unclear, 4-6 sentences",
-  "mismatch": "where the brand feels slightly out of sync with itself, 3-5 sentences",
-  "voice": "AI visibility assessment: combine recommendation readiness with technical AEO readiness — check for structured data, clear meta descriptions, natural-language descriptions, FAQ presence, AI crawler access, llms.txt if present, and consistent naming. 4-6 sentences",
-  "direction": "what to do next, 4-6 sentences",
-  "amplify": "what to lean into more, 3-5 sentences",
-  "drop": "what to reduce, simplify, or remove, 3-5 sentences",
+  "whatItDoes": "1-2 plain-language sentences: the category, the buyer, and the deliverable. Not a sales pitch — a plain description a stranger could repeat. 'X is a Y studio that does Z for W' is the right structure.",
+  "summary": "2 sentences describing what this company does and the first impression it makes — not a sales pitch. State the category and the buyer plainly. FORBIDDEN: 'compelling narratives', 'capture attention', 'strategic clarity' as filler, any sentence that sounds like it came from the company's own About page.",
+  "current": "What a first-time visitor sees and feels on this homepage — describe the specific design choices and the commercial promise they imply, then state whether the copy honours or undercuts that promise. 4-6 sentences. FORBIDDEN: 'slight disconnect', 'may confuse', 'could benefit from', 'signals strong focus on', any sentence starting with 'However'. Write in declarative statements: the design does X, the copy does Y, they match or they do not.",
+  "strength": "What is already doing real commercial work — name specific elements: a typography choice, a layout decision, a copy line, a structural choice. Not 'the visuals are polished' — say which specific element is working and what it earns from the visitor. 3-5 sentences. FORBIDDEN: 'instills confidence in potential clients', 'reflects expertise', 'reflects a strong understanding of brand aesthetics', 'polished' as a standalone description.",
+  "gap": "The exact thing that is missing — name the specific page element and what it should do instead. Not 'the offer could be clearer' — say 'the first headline does not name who this is for' or 'there is no visible price anchor'. Every sentence must pass this test: can the owner open their homepage right now and immediately see the problem described? 4-6 sentences. FORBIDDEN: 'could be improved', 'may sometimes', 'might benefit', 'occasionally drift', 'could lead to'.",
+  "mismatch": "Name two specific things that are out of sync — what the design implies versus where the copy fails to match it. Not 'there is a slight dissonance' — say 'the visual system implies X but the copy delivers Y'. 3-5 sentences. FORBIDDEN: 'slight dissonance', 'could be more cohesive', 'slight', 'execution could', 'dilute the overall impact'.",
+  "voice": "What ChatGPT or Perplexity would actually say about THIS brand if someone asked — would it surface at all, get the category right, name the offer accurately? Name the specific technical signals that are present or missing on this site: schema blocks, meta description quality, FAQ presence, category nouns, consistent naming. 4-6 sentences. DO NOT describe what AI visibility is in general — assess this brand specifically. FORBIDDEN: starting a sentence with 'AI visibility also depends on' as a generic statement.",
+  "direction": "The two or three most specific actions that would move the score fastest — name the page element, the change, and the reason. Not 'refine the messaging' — say 'rewrite the hero headline to name the buyer and the outcome in one line'. 4-6 sentences.",
+  "amplify": "What to keep and build on — name the specific elements worth protecting and why. Not 'the visual identity is strong' — say which design choice is doing commercial work. 3-5 sentences.",
+  "drop": "What to remove or stop doing — name the specific pattern, copy habit, or structural choice that is weakening the brand. Not 'reduce vague language' — say 'remove the opening paragraph that describes the process before it names the result'. 3-5 sentences.",
   "positioningClarity": 72,
   "toneCoherence": 74,
   "visualCredibility": 84,
   "offerSpecificity": 68,
   "conversionReadiness": 72,
-  "strongestSignal": "one precise sentence in the requested language",
-  "mainFriction": "one precise sentence in the requested language",
-  "nextMove": "one precise sentence in the requested language"
+  "strongestSignal": "one sentence naming the specific thing that is already working commercially — name the design choice, copy decision, or structural element. Not 'the brand looks strong' — say what exactly is working.",
+  "mainFriction": "one sentence naming the exact friction point — the specific page element or copy failure that is costing the most trust or conversions. Name it. Do not soften it.",
+  "nextMove": "one sentence: the single most impactful action the owner could take this week — specific enough to act on without a meeting."
 }
 `;
 
   // Retry helper for OpenAI API calls
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const model = process.env.OPENAI_MODEL || "gpt-4o";
 
   async function attemptOpenAICall(retries: number): Promise<Response> {
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -2190,7 +2178,7 @@ Return JSON with exactly these keys. Do not omit any of the five scores under an
               messages: [
                 {
                   role: "system",
-                  content: "You are a brand strategist. Always respond with valid JSON only, no markdown fences.",
+                  content: "You are BrandMirror, a premium brand diagnostic tool with the precision of a sharp editor, not the softness of a consultant. Every prose sentence must be specific to THIS brand — if the sentence could appear unchanged in a report about any other company, rewrite it. Forbidden in all prose fields: 'slight', 'somewhat', 'may confuse', 'could benefit from', 'instills confidence', 'reflects expertise', 'compelling narratives', 'impactful', 'holistic', 'leverages', 'synergy'. Always respond with valid JSON only, no markdown fences.",
                 },
                 {
                   role: "user",
