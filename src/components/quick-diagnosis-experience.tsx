@@ -146,14 +146,14 @@ export function QuickDiagnosisExperience({
         setStatus(
           locale === "ru"
             ? emailSent
-              ? "Quick Diagnosis готов. Мы также отправили ссылку на email."
+              ? "Quick Diagnosis готов. Мы также отправили PDF и ссылку на email."
               : "Quick Diagnosis готов."
             : locale === "es"
               ? emailSent
-                ? "Quick Diagnosis listo. También enviamos el enlace por email."
+                ? "Quick Diagnosis listo. También enviamos el PDF y el enlace por email."
                 : "Quick Diagnosis listo."
               : emailSent
-                ? "Quick Diagnosis ready. We also emailed you the access link."
+                ? "Quick Diagnosis ready. We also emailed you the PDF and access link."
                 : "Quick Diagnosis ready.",
         );
       } catch (requestError) {

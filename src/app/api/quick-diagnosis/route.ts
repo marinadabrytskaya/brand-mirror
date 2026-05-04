@@ -8,6 +8,7 @@ import { isReportEmailConfigured, sendQuickDiagnosisEmail } from "@/lib/report-e
 import { verifyPromoToken } from "@/lib/promo";
 import { canAccessBrandMirrorProduct } from "@/lib/products";
 import { buildReportAccessUrl } from "@/lib/report-access-url";
+import { generateQuickDiagnosisPdf } from "@/lib/quick-diagnosis-pdf";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -114,19 +115,24 @@ export async function POST(request: Request) {
       });
 
       const delivery = isReportEmailConfigured()
-        ? await sendQuickDiagnosisEmail({
-            to: paidEmail,
-            report,
-            locale: paidLocale,
-            reportUrl: reportAccessUrl,
-            fullReportUrl: fullReportUrl.toString(),
-          }).catch((emailSendError) => ({
-            status: "failed" as const,
-            error:
-              emailSendError instanceof Error
-                ? emailSendError.message
-                : "Unable to email the quick diagnosis.",
-          }))
+        ? await generateQuickDiagnosisPdf(report, paidLocale)
+            .then((pdf) =>
+              sendQuickDiagnosisEmail({
+                to: paidEmail,
+                report,
+                locale: paidLocale,
+                reportUrl: reportAccessUrl,
+                fullReportUrl: fullReportUrl.toString(),
+                pdf,
+              }),
+            )
+            .catch((emailSendError) => ({
+              status: "failed" as const,
+              error:
+                emailSendError instanceof Error
+                  ? emailSendError.message
+                  : "Unable to email the quick diagnosis.",
+            }))
         : { status: "skipped" as const, reason: "not_configured" as const };
 
       emailStatus = delivery.status;

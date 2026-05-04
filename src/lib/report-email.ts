@@ -82,10 +82,10 @@ function htmlFor(report: BrandReport, locale: SiteLocale, reportUrl?: string | n
 function quickDiagnosisHtmlFor(report: BrandReport, locale: SiteLocale, reportUrl: string, fullReportUrl: string) {
   const intro =
     locale === "ru"
-      ? "Ваш BrandMirror Quick Diagnosis готов. Ссылка ниже вернёт вас к этому диагнозу."
+      ? "Ваш BrandMirror Quick Diagnosis готов. PDF прикреплён к письму, а ссылка ниже вернёт вас к диагнозу онлайн."
       : locale === "es"
-        ? "Tu BrandMirror Quick Diagnosis está listo. El enlace de abajo te devuelve a este diagnóstico."
-        : "Your BrandMirror Quick Diagnosis is ready. The link below brings you back to this diagnosis.";
+        ? "Tu BrandMirror Quick Diagnosis está listo. El PDF está adjunto y el enlace de abajo te devuelve al diagnóstico online."
+        : "Your BrandMirror Quick Diagnosis is ready. The PDF is attached, and the link below brings you back to the online diagnosis.";
 
   const firstFix =
     locale === "ru"
@@ -115,6 +115,13 @@ function quickDiagnosisHtmlFor(report: BrandReport, locale: SiteLocale, reportUr
         ? "Si el problema es más profundo, el reporte completo muestra los 5 deep dives, competitor intelligence, commercial impact, brand brief e implementation playbook."
         : "If the issue runs deeper, the full report gives you all 5 deep dives, competitor intelligence, commercial impact, brand brief, and implementation playbook.";
 
+  const saharText =
+    locale === "ru"
+      ? "Если хотите, SAHAR может взять эти замечания и внедрить их: позиционирование, offer language, AI visibility signals, структуру сайта, proof, messaging и CTA flow."
+      : locale === "es"
+        ? "Si quieres, SAHAR puede convertir estos hallazgos en cambios reales: posicionamiento, oferta, señales para IA, estructura web, prueba, mensajes y CTA flow."
+        : "If you want help implementing the fixes, SAHAR can turn these findings into visible changes: positioning, offer language, AI visibility signals, website structure, proof, messaging, and CTA flow.";
+
   return `
     <div style="font-family: Arial, sans-serif; color: #111; line-height: 1.55;">
       <p>${intro}</p>
@@ -127,6 +134,7 @@ function quickDiagnosisHtmlFor(report: BrandReport, locale: SiteLocale, reportUr
         </a>
       </p>
       <p>${escapeHtml(fullText)}</p>
+      <p>${escapeHtml(saharText)}</p>
       <p style="margin: 18px 0;">
         <a href="${escapeHtml(fullReportUrl)}" style="color: #111; font-weight: 700;">
           ${escapeHtml(fullButton)}
@@ -250,17 +258,22 @@ export async function sendQuickDiagnosisEmail({
   locale,
   reportUrl,
   fullReportUrl,
+  pdf,
 }: {
   to: string;
   report: BrandReport;
   locale: SiteLocale;
   reportUrl: string;
   fullReportUrl: string;
+  pdf: Buffer;
 }): Promise<ReportEmailResult> {
+  const filename = `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-quick-diagnosis.pdf`;
   return sendEmail({
     to,
     subject: quickDiagnosisSubjectFor(report, locale),
     html: quickDiagnosisHtmlFor(report, locale, reportUrl, fullReportUrl),
+    filename,
+    pdf,
   });
 }
 
