@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import LanguageSwitcher from "@/components/language-switcher";
@@ -83,6 +83,15 @@ export function QuickDiagnosisExperience({
   );
   const [error, setError] = useState(accessError);
   const [isPending, startTransition] = useTransition();
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const prevReportRef = useRef<BrandReport | null>(null);
+
+  useEffect(() => {
+    if (report && !prevReportRef.current && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    prevReportRef.current = report;
+  }, [report]);
 
   function handleGenerate(nextUrl?: string) {
     const targetUrl = (nextUrl ?? url).trim();
@@ -224,7 +233,7 @@ export function QuickDiagnosisExperience({
               disabled={isPending}
               className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[rgba(233,239,248,0.96)] px-5 py-3 text-sm font-medium text-[#151b28] disabled:opacity-60"
             >
-              {isPending ? "Generating..." : "Regenerate Quick Diagnosis"}
+              {isPending ? "Generating..." : report ? "Regenerate Quick Diagnosis" : "Generate Quick Diagnosis"}
             </button>
             {status ? (
               <p className="mt-5 text-sm leading-6 text-[color:var(--foreground-soft)]">
@@ -286,6 +295,26 @@ export function QuickDiagnosisExperience({
                   ))}
                 </div>
               </>
+            ) : isPending ? (
+              <div className="min-h-[28rem] rounded-[1.5rem] border border-[color:var(--line)] p-8">
+                <p className="section-label opacity-60">Generating…</p>
+                <div className="mt-6 space-y-3">
+                  <div className="h-3 animate-pulse rounded-full bg-[rgba(237,237,242,0.08)]" style={{ width: "55%" }} />
+                  <div className="h-3 animate-pulse rounded-full bg-[rgba(237,237,242,0.06)]" style={{ width: "75%" }} />
+                  <div className="h-3 animate-pulse rounded-full bg-[rgba(237,237,242,0.04)]" style={{ width: "40%" }} />
+                </div>
+                <div className="mt-10 space-y-5">
+                  {[62, 78, 55, 83, 70].map((w, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_auto] gap-5 items-center">
+                      <div className="space-y-2">
+                        <div className="h-2 animate-pulse rounded-full bg-[rgba(237,237,242,0.08)]" style={{ width: `${w}%` }} />
+                        <div className="h-1.5 animate-pulse rounded-full bg-[rgba(237,237,242,0.05)]" />
+                      </div>
+                      <div className="h-9 w-12 animate-pulse rounded bg-[rgba(237,237,242,0.08)]" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               <div className="min-h-[28rem] rounded-[1.5rem] border border-[color:var(--line)] p-8">
                 <p className="section-label">BrandMirror</p>
@@ -299,7 +328,7 @@ export function QuickDiagnosisExperience({
 
         {report ? (
           <>
-            <section className="editorial-rule py-12">
+            <section ref={resultsRef} className="editorial-rule py-12">
               <p className="section-label">Website Evidence</p>
               <div className="mt-8 grid gap-5 md:grid-cols-2">
                 {evidence.map((item) => (
@@ -371,7 +400,7 @@ export function QuickDiagnosisExperience({
 
             <section className="editorial-rule flex flex-col gap-5 py-12 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="section-label">$197 Full Report</p>
+                <p className="section-label">$149 Full Report</p>
                 <h2 className="mt-3 font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)]">
                   Need the full blueprint?
                 </h2>
