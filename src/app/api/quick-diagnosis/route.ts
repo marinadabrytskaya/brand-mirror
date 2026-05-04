@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { generateBrandReport, generateBrandReportPdf } from "@/lib/brand-report";
+import { generateBrandReport } from "@/lib/brand-report";
 import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
 import { savePaidReport } from "@/lib/supabase";
-import { isReportEmailConfigured, sendBrandReportEmail } from "@/lib/report-email";
 import { verifyPromoToken } from "@/lib/promo";
 import { canAccessBrandMirrorProduct } from "@/lib/products";
 
@@ -34,18 +33,18 @@ export async function POST(request: Request) {
     if ((isPaystackConfigured() || isStripeConfigured()) && !paidAccess) {
       return NextResponse.json(
         {
-          error: "Full report is locked until payment is confirmed.",
-          detail: "Complete checkout to unlock the paid BrandMirror report.",
+          error: "Quick Diagnosis is locked until payment is confirmed.",
+          detail: "Complete checkout to unlock the $67 BrandMirror Quick Diagnosis.",
         },
         { status: 403 },
       );
     }
 
-    if (paidAccess && !canAccessBrandMirrorProduct(paidAccess.product, "full_report")) {
+    if (paidAccess && !canAccessBrandMirrorProduct(paidAccess.product, "quick_diagnosis")) {
       return NextResponse.json(
         {
-          error: "Full report is locked until full report payment is confirmed.",
-          detail: "This checkout unlocks Quick Diagnosis, not the $197 Full Report.",
+          error: "Quick Diagnosis is locked for this checkout.",
+          detail: "This checkout does not unlock BrandMirror Quick Diagnosis.",
         },
         { status: 403 },
       );
@@ -61,8 +60,6 @@ export async function POST(request: Request) {
       paidAccess?.reportUrl || body.url || "",
       paidLocale,
     );
-    let emailStatus: "pending" | "sent" | "skipped" | "failed" = "skipped";
-    let emailError: string | null = null;
 
     if (provider && paymentReference && paidEmail) {
       await savePaidReport({
@@ -74,48 +71,12 @@ export async function POST(request: Request) {
         amountTotal: paidAccess?.amountTotal ?? null,
         currency: paidAccess?.currency ?? null,
         report,
-        emailStatus: "pending",
+        emailStatus: "skipped",
+        emailError: "quick_diagnosis_no_pdf",
         dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
         marketingConsent: paidAccess?.marketingConsent ?? false,
       }).catch((saveError) => {
-        console.warn("Unable to save paid report before email", saveError);
-      });
-
-      const delivery = isReportEmailConfigured()
-        ? await generateBrandReportPdf(report, paidLocale)
-            .then((pdf) => sendBrandReportEmail({ to: paidEmail, report, locale: paidLocale, pdf }))
-            .catch((emailSendError) => ({
-              status: "failed" as const,
-              error:
-                emailSendError instanceof Error
-                  ? emailSendError.message
-                  : "Unable to email the report.",
-            }))
-        : { status: "skipped" as const, reason: "not_configured" as const };
-
-      emailStatus = delivery.status;
-      emailError =
-        delivery.status === "failed"
-          ? delivery.error
-          : delivery.status === "skipped"
-            ? delivery.reason
-            : null;
-
-      await savePaidReport({
-        email: paidEmail,
-        url: report.url,
-        locale: paidLocale,
-        provider,
-        paymentReference,
-        amountTotal: paidAccess?.amountTotal ?? null,
-        currency: paidAccess?.currency ?? null,
-        report,
-        emailStatus,
-        emailError,
-        dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
-        marketingConsent: paidAccess?.marketingConsent ?? false,
-      }).catch((saveError) => {
-        console.warn("Unable to save paid report after email", saveError);
+        console.warn("Unable to save quick diagnosis", saveError);
       });
     }
 
@@ -123,18 +84,18 @@ export async function POST(request: Request) {
       ok: true,
       report,
       delivery: {
-        emailStatus,
-        emailError,
+        emailStatus: "skipped",
+        emailError: "quick_diagnosis_no_pdf",
       },
     });
   } catch (error) {
     return NextResponse.json(
       {
-        error: "Unable to generate the full BrandMirror report right now.",
+        error: "Unable to generate the BrandMirror Quick Diagnosis right now.",
         detail:
           error instanceof Error
             ? error.message
-            : "Something went wrong while generating the report.",
+            : "Something went wrong while generating the quick diagnosis.",
       },
       { status: 500 },
     );

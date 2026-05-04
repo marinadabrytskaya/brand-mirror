@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateBrandRead } from "@/lib/brand-read";
 import { getSiteLocale } from "@/lib/site-i18n";
-import { normalizeCustomerEmail } from "@/lib/customer-email";
-import { hasDataProcessingConsent, hasMarketingConsent } from "@/lib/customer-consent";
-import { saveFirstReadLead } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,39 +14,9 @@ export async function POST(request: Request) {
       dataProcessingConsent?: boolean;
       marketingConsent?: boolean;
     };
-    const email = normalizeCustomerEmail(body.email);
-    if (!email) {
-      return NextResponse.json(
-        {
-          error: "Email is required before the free report.",
-          detail: "Enter a valid email address to receive your BrandMirror report.",
-        },
-        { status: 400 },
-      );
-    }
-    const dataProcessingConsent = hasDataProcessingConsent(body.dataProcessingConsent);
-    if (!dataProcessingConsent) {
-      return NextResponse.json(
-        {
-          error: "Data processing consent is required before the free report.",
-          detail: "Please agree to data processing so we can generate and send your report.",
-        },
-        { status: 400 },
-      );
-    }
 
     const locale = getSiteLocale(body.language);
     const payload = await generateBrandRead(body.url || "", locale);
-    await saveFirstReadLead({
-      email,
-      url: payload.url,
-      locale,
-      result: payload.result,
-      dataProcessingConsent,
-      marketingConsent: hasMarketingConsent(body.marketingConsent),
-    }).catch((saveError) => {
-      console.warn("Unable to save first read lead", saveError);
-    });
 
     return NextResponse.json({
       ok: true,

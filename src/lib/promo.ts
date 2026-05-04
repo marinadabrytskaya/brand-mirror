@@ -4,6 +4,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { normalizeUrl } from "@/lib/brand-read";
 import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { getSiteLocale, type SiteLocale } from "@/lib/site-i18n";
+import { type BrandMirrorProduct, getBrandMirrorProduct } from "@/lib/products";
 
 const PROMO_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -23,6 +24,7 @@ export type PromoAccess = {
   promoCode: string;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
+  product: BrandMirrorProduct;
 };
 
 function base64url(input: string | Buffer) {
@@ -77,6 +79,7 @@ export function createPromoToken({
   locale,
   email,
   promoCode,
+  product,
   dataProcessingConsent,
   marketingConsent,
 }: {
@@ -84,6 +87,7 @@ export function createPromoToken({
   locale: SiteLocale;
   email: string;
   promoCode: string;
+  product?: BrandMirrorProduct;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
 }) {
@@ -100,6 +104,7 @@ export function createPromoToken({
       locale,
       email: normalizedEmail,
       code: normalizePromoCode(promoCode),
+      product: getBrandMirrorProduct(product),
       dataProcessingConsent,
       marketingConsent,
       exp: Date.now() + PROMO_TOKEN_TTL_MS,
@@ -132,6 +137,7 @@ export function verifyPromoToken(token?: string | null): PromoAccess | null {
         locale?: string;
         email?: string;
         code?: string;
+        product?: string;
         dataProcessingConsent?: boolean;
         marketingConsent?: boolean;
         exp?: number;
@@ -158,5 +164,6 @@ export function verifyPromoToken(token?: string | null): PromoAccess | null {
     promoCode: decoded.code,
     dataProcessingConsent: decoded.dataProcessingConsent === true,
     marketingConsent: decoded.marketingConsent === true,
+    product: getBrandMirrorProduct(decoded.product),
   };
 }

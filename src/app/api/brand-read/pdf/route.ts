@@ -24,7 +24,8 @@ import {
   refundLineForLocale,
 } from "@/lib/free-report-copy";
 import { sendBrandReadEmail } from "@/lib/report-email";
-import { hasDataProcessingConsent } from "@/lib/customer-consent";
+import { hasDataProcessingConsent, hasMarketingConsent } from "@/lib/customer-consent";
+import { saveFirstReadLead } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -1103,6 +1104,7 @@ async function parseRequestBody(request: Request): Promise<{
   email?: string;
   delivery?: "download" | "email";
   dataProcessingConsent?: boolean;
+  marketingConsent?: boolean;
 }> {
   const contentType = request.headers.get("content-type") || "";
 
@@ -1114,6 +1116,7 @@ async function parseRequestBody(request: Request): Promise<{
       email?: string;
       delivery?: "download" | "email";
       dataProcessingConsent?: boolean;
+      marketingConsent?: boolean;
     };
   }
 
@@ -1130,6 +1133,7 @@ async function parseRequestBody(request: Request): Promise<{
     const rawEmail = form.get("email");
     const rawDelivery = form.get("delivery");
     const rawDataProcessingConsent = form.get("dataProcessingConsent");
+    const rawMarketingConsent = form.get("marketingConsent");
 
     return {
       url: typeof rawUrl === "string" ? rawUrl : undefined,
@@ -1141,6 +1145,7 @@ async function parseRequestBody(request: Request): Promise<{
       email: typeof rawEmail === "string" ? rawEmail : undefined,
       delivery: rawDelivery === "email" ? "email" : undefined,
       dataProcessingConsent: hasDataProcessingConsent(rawDataProcessingConsent),
+      marketingConsent: hasMarketingConsent(rawMarketingConsent),
     };
   }
 
@@ -1152,25 +1157,23 @@ export async function POST(request: Request) {
     const body = await parseRequestBody(request);
     const language = getSiteLocale(body.language);
     const email = normalizeCustomerEmail(body.email);
-    if (body.delivery === "email") {
-      if (!email) {
-        return Response.json(
-          {
-            error: "Email is required before sending the PDF.",
-            detail: "Enter a valid email address to receive your BrandMirror PDF.",
-          },
-          { status: 400 },
-        );
-      }
-      if (!hasDataProcessingConsent(body.dataProcessingConsent)) {
-        return Response.json(
-          {
-            error: "Data processing consent is required before sending the PDF.",
-            detail: "Please agree to data processing so we can email your BrandMirror PDF.",
-          },
-          { status: 400 },
-        );
-      }
+    if (!email) {
+      return Response.json(
+        {
+          error: "Email is required before exporting the PDF.",
+          detail: "Enter a valid email address to receive or download your BrandMirror PDF.",
+        },
+        { status: 400 },
+      );
+    }
+    if (!hasDataProcessingConsent(body.dataProcessingConsent)) {
+      return Response.json(
+        {
+          error: "Data processing consent is required before exporting the PDF.",
+          detail: "Please agree to data processing so we can prepare your BrandMirror PDF.",
+        },
+        { status: 400 },
+      );
     }
 
     const payload =
@@ -1181,7 +1184,7 @@ export async function POST(request: Request) {
     const origin = new URL(request.url).origin;
     const fullReportUrl = new URL("/first-read", origin);
     fullReportUrl.searchParams.set("url", payload.url);
-    if (email) fullReportUrl.searchParams.set("email", email);
+    fullReportUrl.searchParams.set("email", email);
     fullReportUrl.searchParams.set("lang", language);
     fullReportUrl.hash = "unlock-full-report";
 
@@ -1194,6 +1197,17 @@ export async function POST(request: Request) {
       language,
       fullReportUrl.toString(),
     );
+
+    await saveFirstReadLead({
+      email,
+      url: payload.url,
+      locale: language,
+      result: payload.result,
+      dataProcessingConsent: true,
+      marketingConsent: hasMarketingConsent(body.marketingConsent),
+    }).catch((saveError) => {
+      console.warn("Unable to save first read lead from PDF request", saveError);
+    });
 
     if (body.delivery === "email") {
       const deliveryEmail = email;

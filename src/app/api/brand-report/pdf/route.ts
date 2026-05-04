@@ -8,6 +8,7 @@ import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
 import { verifyPromoToken } from "@/lib/promo";
+import { canAccessBrandMirrorProduct } from "@/lib/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,6 +84,21 @@ export async function POST(request: Request) {
         JSON.stringify({
           error: "Full report PDF is locked until payment is confirmed.",
           detail: "Complete checkout or use a valid promo code before exporting the full report PDF.",
+        }),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    }
+
+    if (!canAccessBrandMirrorProduct(paidAccess.product, "full_report")) {
+      return new Response(
+        JSON.stringify({
+          error: "Full report PDF is locked until full report payment is confirmed.",
+          detail: "This checkout unlocks Quick Diagnosis, not the $197 Full Report.",
         }),
         {
           status: 403,

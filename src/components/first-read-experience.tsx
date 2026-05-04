@@ -189,7 +189,28 @@ const terminalText: React.CSSProperties = {
   color: COLOR.textMuted,
 };
 
-const REPORT_PRICE_USD_CENTS = 19_700;
+const CHECKOUT_PRODUCTS = {
+  quick_diagnosis: {
+    label: "LAUNCH PRICE $67",
+    regularLabel: "$97",
+    subtotal: "BrandMirror Quick Diagnosis",
+    usdCents: 6_700,
+    regularUsdCents: 9_700,
+    idleCta: "Unlock Quick Diagnosis — $67",
+    freeCta: "Open Quick Diagnosis — $0",
+  },
+  full_report: {
+    label: "LAUNCH PRICE $149",
+    regularLabel: "$197",
+    subtotal: "BrandMirror Full Report",
+    usdCents: 14_900,
+    regularUsdCents: 19_700,
+    idleCta: "Unlock Full Report — $149",
+    freeCta: "Open full report — $0",
+  },
+} as const;
+
+type CheckoutProduct = keyof typeof CHECKOUT_PRODUCTS;
 
 function formatUsd(cents: number) {
   const dollars = cents / 100;
@@ -204,6 +225,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
     locale === "ru" ? "ПЕРВЫЙ РАЗБОР" : locale === "es" ? "PRIMERA LECTURA" : "FIRST READ";
   const liveLabel = locale === "ru" ? "В ЭФИРЕ" : locale === "es" ? "EN VIVO" : "LIVE";
   const searchParams = useSearchParams();
+  const checkoutProduct: CheckoutProduct =
+    searchParams.get("product") === "quick_diagnosis" ? "quick_diagnosis" : "full_report";
+  const checkoutProductConfig = CHECKOUT_PRODUCTS[checkoutProduct];
   const [url, setUrl] = useState(() => searchParams.get("url") || "");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [dataProcessingConsent, setDataProcessingConsent] = useState(false);
@@ -218,6 +242,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const [currentUrl, setCurrentUrl] = useState("");
   const [result, setResult] = useState<BrandReadResult>(defaultResult);
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
+  const [isEmailingPdf, setIsEmailingPdf] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [clock, setClock] = useState<string>(() => formatLocalClock());
@@ -251,18 +276,50 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         : "When the read is already in the leading range, the report is not hunting for basic problems. It shows what to protect, what to refine, and where the next advantage lives.";
   const nextMoveParagraphs = buildNextMoveCliffhanger(result, locale);
   const localizedFullReportIncludes = fullReportIncludesForLocale(locale);
+  const localizedQuickDiagnosisIncludes =
+    locale === "ru"
+      ? [
+          "Полная панель оценок",
+          "Доказательства с сайта по главным точкам трения",
+          "Топ-3 коммерческих deep dives из 5",
+          "Priority fix stack — что исправить первым",
+          "AI visibility read — как LLM сейчас видят бренд",
+        ]
+      : locale === "es"
+        ? [
+            "Panel completo de puntuaciones",
+            "Evidencia del sitio para cada punto de fricción",
+            "Top 3 deep dives comerciales de 5",
+            "Priority fix stack: qué corregir primero",
+            "AI visibility read: cómo los LLM ven la marca ahora",
+          ]
+        : [
+            "Full score dashboard",
+            "Website evidence for each friction point",
+            "Top 3 commercial deep dives",
+            "Priority fix stack — what to tackle first",
+            "AI visibility read — how LLMs currently see your brand",
+          ];
+  const localizedCheckoutIncludes =
+    checkoutProduct === "quick_diagnosis"
+      ? localizedQuickDiagnosisIncludes
+      : localizedFullReportIncludes;
   const localizedRefundLine = refundLineForLocale(locale);
   const discountPercent = promoPreview?.discountPercent ?? 0;
-  const discountUsdCents = Math.round(REPORT_PRICE_USD_CENTS * (discountPercent / 100));
-  const amountDueUsdCents = Math.max(0, REPORT_PRICE_USD_CENTS - discountUsdCents);
+  const discountUsdCents = Math.round(checkoutProductConfig.usdCents * (discountPercent / 100));
+  const amountDueUsdCents = Math.max(0, checkoutProductConfig.usdCents - discountUsdCents);
   const hasAppliedPromo = promoStatus === "applied" && Boolean(promoPreview);
   const checkoutButtonLabel = isOpeningCheckout
     ? (copy.checkoutBusy ?? "Opening checkout...")
     : hasAppliedPromo && amountDueUsdCents === 0
-      ? (copy.promoFreeCta ?? "Open full report — $0")
+      ? (checkoutProduct === "quick_diagnosis"
+          ? "Open Quick Diagnosis — $0"
+          : (copy.promoFreeCta ?? checkoutProductConfig.freeCta))
       : hasAppliedPromo
         ? `${copy.promoPayCta ?? "Pay today"} — ${formatUsd(amountDueUsdCents)}`
-        : (copy.checkoutCta ?? copy.unlockCta ?? "Unlock — $197");
+        : (checkoutProduct === "quick_diagnosis"
+            ? checkoutProductConfig.idleCta
+            : (copy.checkoutCta ?? copy.unlockCta ?? checkoutProductConfig.idleCta));
 
   function handlePromoCodeChange(value: string) {
     setPromoCode(value.toUpperCase());
@@ -281,19 +338,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       return;
     }
 
-    const checkedEmail = normalizeCustomerEmail(email);
-    if (!checkedEmail) {
-      setError(copy.emailRequired ?? "Enter a valid email address to receive the report.");
-      setStatus("");
-      return;
-    }
-
-    if (!dataProcessingConsent) {
-      setError(copy.dataConsentRequired ?? "Please agree to data processing so we can generate and send your report.");
-      setStatus("");
-      return;
-    }
-
     setError("");
     setPdfEmailStatus("");
     setStatus(copy.statusReading);
@@ -308,9 +352,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           body: JSON.stringify({
             url: checkedUrl.url,
             language: locale,
-            email: checkedEmail,
-            dataProcessingConsent,
-            marketingConsent,
           }),
         });
 
@@ -327,43 +368,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
 
         setCurrentUrl(payload.url);
         setResult(payload.result);
-        setStatus(copy.statusDone);
-
-        setPdfEmailStatus(copy.pdfEmailSending ?? "Sending your PDF to email...");
-        const pdfDeliveryResponse = await fetch("/api/brand-read/pdf", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: payload.url,
-            language: locale,
-            result: payload.result,
-            email: checkedEmail,
-            delivery: "email",
-            dataProcessingConsent,
-          }),
-        });
-        const pdfDelivery = (await pdfDeliveryResponse.json().catch(() => null)) as {
-          delivery?: { status?: string; reason?: string; error?: string };
-          detail?: string;
-          error?: string;
-        } | null;
-
-        if (!pdfDeliveryResponse.ok) {
-          setPdfEmailStatus(
-            pdfDelivery?.detail ||
-              pdfDelivery?.error ||
-              copy.pdfEmailFailed ||
-              "The report is ready, but the email could not be sent.",
-          );
-        } else if (pdfDelivery?.delivery?.status === "sent") {
-          setPdfEmailStatus(copy.pdfEmailSent ?? "PDF sent to your email.");
-        } else if (pdfDelivery?.delivery?.status === "skipped") {
-          setPdfEmailStatus(copy.pdfEmailSkipped ?? "PDF email is not configured yet; use the download button below.");
-        } else {
-          setPdfEmailStatus(copy.pdfEmailFailed ?? "The report is ready, but the email could not be sent.");
-        }
+        setStatus(
+          checkoutProduct === "quick_diagnosis"
+            ? "First read generated. The $67 launch-price Quick Diagnosis is ready to unlock."
+            : copy.statusDone,
+        );
       } catch (requestError) {
         const message =
           requestError instanceof Error
@@ -381,6 +390,82 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
         setStatus("");
       }
     });
+  }
+
+  function validateReportEmail() {
+    const checkedEmail = normalizeCustomerEmail(email);
+    if (!checkedEmail) {
+      setError(copy.emailRequired ?? "Enter a valid email address to receive the report.");
+      return null;
+    }
+
+    if (!dataProcessingConsent) {
+      setError(copy.dataConsentRequired ?? "Please agree to data processing so we can generate and send your report.");
+      return null;
+    }
+
+    setError("");
+    return checkedEmail;
+  }
+
+  async function handleEmailFreePdf() {
+    if (!currentUrl) return;
+    const checkedEmail = validateReportEmail();
+    if (!checkedEmail) return;
+
+    setIsEmailingPdf(true);
+    setPdfEmailStatus(copy.pdfEmailSending ?? "Sending your PDF to email...");
+
+    try {
+      const pdfDeliveryResponse = await fetch("/api/brand-read/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: currentUrl,
+          language: locale,
+          result,
+          email: checkedEmail,
+          delivery: "email",
+          dataProcessingConsent,
+          marketingConsent,
+        }),
+      });
+      const pdfDelivery = (await pdfDeliveryResponse.json().catch(() => null)) as {
+        delivery?: { status?: string; reason?: string; error?: string };
+        detail?: string;
+        error?: string;
+      } | null;
+
+      if (!pdfDeliveryResponse.ok) {
+        setPdfEmailStatus(
+          pdfDelivery?.detail ||
+            pdfDelivery?.error ||
+            copy.pdfEmailFailed ||
+            "The report is ready, but the email could not be sent.",
+        );
+      } else if (pdfDelivery?.delivery?.status === "sent") {
+        setPdfEmailStatus(copy.pdfEmailSent ?? "PDF sent to your email.");
+      } else if (pdfDelivery?.delivery?.status === "skipped") {
+        setPdfEmailStatus(copy.pdfEmailSkipped ?? "PDF email is not configured yet; use the download button below.");
+      } else {
+        setPdfEmailStatus(copy.pdfEmailFailed ?? "The report is ready, but the email could not be sent.");
+      }
+    } catch {
+      setPdfEmailStatus(copy.pdfEmailFailed ?? "The report is ready, but the email could not be sent.");
+    } finally {
+      setIsEmailingPdf(false);
+    }
+  }
+
+  function handleDownloadFreePdf(event: React.FormEvent<HTMLFormElement>) {
+    const checkedEmail = validateReportEmail();
+    if (!checkedEmail) {
+      event.preventDefault();
+      return;
+    }
+    setPdfEmailStatus("");
   }
 
   const normalizedPreviewUrl = normalizeUrl(url);
@@ -436,6 +521,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           url: checkedUrl.url,
           language: locale,
           email: checkedEmail,
+          product: checkoutProduct,
           dataProcessingConsent,
           marketingConsent,
           promoCode: promoCode.trim() || undefined,
@@ -681,78 +767,26 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               {normalizedPreviewUrl.ok ? copy.statusReady : copy.startHelper}
             </p>
 
-            <label
-              htmlFor="customer-email"
-              className="mt-5 block"
-              style={{ ...metaLabel, letterSpacing: "0.24em" }}
-            >
-              {(copy.emailLabel ?? "Email for report").toUpperCase()}
-            </label>
-
             <div
-              className="mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5"
+              className="mt-5 rounded-xl border px-4 py-3"
               style={{
-                borderColor: normalizeCustomerEmail(email)
-                  ? "rgba(111,224,194,0.55)"
-                  : "rgba(255,255,255,0.16)",
-                background: "rgba(255,255,255,0.018)",
+                borderColor: "rgba(111,224,194,0.18)",
+                background: "rgba(111,224,194,0.04)",
               }}
             >
-              <span
-                aria-hidden
+              <p
                 style={{
-                  color: "#D4C4DC",
                   fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontSize: "13px",
+                  fontSize: "10.5px",
+                  letterSpacing: "0.12em",
+                  lineHeight: 1.7,
+                  color: COLOR.textMuted,
+                  textTransform: "uppercase",
                 }}
               >
-                @
-              </span>
-              <input
-                id="customer-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder={copy.emailPlaceholder ?? "you@example.com"}
-                className="min-w-0 flex-1 bg-transparent outline-none"
-                style={{
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontSize: "15px",
-                  color: COLOR.text,
-                  caretColor: "#6FE0C2",
-                  letterSpacing: "0.01em",
-                }}
-              />
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textSoft }}>
-                <input
-                  type="checkbox"
-                  checked={dataProcessingConsent}
-                  onChange={(event) => setDataProcessingConsent(event.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
-                  required
-                />
-                <span>
-                  {copy.dataConsentLabel ??
-                    "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report."}
-                </span>
-              </label>
-              <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textMuted }}>
-                <input
-                  type="checkbox"
-                  checked={marketingConsent}
-                  onChange={(event) => setMarketingConsent(event.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
-                />
-                <span>
-                  {copy.marketingConsentLabel ??
-                    "Send me occasional SAHAR/BrandMirror updates, offers, and useful articles on branding and AI. I can unsubscribe anytime."}
-                </span>
-              </label>
+                {copy.scanConsentNotice ??
+                  "By running the scan, you agree that BrandMirror may analyse this public URL. We ask for email only if you choose to send, download, or unlock a report."}
+              </p>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -818,21 +852,6 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               </p>
             ) : null}
 
-            {pdfEmailStatus ? (
-              <p
-                className="mt-4"
-                style={{
-                  color: pdfEmailStatus.toLowerCase().includes("not configured") ? COLOR.textMuted : "#6FE0C2",
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontSize: "11px",
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {pdfEmailStatus}
-              </p>
-            ) : null}
-
             <div
               className="mt-8 border-t pt-6"
               style={{ borderColor: COLOR.lineSoft }}
@@ -880,43 +899,158 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
 
         {currentUrl ? (
           <section
-            className="mt-8 flex flex-col gap-4 rounded-2xl border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+            className="mt-8 rounded-2xl border px-5 py-5 sm:px-6"
             style={{
               borderColor: COLOR.lineSoft,
               background: "rgba(255,255,255,0.018)",
             }}
           >
-            <div>
-              <p style={{ ...metaLabel, color: COLOR.accent }}>
-                {(copy.freePdfLabel ?? "FREE REPORT EXPORT").toUpperCase()}
-              </p>
-              <p
-                className="mt-2 leading-6"
-                style={{ color: COLOR.textMuted, fontSize: "13.5px" }}
-              >
-                {copy.freePdfBody ?? "Save the free first read as a shareable PDF snapshot."}
-              </p>
+            <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+              <div>
+                <p style={{ ...metaLabel, color: COLOR.accent }}>
+                  {(copy.freePdfLabel ?? "SEND OR DOWNLOAD").toUpperCase()}
+                </p>
+                <p
+                  className="mt-2 leading-6"
+                  style={{ color: COLOR.textMuted, fontSize: "13.5px" }}
+                >
+                  {copy.freePdfBody ??
+                    "Want the free first read as a PDF? Add your email and choose whether to receive occasional useful BrandMirror updates."}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="customer-email"
+                  style={{ ...metaLabel, letterSpacing: "0.24em" }}
+                >
+                  {(copy.emailLabel ?? "Email for report").toUpperCase()}
+                </label>
+                <div
+                  className="mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5"
+                  style={{
+                    borderColor: normalizeCustomerEmail(email)
+                      ? "rgba(111,224,194,0.55)"
+                      : "rgba(255,255,255,0.16)",
+                    background: "rgba(255,255,255,0.018)",
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      color: "#D4C4DC",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "13px",
+                    }}
+                  >
+                    @
+                  </span>
+                  <input
+                    id="customer-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder={copy.emailPlaceholder ?? "you@example.com"}
+                    className="min-w-0 flex-1 bg-transparent outline-none"
+                    style={{
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "15px",
+                      color: COLOR.text,
+                      caretColor: "#6FE0C2",
+                      letterSpacing: "0.01em",
+                    }}
+                  />
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textSoft }}>
+                    <input
+                      type="checkbox"
+                      checked={dataProcessingConsent}
+                      onChange={(event) => setDataProcessingConsent(event.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
+                      required
+                    />
+                    <span>
+                      {copy.dataConsentLabel ??
+                        "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report."}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 text-sm leading-5" style={{ color: COLOR.textMuted }}>
+                    <input
+                      type="checkbox"
+                      checked={marketingConsent}
+                      onChange={(event) => setMarketingConsent(event.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[#6FE0C2]"
+                    />
+                    <span>
+                      {copy.marketingConsentLabel ??
+                        "Send me occasional SAHAR/BrandMirror updates, offers, and useful articles on branding and AI. I can unsubscribe anytime."}
+                    </span>
+                  </label>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={handleEmailFreePdf}
+                    disabled={isEmailingPdf}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{
+                      borderColor: "rgba(111,224,194,0.42)",
+                      background: "rgba(111,224,194,0.08)",
+                      color: COLOR.text,
+                      fontSize: "12.5px",
+                      letterSpacing: "0.18em",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {(isEmailingPdf ? copy.pdfEmailSending : copy.freePdfEmailIdle ?? "Email free PDF").toUpperCase()}
+                  </button>
+
+                  <form action="/api/brand-read/pdf" method="post" onSubmit={handleDownloadFreePdf}>
+                    <input type="hidden" name="url" value={currentUrl} />
+                    <input type="hidden" name="language" value={locale} />
+                    <input type="hidden" name="email" value={email} />
+                    <input type="hidden" name="dataProcessingConsent" value={dataProcessingConsent ? "true" : "false"} />
+                    <input type="hidden" name="marketingConsent" value={marketingConsent ? "true" : "false"} />
+                    <input type="hidden" name="result" value={JSON.stringify(result)} />
+                    <button
+                      type="submit"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
+                      style={{
+                        borderColor: "rgba(255,255,255,0.16)",
+                        color: COLOR.text,
+                        fontSize: "12.5px",
+                        letterSpacing: "0.18em",
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {copy.freePdfIdle.toUpperCase()}
+                    </button>
+                  </form>
+                </div>
+
+                {pdfEmailStatus ? (
+                  <p
+                    className="mt-4"
+                    style={{
+                      color: pdfEmailStatus.toLowerCase().includes("not configured") ? COLOR.textMuted : "#6FE0C2",
+                      fontFamily: "var(--font-mono), ui-monospace, monospace",
+                      fontSize: "11px",
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {pdfEmailStatus}
+                  </p>
+                ) : null}
+              </div>
             </div>
-            <form action="/api/brand-read/pdf" method="post">
-              <input type="hidden" name="url" value={currentUrl} />
-              <input type="hidden" name="language" value={locale} />
-              <input type="hidden" name="email" value={email} />
-              <input type="hidden" name="result" value={JSON.stringify(result)} />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 transition hover:bg-white/[0.04]"
-                style={{
-                  borderColor: "rgba(111,224,194,0.34)",
-                  color: COLOR.text,
-                  fontSize: "12.5px",
-                  letterSpacing: "0.18em",
-                  fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  fontWeight: 500,
-                }}
-              >
-                {copy.freePdfIdle.toUpperCase()}
-              </button>
-            </form>
           </section>
         ) : null}
 
@@ -1103,7 +1237,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
             style={{ borderColor: COLOR.line, background: "rgba(255,255,255,0.02)" }}
           >
             <p style={{ ...metaLabel, color: COLOR.accent }}>
-              {(copy.unlockLabel ?? "UNLOCK FULL REPORT").toUpperCase()}
+              {(checkoutProduct === "quick_diagnosis"
+                ? "Unlock Quick Diagnosis"
+                : (copy.unlockLabel ?? "UNLOCK FULL REPORT")
+              ).toUpperCase()}
             </p>
             <div className="mt-5 flex min-h-[15.5rem] flex-col justify-between">
               <div>
@@ -1118,7 +1255,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     letterSpacing: "0.16em",
                   }}
                 >
-                  {copy.fullReportTag ?? "$197 FULL REPORT"}
+                  <span>{checkoutProductConfig.label}</span>
+                  <span
+                    className="ml-3 opacity-60 line-through"
+                    aria-label={`Regular price ${checkoutProductConfig.regularLabel}`}
+                  >
+                    {checkoutProductConfig.regularLabel}
+                  </span>
                 </div>
                 <p
                   className="mt-5 max-w-md leading-[1.18]"
@@ -1129,10 +1272,12 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     fontWeight: 500,
                   }}
                 >
-                  {copy.unlockExactFix ?? "Unlock the exact fix stack behind this scan."}
+                  {checkoutProduct === "quick_diagnosis"
+                    ? "Unlock the evidence and ranked fix list behind this scan."
+                    : (copy.unlockExactFix ?? "Unlock the exact fix stack behind this scan.")}
                 </p>
                 <ol className="mt-5 space-y-2">
-                  {localizedFullReportIncludes.slice(0, 7).map((item, index) => (
+                  {localizedCheckoutIncludes.slice(0, 7).map((item, index) => (
                     <li
                       key={item}
                       className="grid grid-cols-[1.6rem_1fr] gap-2 leading-6"
@@ -1252,7 +1397,9 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 >
                   <div className="flex items-center justify-between gap-4">
                     <span style={{ color: COLOR.textMuted, fontSize: "13px" }}>
-                      {copy.promoSubtotal ?? "BrandMirror Report"}
+                      {checkoutProduct === "quick_diagnosis"
+                        ? checkoutProductConfig.subtotal
+                        : (copy.promoSubtotal ?? checkoutProductConfig.subtotal)}
                     </span>
                     <span
                       style={{
@@ -1261,7 +1408,13 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                         fontSize: "13px",
                       }}
                     >
-                      {formatUsd(REPORT_PRICE_USD_CENTS)}
+                      {formatUsd(checkoutProductConfig.usdCents)}
+                      <span
+                        className="ml-2 text-[11px] opacity-55 line-through"
+                        aria-label={`Regular price ${formatUsd(checkoutProductConfig.regularUsdCents)}`}
+                      >
+                        {formatUsd(checkoutProductConfig.regularUsdCents)}
+                      </span>
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-4">
@@ -1385,7 +1538,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p style={{ ...metaLabel, fontSize: "10px", color: COLOR.accent }}>
-                    {(copy.includedInFullReport ?? "INCLUDED IN FULL REPORT").toUpperCase()}
+                    {(checkoutProduct === "quick_diagnosis"
+                      ? "Included in Quick Diagnosis"
+                      : (copy.includedInFullReport ?? "INCLUDED IN FULL REPORT")
+                    ).toUpperCase()}
                   </p>
                   <p className="mt-2" style={{ color: COLOR.textSoft, fontSize: "13px" }}>
                     {copy.fixStackIncluded ??

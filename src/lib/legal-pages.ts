@@ -77,7 +77,7 @@ export const legalPageCopy: Record<
         {
           title: "Paid report",
           body: [
-            "The full BrandMirror Report costs $197 USD unless a valid promo code changes the amount due at checkout.",
+            "The full BrandMirror Report costs $149 USD during the launch period. The regular price is $197 USD unless a valid promo code changes the amount due at checkout.",
             "After successful payment or approved promo access, the report is generated for the submitted URL and can be viewed, downloaded as a PDF, and emailed to the address provided.",
           ],
         },
@@ -156,7 +156,7 @@ export const legalPageCopy: Record<
         {
           title: "Reporte pagado",
           body: [
-            "El BrandMirror Report completo cuesta $197 USD salvo que un código promocional válido cambie el importe en checkout.",
+            "El BrandMirror Report completo cuesta $149 USD durante el periodo de lanzamiento. El precio regular es $197 USD salvo que un código promocional válido cambie el importe en checkout.",
             "Después del pago exitoso o acceso aprobado por promo, el reporte se genera para la URL enviada y puede verse, descargarse como PDF y enviarse al email indicado.",
           ],
         },
@@ -235,7 +235,7 @@ export const legalPageCopy: Record<
         {
           title: "Платный отчёт",
           body: [
-            "Полный BrandMirror Report стоит $197 USD, если действующий промокод не меняет сумму к оплате.",
+            "Полный BrandMirror Report стоит $149 USD в период запуска. Обычная цена — $197 USD, если действующий промокод не меняет сумму к оплате.",
             "После успешной оплаты или доступа по промокоду отчёт генерируется для указанного URL, его можно посмотреть, скачать как PDF и получить на указанный email.",
           ],
         },

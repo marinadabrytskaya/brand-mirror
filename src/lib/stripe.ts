@@ -4,9 +4,14 @@ import Stripe from "stripe";
 import { normalizeUrl } from "@/lib/brand-read";
 import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { getSiteLocale, type SiteLocale } from "@/lib/site-i18n";
+import {
+  type BrandMirrorProduct,
+  getBrandMirrorProduct,
+  getBrandMirrorProductConfig,
+} from "@/lib/products";
 
 const STRIPE_API_VERSION = "2026-03-25.dahlia";
-const REPORT_PRICE_USD_CENTS = 19_700;
+export const REPORT_PRICE_USD_CENTS = getBrandMirrorProductConfig("full_report").usdCents;
 
 let stripeSingleton: Stripe | null = null;
 
@@ -20,6 +25,7 @@ export type PaidCheckoutAccess = {
   currency: string | null;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
+  product: BrandMirrorProduct;
 };
 
 export function isStripeConfigured() {
@@ -46,6 +52,7 @@ export async function createCheckoutSession({
   reportUrl,
   locale,
   email,
+  product,
   dataProcessingConsent,
   marketingConsent,
 }: {
@@ -53,6 +60,7 @@ export async function createCheckoutSession({
   reportUrl: string;
   locale: SiteLocale;
   email: string;
+  product?: BrandMirrorProduct;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
 }) {
@@ -66,8 +74,9 @@ export async function createCheckoutSession({
   }
 
   const stripe = getStripe();
-  const successUrl = `${origin}/full-report?session_id={CHECKOUT_SESSION_ID}&lang=${locale}`;
-  const cancelUrl = `${origin}/first-read?url=${encodeURIComponent(normalizedUrl)}&lang=${locale}`;
+  const productConfig = getBrandMirrorProductConfig(product);
+  const successUrl = `${origin}${productConfig.successPath}?session_id={CHECKOUT_SESSION_ID}&lang=${locale}`;
+  const cancelUrl = `${origin}/first-read?url=${encodeURIComponent(normalizedUrl)}&product=${productConfig.successPath === "/quick-diagnosis" ? "quick_diagnosis" : "full_report"}&lang=${locale}`;
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -81,18 +90,20 @@ export async function createCheckoutSession({
         quantity: 1,
         price_data: {
           currency: "usd",
-          unit_amount: REPORT_PRICE_USD_CENTS,
+          unit_amount: productConfig.usdCents,
           product_data: {
-            name: "BrandMirror Full Report",
+            name: productConfig.name,
             description:
-              "Paid diagnostic layer with full report access and PDF export.",
+              productConfig.successPath === "/full-report"
+                ? "Complete BrandMirror blueprint with full report access and PDF export."
+                : "BrandMirror quick diagnosis with evidence and a ranked priority fix stack.",
           },
         },
       },
     ],
     metadata: {
       locale,
-      product: "brandmirror_full_report",
+      product: productConfig.paystackMetadataProduct,
       report_url: normalizedUrl,
       customer_email: normalizedEmail,
       data_processing_consent: String(dataProcessingConsent),
@@ -133,5 +144,6 @@ export async function getPaidCheckoutAccess(sessionId?: string | null) {
     currency: session.currency ?? null,
     dataProcessingConsent: session.metadata?.data_processing_consent === "true",
     marketingConsent: session.metadata?.marketing_consent === "true",
+    product: getBrandMirrorProduct(session.metadata?.product),
   } satisfies PaidCheckoutAccess;
 }

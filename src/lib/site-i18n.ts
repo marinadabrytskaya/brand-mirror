@@ -30,19 +30,19 @@ export const siteCopy = {
     landing: {
       brandPowered: "Created by SAHAR",
       navHow: "How it works",
-      navOffer: "Offer",
+      navOffer: "Pricing",
       navSample: "Sample report",
       navSahar: "SAHAR website",
-      kicker: "BrandMirror shows what to fix first.",
-      title: "AI Brand Audit for Any Website",
+      kicker: "Free first read. 2 minutes. No account needed.",
+      title: "Your brand is losing deals before you open your mouth.",
       body:
-        "Your website may have a leak visitors can feel before they can name it. Enter any homepage and get a free first read of its positioning, AI visibility, offer clarity, visual trust, and conversion readiness.",
-      primaryCta: "\u25B6 Read My Brand",
+        "Visitors land. They feel something is off. They leave. BrandMirror reads your homepage the way a cold buyer does — and shows you exactly where trust breaks down.",
+      primaryCta: "Read My Brand",
       secondaryCta: "See sample report \u2192",
       heroProofs: [
         "Free first read: 5 scores, strongest asset, main friction.",
-        "$197 full report: website evidence, fix stack, competitor read, PDF.",
-        "Built for any site that needs to explain value and convert.",
+        "$67 Quick Diagnosis: full breakdown + ranked fix list.",
+        "$149 launch Full Report: the complete commercial map, ready to act on.",
       ],
       signalHeadingLabel: "What it reads",
       signalHeadingTitle:
@@ -67,6 +67,18 @@ export const siteCopy = {
           title: "Your visuals speak before your copy does.",
           body:
             "BrandMirror reads what they're saying — and whether it's costing you money.",
+        },
+        {
+          label: "Offer clarity",
+          title: "A great product buried in vague language converts like a bad product.",
+          body:
+            "BrandMirror reads the gap.",
+        },
+        {
+          label: "Conversion readiness",
+          title: "Where does the buyer lose momentum?",
+          body:
+            "BrandMirror finds the drop — before it becomes a pattern.",
         },
       ],
       evidence: {
@@ -131,7 +143,7 @@ export const siteCopy = {
           "Enter a URL. See the first signal. Unlock the full diagnosis only if the read hits.",
         notes: [
           "The free read shows you the signal.",
-          "The $197 report names the leak, the fix, and the commercial cost of doing nothing.",
+          "The $149 launch report names the leak, the fix, and the commercial cost of doing nothing.",
         ],
         workflow: [
           {
@@ -147,7 +159,7 @@ export const siteCopy = {
           {
             step: "03",
             title: "Unlock the full report",
-            body: "$197 opens the complete breakdown: what works, what leaks, why buyers hesitate — and what to fix first.",
+            body: "$149 launch access opens the complete breakdown: what works, what leaks, why buyers hesitate — and what to fix first.",
           },
         ],
       },
@@ -155,8 +167,8 @@ export const siteCopy = {
         label: "Full report",
         title: "Start free. Go deeper only if the signal hits.",
         body:
-          "The free read shows you the signal. The $197 report names the leak, the fix, and the commercial cost of doing nothing. One or the other. You pick.",
-        cardLabel: "BrandMirror report — $197",
+          "The free read shows you the signal. The $149 launch report names the leak, the fix, and the commercial cost of doing nothing. One or the other. You pick.",
+        cardLabel: "BrandMirror report — $149",
         included: "Included",
         items: [
           "What works / what's broken",
@@ -179,39 +191,89 @@ export const siteCopy = {
       },
       offers: {
         label: "Pricing",
-        title: "The free read shows you the signal.",
+        title: "Start free. Go deeper only if the signal hits.",
         body:
-          "The $197 report turns that signal into a full commercial diagnosis: what is working, what is leaking trust, what to fix first, and what the upside looks like when the brand becomes easier to understand, recommend, and choose.",
-        layer: "Diagnostic layer",
+          "Each tier answers a different question: what is broken, why it matters, and how to rebuild the signal.",
+        layer: "Signal layer / Diagnostic layer / Blueprint layer",
         rows: [
           {
-            name: "Free First Read",
-            layer: "Diagnostic layer",
+            name: "FREE — First Read",
+            layer: "Signal layer",
             price: "$0",
             summary:
-              "A fast outside read of the homepage: first-screen signal, 5 scores, strongest asset, main friction, and the first reason buyers may hesitate.",
-            detail: "Best for seeing whether the diagnosis feels specific before you pay.",
+              "A fast outside read of your homepage.",
+            detail:
+              "You'll see the signal. You won't know what it's costing you.",
+            items: [
+              "5 scores: Positioning · AI Visibility · Visual · Offer · Conversion",
+              "Strongest asset",
+              "Main friction point",
+              "First reason buyers may hesitate",
+            ],
+            actionLabel: "Read My Brand — free →",
+            actionHref: "/first-read",
           },
           {
-            name: "BrandMirror Report",
+            name: "$67 — Quick Diagnosis",
             layer: "Diagnostic layer",
-            price: "$197",
+            price: "$67",
+            priceWas: "$97",
+            badge: "Most popular",
             summary:
-              "The paid diagnosis: score dashboard, website evidence, 5 commercial deep dives, AI visibility read, competitor intelligence, commercial impact, priority fix stack, one-page brand brief, and implementation playbook.",
-            detail: "Best for any website owner, team, founder, studio, consultant, or service brand that needs to know what to fix, why it matters, and what to do next.",
+              "The free read shows you something is leaking. The Quick Diagnosis shows you where — with evidence from your own site.",
+            detail:
+              "You leave with a ranked action list, not a vague direction. Most founders fix the critical layer here. Some discover the issue runs deeper than copy.",
+            items: [
+              "Full score dashboard",
+              "Website evidence for each friction point",
+              "Top 3 commercial deep dives (out of 5)",
+              "Priority fix stack — what to tackle first",
+              "AI visibility read — how LLMs currently see your brand",
+            ],
+            actionLabel: "Get Quick Diagnosis — $67 →",
+            actionHref: "/first-read?product=quick_diagnosis",
+            footnote: "Launch price. $97 after launch.",
+          },
+          {
+            name: "$149 — Full Report",
+            layer: "Blueprint layer",
+            price: "$149",
+            priceWas: "$197",
+            summary:
+              "What's broken, why, and what to build instead. After the Quick Diagnosis, you know what to fix. The Full Report shows every layer, every lever.",
+            detail:
+              "This is architecture, not advice.",
+            items: [
+              "Everything in Quick Diagnosis",
+              "All 5 commercial deep dives",
+              "Competitor intelligence — where you're losing ground and to whom",
+              "Commercial impact estimate — what fixing this is worth",
+              "One-page brand brief — your messaging foundation, ready to use",
+              "Implementation playbook — step-by-step, not just direction",
+              "PDF export — ready to hand to a developer or designer",
+            ],
+            actionLabel: "Get the Full Report — $149 →",
+            actionHref: "/first-read?product=full_report",
+            footnote: "Launch price. $197 after launch.",
           },
           {
             name: "SAHAR Follow-Through",
             layer: "Implementation layer",
             price: "By scope",
             summary:
-              "If you want help implementing the fixes, SAHAR can sharpen the positioning, visibility signals, offer clarity, messaging, proof, CTA path, website structure, and broader brand strategy.",
+              "If you want help implementing the fixes — SAHAR can sharpen the positioning, offer language, AI visibility signals, website structure, and messaging.",
             detail: "Best when you want the diagnosis turned into visible changes, not just a report.",
             actionLabel: "Discuss implementation",
             actionHref: "mailto:hello@saharstudio.com?subject=BrandMirror%20implementation",
           },
         ],
-        primaryCta: "\u25B6 UNLOCK FULL REPORT — $197",
+        guarantee: "3 actionable findings this week — or a full refund. No questions asked.",
+        logicLine: [
+          "The free read shows you the signal.",
+          "The Quick Diagnosis names the leak and tells you what to fix first.",
+          "The Full Report shows you what it costs to ignore it — and how to rebuild.",
+        ],
+        primaryCta: "Read My Brand — free →",
         secondaryCta: "See sample report \u2192",
       },
       faq: {
@@ -222,37 +284,42 @@ export const siteCopy = {
           {
             question: "What is BrandMirror?",
             answer:
-              "BrandMirror is an AI website audit for any homepage that needs to explain value and convert. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
+              "BrandMirror is an AI brand audit for any homepage that needs to explain value and convert. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
           },
           {
             question: "What do I get in the free first read?",
             answer:
-              "The free first read gives a fast diagnostic signal: score dashboard, strongest asset, main friction, first diagnosis, and a clear next-step teaser before payment.",
+              "5 scores, your strongest asset, main friction point, and the first reason buyers may hesitate — before you pay anything.",
           },
           {
-            question: "What is included in the $197 full report?",
+            question: "What's the difference between $67 and $149?",
             answer:
-              "The paid report includes the full first read, score dashboard, website evidence, five commercial deep dives, AI visibility read, competitor intelligence, commercial impact, priority fix stack, one-page brand brief, implementation playbook, and PDF export.",
+              "The Quick Diagnosis gives you the triage: where the leak is and what to fix first. The Full Report gives you the full commercial map — all 5 deep dives, competitor read, impact estimate, brand brief, and implementation playbook. Start with $67. Upgrade if the fix runs deeper.",
           },
           {
-            question: "Who is BrandMirror best for?",
+            question: "What is included in the $149 full report?",
             answer:
-              "BrandMirror is best for websites that already have something valuable to offer but need clearer positioning, offer language, proof, and conversion direction.",
+              "Score dashboard, website evidence, 5 commercial deep dives, AI visibility read, competitor intelligence, commercial impact estimate, priority fix stack, one-page brand brief, implementation playbook, and PDF export.",
           },
           {
             question: "Can I hand the recommendations to a developer?",
             answer:
-              "Yes. The full report includes concrete implementation guidance, including messaging priorities, website structure, AI visibility tasks, metadata/schema checks, and priority fixes.",
+              "Yes. The full report includes concrete implementation guidance: messaging priorities, website structure, AI visibility tasks, metadata/schema checks, and priority fixes — ready to brief a team.",
+          },
+          {
+            question: "Who is BrandMirror for?",
+            answer:
+              "Any website that already has something valuable to offer — but needs clearer positioning, offer language, proof, and conversion direction. Founders, studios, consultants, service brands.",
           },
         ],
       },
       final: {
         label: "Final cue",
         title:
-          "BrandMirror reads what buyers sense before they speak.",
+          "Your brand is already being read.",
         body:
-          "Start with the free signal. If it lands, unlock the full diagnosis and turn the leak into a fix stack.",
-        primaryCta: "\u25B6 Read My Brand",
+          "The question is what it's saying.",
+        primaryCta: "Read My Brand — free →",
         secondaryCta: "See sample report \u2192",
       },
       legalLine:
@@ -278,12 +345,14 @@ export const siteCopy = {
       emailLabel: "Email for report",
       emailPlaceholder: "you@example.com",
       emailRequired: "Enter a valid email address to receive the report.",
+      scanConsentNotice:
+        "By running the scan, you agree that BrandMirror may analyse this public URL. We ask for email only if you choose to send, download, or unlock a report.",
       dataConsentLabel:
         "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report.",
       dataConsentRequired:
         "Please agree to data processing so we can generate and send your report.",
       marketingConsentLabel:
-        "Send me occasional SAHAR/BrandMirror updates, offers, and useful articles on branding and AI. I can unsubscribe anytime.",
+        "Send me occasional SAHAR/BrandMirror updates, offers, and useful articles on branding, AI visibility, and website clarity. I can unsubscribe anytime.",
       promoLabel: "Promo code",
       promoPlaceholder: "OPTIONAL",
       promoApply: "Apply",
@@ -297,14 +366,14 @@ export const siteCopy = {
       promoDueToday: "Due today",
       promoFreeCta: "Open full report — $0",
       promoPayCta: "Pay today",
-      checkoutCta: "Unlock — $197",
+      checkoutCta: "Unlock — $149",
       checkoutBusy: "Opening checkout...",
       checkoutError: "Unable to open checkout right now.",
       submitIdle: "\u25B6 READ THE SIGNAL",
       submitBusy: "Reading brand...",
       statusInitial: "Enter a URL to begin",
       statusReading: "Scanning homepage copy, AI visibility, visual hierarchy, offer clarity, and conversion path.",
-      statusDone: "First read generated. The $197 report is ready to unlock.",
+      statusDone: "First read generated. The $149 launch-price report is ready to unlock.",
       pdfEmailSending: "Sending your PDF to email...",
       pdfEmailSent: "PDF sent to your email.",
       pdfEmailSkipped: "PDF email is not configured yet; use the download button below.",
@@ -323,7 +392,11 @@ export const siteCopy = {
       strongestSignal: "Strongest signal",
       mainFriction: "Main friction",
       nextMove: "Next move",
+      freePdfLabel: "Send or download",
+      freePdfBody:
+        "Want the free first read as a PDF? Add your email, confirm consent, and choose email or download.",
       freePdfIdle: "Download free read PDF",
+      freePdfEmailIdle: "Email free PDF",
       freePdfBusy: "Exporting free PDF...",
       unlockLabel: "Unlock full report",
       unlockBody:
@@ -345,7 +418,7 @@ export const siteCopy = {
         "Format: private web report with downloadable PDF.",
         "Built as a strategic working document, not as a generic upsell wall.",
       ],
-      unlockCta: "Unlock the full BrandMirror report — $197",
+      unlockCta: "Unlock the full BrandMirror report — $149",
       unlockSecondary: "See full report structure",
     },
     fullReport: {
@@ -467,7 +540,7 @@ export const siteCopy = {
       secondaryCta: "Ver reporte de muestra",
       heroProofs: [
         "Primera lectura gratis: 5 puntuaciones, activo más fuerte y fricción principal.",
-        "Reporte completo de $197: evidencia del sitio, prioridades de corrección, lectura competitiva y PDF.",
+        "Reporte completo de $149 en lanzamiento: evidencia del sitio, prioridades de corrección, lectura competitiva y PDF.",
         "Hecho para cualquier sitio que necesita explicar valor y convertir.",
       ],
       signalHeadingLabel: "Qué lee",
@@ -562,15 +635,15 @@ export const siteCopy = {
         workflow: [
           { step: "01", title: "Ingresa tu sitio", body: "BrandMirror toma una primera lectura de la página principal y muestra gratis la impresión inmediata." },
           { step: "02", title: "Revisa la primera señal", body: "Ves el resumen, tres puntuaciones, una fortaleza, un punto de fricción y el siguiente movimiento que vale la pena arreglar." },
-          { step: "03", title: "Desbloquea el reporte completo", body: "Paga $197 para abrir el diagnóstico completo con posicionamiento, visibilidad en IA, identidad visual, escenarios de impacto comercial, comparación con competidores y el plan de implementación." },
+          { step: "03", title: "Desbloquea el reporte completo", body: "Paga $149 durante el lanzamiento para abrir el diagnóstico completo con posicionamiento, visibilidad en IA, identidad visual, escenarios de impacto comercial, comparación con competidores y el plan de implementación." },
         ],
       },
       fullReport: {
         label: "Reporte completo",
-        title: "La capa de $197 debe sentirse como un mini-producto real.",
+        title: "La capa de $149 en lanzamiento debe sentirse como un mini-producto real.",
         body:
           "Lo que el comprador desbloquea no es más comentario. Es el diagnóstico pagado: qué funciona, qué está roto, por qué la marca no convierte y qué arreglar primero.",
-        cardLabel: "Reporte BrandMirror — $197",
+        cardLabel: "Reporte BrandMirror — $149",
         included: "Incluido",
         items: [
           "Qué funciona / qué está roto",
@@ -595,7 +668,7 @@ export const siteCopy = {
         label: "Estructura de oferta",
         title: "Una escalera simple: señal gratis, reporte pagado y trabajo más profundo opcional.",
         body:
-          "El reporte de $197 convierte esa señal en un diagnóstico comercial completo: qué funciona, dónde se fuga la confianza, qué corregir primero y qué mejora cuando la marca se vuelve más fácil de entender, recomendar y elegir.",
+        "El reporte de $149 en lanzamiento convierte esa señal en un diagnóstico comercial completo: qué funciona, dónde se fuga la confianza, qué corregir primero y qué mejora cuando la marca se vuelve más fácil de entender, recomendar y elegir.",
         layer: "Capa de diagnóstico",
         rows: [
           {
@@ -609,7 +682,8 @@ export const siteCopy = {
           {
             name: "Reporte BrandMirror",
             layer: "Capa de diagnóstico",
-            price: "$197",
+            price: "$149",
+            priceWas: "$197",
             summary:
               "El diagnóstico pagado: panel de puntuaciones, evidencia del sitio, 5 análisis comerciales profundos, lectura de visibilidad en IA, inteligencia competitiva, impacto comercial, prioridades de corrección, brief de marca de una página y playbook de implementación.",
             detail: "Ideal para fundadores y marcas de servicios premium que necesitan saber qué corregir, por qué importa y qué hacer después.",
@@ -644,7 +718,7 @@ export const siteCopy = {
               "La primera lectura gratuita entrega una señal diagnóstica rápida: tablero de puntuaciones, activo más fuerte, fricción principal, primer diagnóstico y un teaser claro del siguiente paso antes del pago.",
           },
           {
-            question: "¿Qué incluye el reporte completo de $197?",
+            question: "¿Qué incluye el reporte completo de $149?",
             answer:
               "El reporte pagado incluye la primera lectura completa, tablero de puntuaciones, evidencia del sitio, cinco análisis comerciales profundos, lectura de visibilidad en IA, inteligencia competitiva, impacto comercial, prioridades de corrección, brief de marca de una página, playbook de implementación y exportación PDF.",
           },
@@ -691,12 +765,14 @@ export const siteCopy = {
       emailLabel: "Correo para recibir el reporte",
       emailPlaceholder: "tu@email.com",
       emailRequired: "Introduce un email válido para recibir el reporte.",
+      scanConsentNotice:
+        "Al ejecutar el scan, aceptas que BrandMirror analice esta URL pública. Solo pedimos email si decides enviar, descargar o desbloquear un reporte.",
       dataConsentLabel:
         "Acepto que SAHAR/BrandMirror procese mi email y la URL del sitio para generar y enviar mi reporte.",
       dataConsentRequired:
         "Acepta el procesamiento de datos para que podamos generar y enviar tu reporte.",
       marketingConsentLabel:
-        "Quiero recibir novedades, ofertas y artículos útiles sobre branding e IA de SAHAR/BrandMirror. Puedo darme de baja cuando quiera.",
+        "Quiero recibir novedades, ofertas y artículos útiles sobre branding, visibilidad en IA y claridad web de SAHAR/BrandMirror. Puedo darme de baja cuando quiera.",
       promoLabel: "Código promocional",
       promoPlaceholder: "OPCIONAL",
       promoApply: "Aplicar",
@@ -710,14 +786,14 @@ export const siteCopy = {
       promoDueToday: "A pagar hoy",
       promoFreeCta: "Abrir reporte completo — $0",
       promoPayCta: "Pagar hoy",
-      checkoutCta: "Desbloquear — $197",
+      checkoutCta: "Desbloquear — $149",
       checkoutBusy: "Abriendo pago...",
       checkoutError: "No pudimos abrir el pago ahora.",
       submitIdle: "Lee mi marca",
       submitBusy: "Leyendo marca...",
       statusInitial: "Ingresa un sitio web para generar la primera lectura.",
       statusReading: "Leyendo el sitio y capturando las señales más fuertes.",
-      statusDone: "Primera lectura generada. El reporte de $197 está listo para desbloquearse.",
+      statusDone: "Primera lectura generada. El reporte de $149 en lanzamiento está listo para desbloquearse.",
       pdfEmailSending: "Enviando tu PDF por email...",
       pdfEmailSent: "PDF enviado a tu email.",
       pdfEmailSkipped: "El envío de PDF por email aún no está configurado; usa el botón de descarga abajo.",
@@ -734,6 +810,7 @@ export const siteCopy = {
       mainFriction: "Fricción principal",
       nextMove: "Siguiente paso",
       freePdfIdle: "Descargar PDF gratuito",
+      freePdfEmailIdle: "Enviar PDF por email",
       freePdfBusy: "Exportando PDF gratuito...",
       unlockLabel: "Desbloquear reporte completo",
       unlockBody:
@@ -756,14 +833,15 @@ export const siteCopy = {
         "Formato: reporte web privado con PDF descargable.",
         "Construido como un documento de trabajo estratégico, no como un simple muro de venta adicional.",
       ],
-      unlockCta: "Desbloquear el reporte completo de BrandMirror — $197",
+      unlockCta: "Desbloquear el reporte completo de BrandMirror — $149",
       unlockSecondary: "Ver estructura del reporte completo",
       statusReady: "Listo para escanear →",
       invalidUrl: "Eso no parece una URL de sitio web",
       unreachableUrl: "No pudimos acceder a esa página. Prueba con la URL de la página principal.",
       startHelper: "Ingresa la URL de tu página principal. El escaneo tarda 60 segundos.",
-      freePdfLabel: "Exportación del reporte gratuito",
-      freePdfBody: "Guarda la primera lectura gratuita como una captura PDF fácil de compartir.",
+      freePdfLabel: "Enviar o descargar",
+      freePdfBody:
+        "¿Quieres la primera lectura gratuita como PDF? Añade tu email, confirma el consentimiento y elige enviarlo o descargarlo.",
       brandReadLabel: "Lectura de marca",
       brandReadTitle: "El síntoma es visible. El coste comercial necesita nombre.",
       brandReadBody:
@@ -777,7 +855,7 @@ export const siteCopy = {
       fixNextLabel: "Corregir después",
       keepLabel: "Mantener",
       fixStackLabel: "Pila de corrección",
-      fullReportTag: "$197 REPORTE COMPLETO",
+      fullReportTag: "$149 REPORTE COMPLETO",
       unlockExactFix: "Desbloquea la pila exacta de correcciones detrás de este escaneo.",
       fixStackBody:
         "Qué corregir primero, qué puede esperar y qué ya está ganando confianza, priorizado por impacto comercial.",
@@ -945,7 +1023,7 @@ export const siteCopy = {
       secondaryCta: "Смотреть пример отчёта",
       heroProofs: [
         "Бесплатный первый разбор: 5 оценок, самый сильный актив и главная точка трения.",
-        "Полный отчёт за $197: доказательства с сайта, стек правок, конкурентный разбор и PDF.",
+        "Полный отчёт за $149 на запуске: доказательства с сайта, стек правок, конкурентный разбор и PDF.",
         "Для любого сайта, которому нужно объяснить ценность и конвертировать.",
       ],
       signalHeadingLabel: "Что он читает",
@@ -1040,15 +1118,15 @@ export const siteCopy = {
         workflow: [
           { step: "01", title: "Введи свой сайт", body: "BrandMirror берёт первый разбор с главной страницы и бесплатно показывает первое впечатление." },
           { step: "02", title: "Посмотри первый сигнал", body: "Ты видишь резюме, три оценки, одну сильную сторону, одну точку трения и следующий ход, который стоит исправить первым." },
-          { step: "03", title: "Открой полный отчёт", body: "Заплати $197 и открой полный диагноз бренда: позиционирование, видимость в ИИ, визуальную идентичность, сценарии коммерческого эффекта, сравнение с конкурентами и план внедрения." },
+          { step: "03", title: "Открой полный отчёт", body: "Заплати $149 в период запуска и открой полный диагноз бренда: позиционирование, видимость в ИИ, визуальную идентичность, сценарии коммерческого эффекта, сравнение с конкурентами и план внедрения." },
         ],
       },
       fullReport: {
         label: "Полный отчёт",
-        title: "Слой за $197 должен ощущаться как настоящий мини-продукт.",
+        title: "Слой за $149 на запуске должен ощущаться как настоящий мини-продукт.",
         body:
           "Покупатель открывает не просто больше комментариев. Он получает платный диагноз: что работает, что сломано, почему бренд не конвертирует и что исправить первым.",
-        cardLabel: "Отчёт BrandMirror — $197",
+        cardLabel: "Отчёт BrandMirror — $149",
         included: "Включено",
         items: [
           "Что работает / что сломано",
@@ -1073,7 +1151,7 @@ export const siteCopy = {
         label: "Структура предложения",
         title: "Простая лестница: бесплатный сигнал, платный отчёт, опционально более глубокая работа.",
         body:
-          "Отчёт за $197 превращает этот сигнал в полноценный коммерческий диагноз: что работает, где утекает доверие, что исправить первым и что меняется, когда бренд становится проще понять, рекомендовать и выбрать.",
+          "Отчёт за $149 на запуске превращает этот сигнал в полноценный коммерческий диагноз: что работает, где утекает доверие, что исправить первым и что меняется, когда бренд становится проще понять, рекомендовать и выбрать.",
         layer: "Диагностический слой",
         rows: [
           {
@@ -1087,7 +1165,8 @@ export const siteCopy = {
           {
             name: "Отчёт BrandMirror",
             layer: "Диагностический слой",
-            price: "$197",
+            price: "$149",
+            priceWas: "$197",
             summary:
               "Платный диагноз: панель оценок, доказательства с сайта, 5 глубоких коммерческих разборов, AI visibility, конкурентная разведка, коммерческий эффект, стек приоритетных правок, бренд-бриф на одну страницу и плейбук внедрения.",
             detail: "Лучше всего для владельцев сайтов, команд, основателей, студий, консультантов и сервисных брендов, которым нужно понять, что исправлять, почему это важно и что делать дальше.",
@@ -1122,7 +1201,7 @@ export const siteCopy = {
               "Бесплатный первый разбор даёт быстрый диагностический сигнал: панель оценок, самый сильный актив, главную точку трения, первый диагноз и понятный тизер следующего шага до оплаты.",
           },
           {
-            question: "Что входит в полный отчёт за $197?",
+            question: "Что входит в полный отчёт за $149?",
             answer:
               "Платный отчёт включает полный первый разбор, панель оценок, доказательства с сайта, пять глубоких коммерческих разборов, AI visibility, конкурентную разведку, коммерческий эффект, стек приоритетных правок, бренд-бриф на одну страницу, плейбук внедрения и PDF-экспорт.",
           },
@@ -1169,12 +1248,14 @@ export const siteCopy = {
       emailLabel: "Эл. почта для отчёта",
       emailPlaceholder: "you@example.com",
       emailRequired: "Введите корректный email, чтобы получить отчёт.",
+      scanConsentNotice:
+        "Запуская скан, вы соглашаетесь, что BrandMirror может проанализировать этот публичный URL. Email мы попросим только если вы захотите отправить, скачать или открыть отчёт.",
       dataConsentLabel:
         "Я согласен/согласна, что SAHAR/BrandMirror может обработать мой email и URL сайта, чтобы сгенерировать и отправить отчёт.",
       dataConsentRequired:
         "Подтвердите согласие на обработку данных, чтобы мы могли сгенерировать и отправить отчёт.",
       marketingConsentLabel:
-        "Я хочу получать от SAHAR/BrandMirror новости, предложения и полезные статьи о брендинге и ИИ. Я смогу отписаться в любой момент.",
+        "Я хочу получать от SAHAR/BrandMirror новости, предложения и полезные статьи о брендинге, AI visibility и ясности сайта. Я смогу отписаться в любой момент.",
       promoLabel: "Промокод",
       promoPlaceholder: "НЕОБЯЗАТЕЛЬНО",
       promoApply: "Применить",
@@ -1188,14 +1269,14 @@ export const siteCopy = {
       promoDueToday: "К оплате сегодня",
       promoFreeCta: "Открыть полный отчёт — $0",
       promoPayCta: "Оплатить сегодня",
-      checkoutCta: "Открыть — $197",
+      checkoutCta: "Открыть — $149",
       checkoutBusy: "Открываю оплату...",
       checkoutError: "Не удалось открыть оплату прямо сейчас.",
       submitIdle: "Прочитать мой бренд",
       submitBusy: "Читаю бренд...",
       statusInitial: "Введите сайт, чтобы сгенерировать первый разбор.",
       statusReading: "Читаю сайт и вытягиваю самые сильные сигналы.",
-      statusDone: "Первый разбор готов. Отчёт за $197 уже можно открыть.",
+      statusDone: "Первый разбор готов. Отчёт за $149 на запуске уже можно открыть.",
       pdfEmailSending: "Отправляю PDF на email...",
       pdfEmailSent: "PDF отправлен на ваш email.",
       pdfEmailSkipped: "Отправка PDF на email пока не настроена; используйте кнопку скачивания ниже.",
@@ -1212,6 +1293,7 @@ export const siteCopy = {
       mainFriction: "Главная точка трения",
       nextMove: "Следующий шаг",
       freePdfIdle: "Скачать бесплатный PDF",
+      freePdfEmailIdle: "Отправить PDF на email",
       freePdfBusy: "Собираю бесплатный PDF...",
       unlockLabel: "Открыть полный отчёт",
       unlockBody:
@@ -1233,14 +1315,15 @@ export const siteCopy = {
         "Формат: приватный веб-отчёт со скачиваемым PDF.",
         "Сделано как стратегический рабочий документ, а не как обычная стена допродажи.",
       ],
-      unlockCta: "Открыть полный отчёт BrandMirror — $197",
+      unlockCta: "Открыть полный отчёт BrandMirror — $149",
       unlockSecondary: "Посмотреть структуру полного отчёта",
       statusReady: "Готово к сканированию →",
       invalidUrl: "Это не похоже на адрес сайта",
       unreachableUrl: "Не удалось открыть эту страницу. Попробуйте адрес главной страницы.",
       startHelper: "Вставьте адрес главной страницы. Сканирование занимает 60 секунд.",
-      freePdfLabel: "Экспорт бесплатного отчёта",
-      freePdfBody: "Сохраните бесплатный первый разбор как PDF-снимок, которым удобно делиться.",
+      freePdfLabel: "Отправить или скачать",
+      freePdfBody:
+        "Хотите получить бесплатный первый разбор как PDF? Добавьте email, подтвердите согласие и выберите отправку или скачивание.",
       brandReadLabel: "Разбор бренда",
       brandReadTitle: "Симптом виден. Коммерческую цену нужно назвать.",
       brandReadBody:
@@ -1254,7 +1337,7 @@ export const siteCopy = {
       fixNextLabel: "Исправить следом",
       keepLabel: "Оставить",
       fixStackLabel: "Список исправлений",
-      fullReportTag: "$197 ПОЛНЫЙ ОТЧЁТ",
+      fullReportTag: "$149 ПОЛНЫЙ ОТЧЁТ",
       unlockExactFix: "Откройте точный список исправлений за этим сканированием.",
       fixStackBody:
         "Что исправить первым, что может подождать и что уже зарабатывает доверие — с приоритетом по коммерческому эффекту.",

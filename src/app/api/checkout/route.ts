@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/stripe";
 import { getSiteLocale } from "@/lib/site-i18n";
-import { createPaystackCheckout, isPaystackConfigured, REPORT_PRICE_ZAR_CENTS } from "@/lib/paystack";
+import { createPaystackCheckout, isPaystackConfigured } from "@/lib/paystack";
 import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { hasDataProcessingConsent, hasMarketingConsent } from "@/lib/customer-consent";
 import { applyPromoDiscount, createPromoToken, getPromoDiscount } from "@/lib/promo";
+import {
+  getBrandMirrorProduct,
+  getBrandMirrorProductConfig,
+} from "@/lib/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,10 +21,13 @@ export async function POST(request: NextRequest) {
       language?: string;
       email?: string;
       promoCode?: string;
+      product?: string;
       dataProcessingConsent?: boolean;
       marketingConsent?: boolean;
     };
     const locale = getSiteLocale(body.language);
+    const product = getBrandMirrorProduct(body.product);
+    const productConfig = getBrandMirrorProductConfig(product);
     const email = normalizeCustomerEmail(body.email);
     if (!email) {
       return NextResponse.json(
@@ -53,13 +60,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const discountedAmount = applyPromoDiscount(REPORT_PRICE_ZAR_CENTS, promoDiscount);
+    const discountedAmount = applyPromoDiscount(productConfig.zarCents, promoDiscount);
     if (promoDiscount && (promoDiscount.percentOff === 100 || discountedAmount === 0)) {
       const promoToken = createPromoToken({
         reportUrl: body.url || "",
         locale,
         email,
         promoCode: promoDiscount.code,
+        product,
         dataProcessingConsent,
         marketingConsent,
       });
@@ -67,7 +75,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         provider: "promo",
-        checkoutUrl: `${request.nextUrl.origin}/full-report?promo_token=${encodeURIComponent(promoToken)}&lang=${locale}`,
+        checkoutUrl: `${request.nextUrl.origin}${productConfig.successPath}?promo_token=${encodeURIComponent(promoToken)}&lang=${locale}`,
+        product,
         promoCode: promoDiscount.code,
         discountPercent: promoDiscount.percentOff,
       });
@@ -90,6 +99,7 @@ export async function POST(request: NextRequest) {
         locale,
         email,
         amount: discountedAmount,
+        product,
         promoCode: promoDiscount?.code,
         discountPercent: promoDiscount?.percentOff,
         dataProcessingConsent,
@@ -101,6 +111,7 @@ export async function POST(request: NextRequest) {
         provider: "paystack",
         checkoutUrl: checkout.checkoutUrl,
         reference: checkout.reference,
+        product,
         promoCode: promoDiscount?.code ?? null,
         discountPercent: promoDiscount?.percentOff ?? 0,
       });
@@ -111,6 +122,7 @@ export async function POST(request: NextRequest) {
       reportUrl: body.url || "",
       locale,
       email,
+      product,
       dataProcessingConsent,
       marketingConsent,
     });
@@ -120,6 +132,7 @@ export async function POST(request: NextRequest) {
       provider: "stripe",
       checkoutUrl: session.url,
       sessionId: session.id,
+      product,
     });
   } catch (error) {
     return NextResponse.json(

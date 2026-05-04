@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         "/terms",
         "/llms.txt",
       ],
-      disallow: ["/api/", "/full-report"],
+      disallow: ["/api/", "/full-report", "/quick-diagnosis"],
     },
     sitemap: absoluteUrl("/sitemap.xml"),
     host: SITE_HOST,

@@ -3,9 +3,14 @@ import "server-only";
 import { normalizeUrl } from "@/lib/brand-read";
 import { normalizeCustomerEmail } from "@/lib/customer-email";
 import { getSiteLocale, type SiteLocale } from "@/lib/site-i18n";
+import {
+  type BrandMirrorProduct,
+  getBrandMirrorProduct,
+  getBrandMirrorProductConfig,
+} from "@/lib/products";
 
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
-export const REPORT_PRICE_ZAR_CENTS = 3_700_00;
+export const REPORT_PRICE_ZAR_CENTS = getBrandMirrorProductConfig("full_report").zarCents;
 
 type PaystackInitializeResponse = {
   status: boolean;
@@ -54,6 +59,7 @@ export type PaystackCheckoutAccess = {
   currency: string | null;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
+  product: BrandMirrorProduct;
 };
 
 export function isPaystackConfigured() {
@@ -100,6 +106,7 @@ export async function createPaystackCheckout({
   locale,
   email,
   amount,
+  product,
   promoCode,
   discountPercent,
   dataProcessingConsent,
@@ -110,6 +117,7 @@ export async function createPaystackCheckout({
   locale: SiteLocale;
   email: string;
   amount?: number;
+  product?: BrandMirrorProduct;
   promoCode?: string | null;
   discountPercent?: number | null;
   dataProcessingConsent: boolean;
@@ -126,18 +134,19 @@ export async function createPaystackCheckout({
   }
 
   const reference = createReference();
+  const productConfig = getBrandMirrorProductConfig(product);
   const payload = await paystackFetch<PaystackInitializeResponse>("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
-      amount: amount ?? REPORT_PRICE_ZAR_CENTS,
+      amount: amount ?? productConfig.zarCents,
       email: normalizedEmail,
       currency: "ZAR",
       reference,
-      callback_url: `${origin}/full-report?reference=${encodeURIComponent(reference)}&lang=${locale}`,
+      callback_url: `${origin}${productConfig.successPath}?reference=${encodeURIComponent(reference)}&lang=${locale}`,
       metadata: {
         locale,
-        product: "brandmirror_full_report",
-        display_price: "$197",
+        product: productConfig.paystackMetadataProduct,
+        display_price: productConfig.displayPrice,
         customer_email: normalizedEmail,
         promo_code: promoCode || undefined,
         discount_percent: discountPercent || undefined,
@@ -188,5 +197,6 @@ export async function getPaystackCheckoutAccess(reference?: string | null) {
     currency: payload.data.currency ?? null,
     dataProcessingConsent: String(payload.data.metadata?.data_processing_consent) === "true",
     marketingConsent: String(payload.data.metadata?.marketing_consent) === "true",
+    product: getBrandMirrorProduct(payload.data.metadata?.product),
   } satisfies PaystackCheckoutAccess;
 }

@@ -47,11 +47,36 @@ function buildHomeStructuredData(
     description:
       "BrandMirror is an AI brand audit for any homepage that needs to explain value and convert. It reads positioning, AI visibility, offer clarity, visual credibility, and conversion readiness.",
     offers: {
-      "@type": "Offer",
-      price: "197",
+      "@type": "AggregateOffer",
+      lowPrice: "0",
+      highPrice: "149",
       priceCurrency: "USD",
       url: absoluteUrl("/first-read"),
       availability: "https://schema.org/InStock",
+      offerCount: "3",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Free First Read",
+          price: "0",
+          priceCurrency: "USD",
+          url: absoluteUrl("/first-read"),
+        },
+        {
+          "@type": "Offer",
+          name: "Quick Diagnosis",
+          price: "67",
+          priceCurrency: "USD",
+          url: absoluteUrl("/first-read?product=quick_diagnosis"),
+        },
+        {
+          "@type": "Offer",
+          name: "Full BrandMirror Report",
+          price: "149",
+          priceCurrency: "USD",
+          url: absoluteUrl("/first-read?product=full_report"),
+        },
+      ],
     },
     publisher: {
       "@type": "Organization",
@@ -217,17 +242,6 @@ function HeroLiveScan({ cta, locale }: { cta: string; locale: "en" | "es" | "ru"
   );
 }
 
-function ScanCornerMarks() {
-  return (
-    <>
-      <span className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-[#6FE0C2]/70" />
-      <span className="pointer-events-none absolute right-3 top-3 h-3 w-3 border-r border-t border-[#6FE0C2]/70" />
-      <span className="pointer-events-none absolute bottom-3 left-3 h-3 w-3 border-b border-l border-[#6FE0C2]/70" />
-      <span className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-[#6FE0C2]/70" />
-    </>
-  );
-}
-
 function SectionHeading({
   label,
   title,
@@ -262,6 +276,10 @@ export default async function Home({
   const copy = siteI18n.siteCopy[locale].landing;
   const refundLine = refundLineForLocale(locale);
   const structuredData = buildHomeStructuredData();
+  const localizedHref = (href: string) =>
+    href.startsWith("/") ? siteI18n.withLang(href, locale) : href;
+  const offersGuarantee = "guarantee" in copy.offers ? copy.offers.guarantee : undefined;
+  const offersLogicLine = "logicLine" in copy.offers ? copy.offers.logicLine : undefined;
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
@@ -393,50 +411,93 @@ export default async function Home({
               title={copy.offers.title}
               body={copy.offers.body}
             />
-          <div className="editorial-rule mt-14 pt-2">
+          <div className="editorial-rule mt-14 grid gap-5 pt-8 lg:grid-cols-3">
             {copy.offers.rows.map((offer) => {
               const isFixedPrice = offer.price.startsWith("$");
+              const badge = "badge" in offer ? offer.badge : undefined;
+              const items = "items" in offer ? offer.items : undefined;
+              const footnote = "footnote" in offer ? offer.footnote : undefined;
+              const priceWas = "priceWas" in offer ? offer.priceWas : undefined;
 
               return (
                 <div
                   key={offer.name}
-                  className="grid gap-5 border-b border-[color:var(--line)] py-8 md:grid-cols-[minmax(0,1.05fr)_minmax(7.5rem,10rem)_minmax(0,1.55fr)] md:gap-8 lg:gap-10"
+                  className={`relative flex min-h-full flex-col rounded-[1.5rem] border p-6 ${
+                    badge
+                      ? "border-[rgba(111,224,194,0.42)] bg-[rgba(111,224,194,0.055)]"
+                      : "border-[color:var(--line)] bg-[rgba(255,255,255,0.018)]"
+                  }`}
                 >
+                  {badge ? (
+                    <span className="mb-5 w-fit rounded-full border border-[rgba(111,224,194,0.3)] px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-[#6FE0C2]">
+                      {badge}
+                    </span>
+                  ) : null}
                   <div>
-                    <h3 className="font-serif text-4xl leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+                    <h3 className="font-serif text-4xl leading-[0.95] tracking-[-0.04em] text-[color:var(--foreground)]">
                       {offer.name}
                     </h3>
-                    <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
+                    <p className="mt-4 text-xs uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
                       {offer.layer}
                     </p>
                   </div>
-                  <p
-                    className={`max-w-[10rem] font-serif leading-none tracking-[-0.04em] text-[color:var(--accent)] md:pr-4 ${
-                      isFixedPrice ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl"
-                    }`}
-                  >
-                    {offer.price}
-                  </p>
-                  <div>
+                  <div className="mt-8 flex flex-wrap items-end gap-x-3 gap-y-2">
+                    {priceWas ? (
+                      <span className="font-serif text-3xl leading-none tracking-[-0.04em] text-[rgba(212,196,220,0.46)] line-through">
+                        {priceWas}
+                      </span>
+                    ) : null}
+                    <span
+                      className={`font-serif leading-none tracking-[-0.04em] text-[color:var(--accent)] ${
+                        isFixedPrice ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl"
+                      }`}
+                    >
+                      {offer.price}
+                    </span>
+                  </div>
+                  <div className="mt-7 flex flex-1 flex-col">
                     <p className="text-base leading-7 text-[color:var(--foreground-soft)]">
                       {offer.summary}
                     </p>
-                    <p className="mt-3 text-sm leading-6 text-[color:var(--foreground-soft)]">
+                    {items?.length ? (
+                      <ul className="mt-5 space-y-3">
+                        {items.map((item) => (
+                          <li
+                            key={item}
+                            className="grid grid-cols-[0.8rem_1fr] gap-3 text-sm leading-6 text-[color:var(--foreground-soft)]"
+                          >
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#6FE0C2]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <p className="mt-5 text-sm leading-6 text-[color:var(--foreground-soft)]">
                       {offer.detail}
                     </p>
                     {"actionHref" in offer && offer.actionHref ? (
                       <a
-                        href={offer.actionHref}
-                        className="mt-5 inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                        href={localizedHref(offer.actionHref)}
+                        className="mt-auto inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
                       >
                         {offer.actionLabel}
                       </a>
+                    ) : null}
+                    {footnote ? (
+                      <p className="mt-3 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.46)]">
+                        {footnote}
+                      </p>
                     ) : null}
                   </div>
                 </div>
               );
             })}
           </div>
+          {offersGuarantee ? (
+            <p className="mt-7 rounded-2xl border border-[rgba(111,224,194,0.22)] bg-[rgba(111,224,194,0.045)] px-5 py-4 text-sm font-medium leading-6 text-[color:var(--foreground)]">
+              ✦ {offersGuarantee}
+            </p>
+          ) : null}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href={siteI18n.withLang("/first-read", locale)}
@@ -451,50 +512,30 @@ export default async function Home({
               {copy.offers.secondaryCta}
             </Link>
           </div>
-          <p className="mt-4 text-sm font-medium text-[color:var(--foreground-soft)]">
-            {refundLine}
-          </p>
-        </div>
-      </section>
-
-      <section className="px-6 py-20 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.43fr_0.57fr]">
-          <div>
-            <SectionHeading
-              label={copy.fullReport.label}
-              title={copy.fullReport.title}
-              body={copy.fullReport.body}
-            />
-          </div>
-
-          <div className="relative overflow-hidden rounded-[2.25rem] border border-[rgba(111,224,194,0.24)] bg-[#090A0D] p-6 shadow-[0_34px_110px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
-            <ScanCornerMarks />
-            <p className="section-label text-[rgba(111,224,194,0.78)]">
-              {copy.fullReport.cardLabel}
+          {!offersGuarantee ? (
+            <p className="mt-4 text-sm font-medium text-[color:var(--foreground-soft)]">
+              {refundLine}
             </p>
-            <div className="editorial-rule mt-6 space-y-4 pt-6">
-              {copy.fullReport.items.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between gap-6 border-b border-[rgba(111,224,194,0.12)] pb-4 last:border-b-0 last:pb-0"
+          ) : null}
+        </div>
+      </section>
+
+      {offersLogicLine?.length ? (
+        <section className="px-6 py-16 sm:px-8 lg:px-12">
+          <div className="mx-auto max-w-7xl border-y border-[color:var(--line)] py-10">
+            <div className="grid gap-5 lg:grid-cols-3">
+              {offersLogicLine.map((line) => (
+                <p
+                  key={line}
+                  className="font-serif text-2xl leading-tight tracking-[-0.03em] text-[color:var(--foreground)]"
                 >
-                  <p className="text-sm uppercase tracking-[0.18em] text-[rgba(244,245,248,0.76)]">
-                    {item}
-                  </p>
-                  <span className="text-xs uppercase tracking-[0.22em] text-[rgba(111,224,194,0.72)]">
-                    {copy.fullReport.included}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="editorial-rule mt-8 grid gap-4 pt-5 text-sm text-[rgba(237,237,242,0.64)] sm:grid-cols-2">
-              {copy.fullReport.notes.map((item) => (
-                <p key={item}>{item}</p>
+                  {line}
+                </p>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="px-6 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.4fr_0.6fr]">
@@ -518,6 +559,26 @@ export default async function Home({
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-20 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[rgba(111,224,194,0.22)] bg-[#090A0D] p-8 text-center sm:p-12">
+          <p className="section-label text-[rgba(111,224,194,0.78)]">
+            {copy.final.label}
+          </p>
+          <h2 className="mx-auto mt-5 max-w-3xl font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl">
+            {copy.final.title}
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
+            {copy.final.body}
+          </p>
+          <Link
+            href={siteI18n.withLang("/first-read", locale)}
+            className="mt-8 inline-flex items-center justify-center rounded-full bg-[#6FE0C2] px-6 py-3 text-sm font-semibold text-[#06110E] shadow-[0_14px_34px_rgba(5,7,12,0.24)] hover:-translate-y-0.5 hover:bg-[#84efd4]"
+          >
+            {copy.final.primaryCta}
+          </Link>
         </div>
       </section>
 
