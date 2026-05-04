@@ -71,6 +71,13 @@ export async function POST(request: Request) {
     fullReportUrl.searchParams.set("product", "full_report");
     fullReportUrl.searchParams.set("lang", paidLocale);
     fullReportUrl.searchParams.set("url", paidAccess?.reportUrl || body.url || "");
+    if (paidEmail) fullReportUrl.searchParams.set("email", paidEmail);
+    if (paystackAccess?.reference) {
+      fullReportUrl.searchParams.set("upgrade_reference", paystackAccess.reference);
+    }
+    if (stripeAccess?.sessionId) {
+      fullReportUrl.searchParams.set("upgrade_session_id", stripeAccess.sessionId);
+    }
 
     if (paymentReference) {
       const stored = await getStoredPaidReport(paymentReference).catch((storedError) => {

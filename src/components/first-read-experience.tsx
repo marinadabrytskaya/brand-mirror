@@ -211,6 +211,9 @@ const CHECKOUT_PRODUCTS = {
 } as const;
 
 type CheckoutProduct = keyof typeof CHECKOUT_PRODUCTS;
+const QUICK_DIAGNOSIS_CREDIT_USD_CENTS = 6_700;
+const FULL_REPORT_UPGRADE_USD_CENTS =
+  CHECKOUT_PRODUCTS.full_report.usdCents - QUICK_DIAGNOSIS_CREDIT_USD_CENTS;
 
 function formatUsd(cents: number) {
   const dollars = cents / 100;
@@ -228,6 +231,10 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
   const checkoutProduct: CheckoutProduct =
     searchParams.get("product") === "quick_diagnosis" ? "quick_diagnosis" : "full_report";
   const checkoutProductConfig = CHECKOUT_PRODUCTS[checkoutProduct];
+  const upgradeReference = searchParams.get("upgrade_reference") || "";
+  const upgradeSessionId = searchParams.get("upgrade_session_id") || "";
+  const hasQuickDiagnosisCredit =
+    checkoutProduct === "full_report" && Boolean(upgradeReference || upgradeSessionId);
   const [url, setUrl] = useState(() => searchParams.get("url") || "");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [dataProcessingConsent, setDataProcessingConsent] = useState(false);
@@ -306,8 +313,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
       : localizedFullReportIncludes;
   const localizedRefundLine = refundLineForLocale(locale);
   const discountPercent = promoPreview?.discountPercent ?? 0;
-  const discountUsdCents = Math.round(checkoutProductConfig.usdCents * (discountPercent / 100));
-  const amountDueUsdCents = Math.max(0, checkoutProductConfig.usdCents - discountUsdCents);
+  const checkoutBaseUsdCents = hasQuickDiagnosisCredit
+    ? FULL_REPORT_UPGRADE_USD_CENTS
+    : checkoutProductConfig.usdCents;
+  const discountUsdCents = Math.round(checkoutBaseUsdCents * (discountPercent / 100));
+  const amountDueUsdCents = Math.max(0, checkoutBaseUsdCents - discountUsdCents);
   const hasAppliedPromo = promoStatus === "applied" && Boolean(promoPreview);
   const checkoutButtonLabel = isOpeningCheckout
     ? (copy.checkoutBusy ?? "Opening checkout...")
@@ -317,6 +327,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           : (copy.promoFreeCta ?? checkoutProductConfig.freeCta))
       : hasAppliedPromo
         ? `${copy.promoPayCta ?? "Pay today"} — ${formatUsd(amountDueUsdCents)}`
+        : hasQuickDiagnosisCredit
+          ? `Upgrade to Full Report — ${formatUsd(amountDueUsdCents)}`
         : (checkoutProduct === "quick_diagnosis"
             ? checkoutProductConfig.idleCta
             : (copy.checkoutCta ?? copy.unlockCta ?? checkoutProductConfig.idleCta));
@@ -522,6 +534,8 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
           language: locale,
           email: checkedEmail,
           product: checkoutProduct,
+          upgradeReference: checkoutProduct === "full_report" ? upgradeReference || undefined : undefined,
+          upgradeSessionId: checkoutProduct === "full_report" ? upgradeSessionId || undefined : undefined,
           dataProcessingConsent,
           marketingConsent,
           promoCode: promoCode.trim() || undefined,
@@ -1255,7 +1269,11 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                     letterSpacing: "0.16em",
                   }}
                 >
-                  <span>{checkoutProductConfig.label}</span>
+                  <span>
+                    {hasQuickDiagnosisCredit
+                      ? "QUICK DIAGNOSIS CREDIT APPLIED"
+                      : checkoutProductConfig.label}
+                  </span>
                   <span
                     className="ml-3 opacity-60 line-through"
                     aria-label={`Regular price ${checkoutProductConfig.regularLabel}`}
@@ -1417,6 +1435,22 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                       </span>
                     </span>
                   </div>
+                  {hasQuickDiagnosisCredit ? (
+                    <div className="mt-2 flex items-center justify-between gap-4">
+                      <span style={{ color: COLOR.textMuted, fontSize: "13px" }}>
+                        Quick Diagnosis credit
+                      </span>
+                      <span
+                        style={{
+                          color: "#6FE0C2",
+                          fontFamily: "var(--font-mono), ui-monospace, monospace",
+                          fontSize: "13px",
+                        }}
+                      >
+                        -{formatUsd(QUICK_DIAGNOSIS_CREDIT_USD_CENTS)}
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="mt-2 flex items-center justify-between gap-4">
                     <span style={{ color: COLOR.textMuted, fontSize: "13px" }}>
                       {hasAppliedPromo

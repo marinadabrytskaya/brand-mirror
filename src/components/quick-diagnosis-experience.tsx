@@ -167,6 +167,18 @@ export function QuickDiagnosisExperience({
     });
   }
 
+  function fullReportHrefFor(reportUrl: string) {
+    const params = new URLSearchParams({
+      product: "full_report",
+      url: reportUrl,
+    });
+    const reference = searchParams.get("reference");
+    const sessionId = searchParams.get("session_id");
+    if (reference) params.set("upgrade_reference", reference);
+    if (sessionId) params.set("upgrade_session_id", sessionId);
+    return siteI18n.withLang(`/first-read?${params.toString()}`, locale);
+  }
+
   useEffect(() => {
     const urlFromParams = searchParams.get("url");
     const targetUrl = urlFromParams || initialUrl;
@@ -421,7 +433,7 @@ export function QuickDiagnosisExperience({
                 </p>
               </div>
               <Link
-                href={siteI18n.withLang(`/first-read?url=${encodeURIComponent(report.url)}&product=full_report`, locale)}
+                href={fullReportHrefFor(report.url)}
                 className="inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
               >
                 Unlock Full Report

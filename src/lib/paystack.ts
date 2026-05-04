@@ -42,6 +42,9 @@ type PaystackVerifyResponse = {
       customer_email?: string;
       promo_code?: string;
       discount_percent?: number;
+      quick_diagnosis_credit?: number;
+      upgrade_from_reference?: string;
+      upgrade_from_session_id?: string;
       report_url?: string;
       data_processing_consent?: boolean | string;
       marketing_consent?: boolean | string;
@@ -109,6 +112,9 @@ export async function createPaystackCheckout({
   product,
   promoCode,
   discountPercent,
+  quickDiagnosisCredit,
+  upgradeFromReference,
+  upgradeFromSessionId,
   dataProcessingConsent,
   marketingConsent,
 }: {
@@ -120,6 +126,9 @@ export async function createPaystackCheckout({
   product?: BrandMirrorProduct;
   promoCode?: string | null;
   discountPercent?: number | null;
+  quickDiagnosisCredit?: number | null;
+  upgradeFromReference?: string | null;
+  upgradeFromSessionId?: string | null;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
 }) {
@@ -150,6 +159,9 @@ export async function createPaystackCheckout({
         customer_email: normalizedEmail,
         promo_code: promoCode || undefined,
         discount_percent: discountPercent || undefined,
+        quick_diagnosis_credit: quickDiagnosisCredit || undefined,
+        upgrade_from_reference: upgradeFromReference || undefined,
+        upgrade_from_session_id: upgradeFromSessionId || undefined,
         data_processing_consent: dataProcessingConsent,
         marketing_consent: marketingConsent,
         report_url: normalizedUrl,

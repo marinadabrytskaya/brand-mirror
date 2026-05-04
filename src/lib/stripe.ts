@@ -53,6 +53,10 @@ export async function createCheckoutSession({
   locale,
   email,
   product,
+  amountUsdCents,
+  quickDiagnosisCredit,
+  upgradeFromReference,
+  upgradeFromSessionId,
   dataProcessingConsent,
   marketingConsent,
 }: {
@@ -61,6 +65,10 @@ export async function createCheckoutSession({
   locale: SiteLocale;
   email: string;
   product?: BrandMirrorProduct;
+  amountUsdCents?: number | null;
+  quickDiagnosisCredit?: number | null;
+  upgradeFromReference?: string | null;
+  upgradeFromSessionId?: string | null;
   dataProcessingConsent: boolean;
   marketingConsent: boolean;
 }) {
@@ -75,6 +83,7 @@ export async function createCheckoutSession({
 
   const stripe = getStripe();
   const productConfig = getBrandMirrorProductConfig(product);
+  const checkoutAmount = amountUsdCents ?? productConfig.usdCents;
   const successUrl = `${origin}${productConfig.successPath}?session_id={CHECKOUT_SESSION_ID}&lang=${locale}`;
   const cancelUrl = `${origin}/first-read?url=${encodeURIComponent(normalizedUrl)}&product=${productConfig.successPath === "/quick-diagnosis" ? "quick_diagnosis" : "full_report"}&lang=${locale}`;
 
@@ -90,7 +99,7 @@ export async function createCheckoutSession({
         quantity: 1,
         price_data: {
           currency: "usd",
-          unit_amount: productConfig.usdCents,
+          unit_amount: checkoutAmount,
           product_data: {
             name: productConfig.name,
             description:
@@ -106,6 +115,9 @@ export async function createCheckoutSession({
       product: productConfig.paystackMetadataProduct,
       report_url: normalizedUrl,
       customer_email: normalizedEmail,
+      quick_diagnosis_credit: quickDiagnosisCredit ? String(quickDiagnosisCredit) : null,
+      upgrade_from_reference: upgradeFromReference || null,
+      upgrade_from_session_id: upgradeFromSessionId || null,
       data_processing_consent: String(dataProcessingConsent),
       marketing_consent: String(marketingConsent),
     },
