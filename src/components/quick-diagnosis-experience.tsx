@@ -11,6 +11,11 @@ import siteI18n, { type SiteLocale } from "@/lib/site-i18n";
 type ReportResponse = {
   ok: boolean;
   report: BrandReport;
+  accessUrl?: string;
+  delivery?: {
+    emailStatus?: "pending" | "sent" | "skipped" | "failed" | null;
+    emailError?: string | null;
+  };
 };
 
 type ErrorResponse = {
@@ -137,12 +142,19 @@ export function QuickDiagnosisExperience({
         }
 
         setReport(payload.report);
+        const emailSent = payload.delivery?.emailStatus === "sent";
         setStatus(
           locale === "ru"
-            ? "Quick Diagnosis готов."
+            ? emailSent
+              ? "Quick Diagnosis готов. Мы также отправили ссылку на email."
+              : "Quick Diagnosis готов."
             : locale === "es"
-              ? "Quick Diagnosis listo."
-              : "Quick Diagnosis ready.",
+              ? emailSent
+                ? "Quick Diagnosis listo. También enviamos el enlace por email."
+                : "Quick Diagnosis listo."
+              : emailSent
+                ? "Quick Diagnosis ready. We also emailed you the access link."
+                : "Quick Diagnosis ready.",
         );
       } catch (requestError) {
         setError(

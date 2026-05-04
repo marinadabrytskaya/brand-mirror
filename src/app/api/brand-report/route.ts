@@ -3,10 +3,11 @@ import { generateBrandReport, generateBrandReportPdf } from "@/lib/brand-report"
 import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
-import { savePaidReport } from "@/lib/supabase";
+import { getStoredPaidReport, savePaidReport } from "@/lib/supabase";
 import { isReportEmailConfigured, sendBrandReportEmail } from "@/lib/report-email";
 import { verifyPromoToken } from "@/lib/promo";
 import { canAccessBrandMirrorProduct } from "@/lib/products";
+import { buildReportAccessUrl } from "@/lib/report-access-url";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -56,6 +57,33 @@ export async function POST(request: Request) {
       paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
     const paidEmail = paidAccess?.customerEmail || null;
     const paidLocale = paidAccess?.locale || language;
+    const origin = new URL(request.url).origin;
+    const reportAccessUrl = buildReportAccessUrl({
+      origin,
+      product: "full_report",
+      locale: paidLocale,
+      reference: paystackAccess?.reference || null,
+      sessionId: stripeAccess?.sessionId || null,
+      promoToken: body.promoToken || null,
+    });
+
+    if (paymentReference) {
+      const stored = await getStoredPaidReport(paymentReference).catch((storedError) => {
+        console.warn("Unable to load stored full report", storedError);
+        return null;
+      });
+      if (stored?.report) {
+        return NextResponse.json({
+          ok: true,
+          report: stored.report,
+          accessUrl: reportAccessUrl,
+          delivery: {
+            emailStatus: stored.emailStatus || "skipped",
+            emailError: stored.emailError,
+          },
+        });
+      }
+    }
 
     const report = await generateBrandReport(
       paidAccess?.reportUrl || body.url || "",
@@ -83,7 +111,15 @@ export async function POST(request: Request) {
 
       const delivery = isReportEmailConfigured()
         ? await generateBrandReportPdf(report, paidLocale)
-            .then((pdf) => sendBrandReportEmail({ to: paidEmail, report, locale: paidLocale, pdf }))
+            .then((pdf) =>
+              sendBrandReportEmail({
+                to: paidEmail,
+                report,
+                locale: paidLocale,
+                pdf,
+                reportUrl: reportAccessUrl,
+              }),
+            )
             .catch((emailSendError) => ({
               status: "failed" as const,
               error:
@@ -122,6 +158,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       report,
+      accessUrl: reportAccessUrl,
       delivery: {
         emailStatus,
         emailError,

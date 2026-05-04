@@ -32,13 +32,19 @@ function subjectFor(report: BrandReport, locale: SiteLocale) {
   return `Your BrandMirror report: ${report.brandName}`;
 }
 
+function quickDiagnosisSubjectFor(report: BrandReport, locale: SiteLocale) {
+  if (locale === "ru") return `Ваш BrandMirror Quick Diagnosis: ${report.brandName}`;
+  if (locale === "es") return `Tu BrandMirror Quick Diagnosis: ${report.brandName}`;
+  return `Your BrandMirror Quick Diagnosis: ${report.brandName}`;
+}
+
 function firstReadSubjectFor(result: BrandReadResult, locale: SiteLocale) {
   if (locale === "ru") return `Ваш бесплатный BrandMirror PDF: ${result.brandName}`;
   if (locale === "es") return `Tu PDF gratuito de BrandMirror: ${result.brandName}`;
   return `Your free BrandMirror PDF: ${result.brandName}`;
 }
 
-function htmlFor(report: BrandReport, locale: SiteLocale) {
+function htmlFor(report: BrandReport, locale: SiteLocale, reportUrl?: string | null) {
   const intro =
     locale === "ru"
       ? "Ваш полный отчёт BrandMirror готов. PDF прикреплён к письму."
@@ -59,6 +65,73 @@ function htmlFor(report: BrandReport, locale: SiteLocale) {
       <h1 style="font-size: 24px; margin: 24px 0 8px;">${escapeHtml(report.brandName)}</h1>
       <p style="margin: 0 0 18px; color: #555;">${escapeHtml(report.tagline)}</p>
       <p><strong>${next}</strong> ${escapeHtml(report.strategicNextMove)}</p>
+      ${
+        reportUrl
+          ? `<p style="margin: 24px 0;">
+              <a href="${escapeHtml(reportUrl)}" style="background: #111; color: #fff; padding: 12px 18px; text-decoration: none; border-radius: 999px; display: inline-block;">
+                ${escapeHtml(locale === "ru" ? "Открыть отчёт онлайн" : locale === "es" ? "Abrir reporte online" : "Open report online")}
+              </a>
+            </p>`
+          : ""
+      }
+      <p style="margin-top: 28px; color: #666;">BrandMirror by SAHAR</p>
+    </div>
+  `;
+}
+
+function quickDiagnosisHtmlFor(report: BrandReport, locale: SiteLocale, reportUrl: string, fullReportUrl: string) {
+  const intro =
+    locale === "ru"
+      ? "Ваш BrandMirror Quick Diagnosis готов. Ссылка ниже вернёт вас к этому диагнозу."
+      : locale === "es"
+        ? "Tu BrandMirror Quick Diagnosis está listo. El enlace de abajo te devuelve a este diagnóstico."
+        : "Your BrandMirror Quick Diagnosis is ready. The link below brings you back to this diagnosis.";
+
+  const firstFix =
+    locale === "ru"
+      ? "Первое, что стоит исправить:"
+      : locale === "es"
+        ? "Lo primero que conviene corregir:"
+        : "The first thing to fix:";
+
+  const openButton =
+    locale === "ru"
+      ? "Открыть Quick Diagnosis"
+      : locale === "es"
+        ? "Abrir Quick Diagnosis"
+        : "Open Quick Diagnosis";
+
+  const fullButton =
+    locale === "ru"
+      ? "Открыть Full Report"
+      : locale === "es"
+        ? "Abrir Full Report"
+        : "Open the Full Report";
+
+  const fullText =
+    locale === "ru"
+      ? "Если проблема глубже, полный отчёт покажет все 5 deep dives, competitor intelligence, commercial impact, brand brief и implementation playbook."
+      : locale === "es"
+        ? "Si el problema es más profundo, el reporte completo muestra los 5 deep dives, competitor intelligence, commercial impact, brand brief e implementation playbook."
+        : "If the issue runs deeper, the full report gives you all 5 deep dives, competitor intelligence, commercial impact, brand brief, and implementation playbook.";
+
+  return `
+    <div style="font-family: Arial, sans-serif; color: #111; line-height: 1.55;">
+      <p>${intro}</p>
+      <h1 style="font-size: 24px; margin: 24px 0 8px;">${escapeHtml(report.brandName)}</h1>
+      <p style="margin: 0 0 18px; color: #555;">${escapeHtml(report.tagline)}</p>
+      <p><strong>${firstFix}</strong> ${escapeHtml(report.strategicNextMove)}</p>
+      <p style="margin: 24px 0;">
+        <a href="${escapeHtml(reportUrl)}" style="background: #111; color: #fff; padding: 12px 18px; text-decoration: none; border-radius: 999px; display: inline-block;">
+          ${escapeHtml(openButton)}
+        </a>
+      </p>
+      <p>${escapeHtml(fullText)}</p>
+      <p style="margin: 18px 0;">
+        <a href="${escapeHtml(fullReportUrl)}" style="color: #111; font-weight: 700;">
+          ${escapeHtml(fullButton)}
+        </a>
+      </p>
       <p style="margin-top: 28px; color: #666;">BrandMirror by SAHAR</p>
     </div>
   `;
@@ -153,19 +226,41 @@ export async function sendBrandReportEmail({
   report,
   locale,
   pdf,
+  reportUrl,
 }: {
   to: string;
   report: BrandReport;
   locale: SiteLocale;
   pdf: Buffer;
+  reportUrl?: string | null;
 }): Promise<ReportEmailResult> {
   const filename = `${report.brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "brandmirror"}-report.pdf`;
   return sendEmail({
     to,
     subject: subjectFor(report, locale),
-    html: htmlFor(report, locale),
+    html: htmlFor(report, locale, reportUrl),
     filename,
     pdf,
+  });
+}
+
+export async function sendQuickDiagnosisEmail({
+  to,
+  report,
+  locale,
+  reportUrl,
+  fullReportUrl,
+}: {
+  to: string;
+  report: BrandReport;
+  locale: SiteLocale;
+  reportUrl: string;
+  fullReportUrl: string;
+}): Promise<ReportEmailResult> {
+  return sendEmail({
+    to,
+    subject: quickDiagnosisSubjectFor(report, locale),
+    html: quickDiagnosisHtmlFor(report, locale, reportUrl, fullReportUrl),
   });
 }
 

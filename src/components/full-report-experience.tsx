@@ -15,6 +15,11 @@ type SiteLocale = "en" | "es" | "ru";
 type ReportResponse = {
   ok: boolean;
   report: BrandReport;
+  accessUrl?: string;
+  delivery?: {
+    emailStatus?: "pending" | "sent" | "skipped" | "failed" | null;
+    emailError?: string | null;
+  };
 };
 
 type ErrorResponse = {

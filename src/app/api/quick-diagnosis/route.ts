@@ -3,9 +3,11 @@ import { generateBrandReport } from "@/lib/brand-report";
 import { getSiteLocale } from "@/lib/site-i18n";
 import { getPaidCheckoutAccess, isStripeConfigured } from "@/lib/stripe";
 import { getPaystackCheckoutAccess, isPaystackConfigured } from "@/lib/paystack";
-import { savePaidReport } from "@/lib/supabase";
+import { getStoredPaidReport, savePaidReport } from "@/lib/supabase";
+import { isReportEmailConfigured, sendQuickDiagnosisEmail } from "@/lib/report-email";
 import { verifyPromoToken } from "@/lib/promo";
 import { canAccessBrandMirrorProduct } from "@/lib/products";
+import { buildReportAccessUrl } from "@/lib/report-access-url";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -55,11 +57,44 @@ export async function POST(request: Request) {
       paystackAccess?.reference || stripeAccess?.sessionId || promoAccess?.reference || null;
     const paidEmail = paidAccess?.customerEmail || null;
     const paidLocale = paidAccess?.locale || language;
+    const origin = new URL(request.url).origin;
+    const reportAccessUrl = buildReportAccessUrl({
+      origin,
+      product: "quick_diagnosis",
+      locale: paidLocale,
+      reference: paystackAccess?.reference || null,
+      sessionId: stripeAccess?.sessionId || null,
+      promoToken: body.promoToken || null,
+    });
+    const fullReportUrl = new URL("/first-read", origin);
+    fullReportUrl.searchParams.set("product", "full_report");
+    fullReportUrl.searchParams.set("lang", paidLocale);
+    fullReportUrl.searchParams.set("url", paidAccess?.reportUrl || body.url || "");
+
+    if (paymentReference) {
+      const stored = await getStoredPaidReport(paymentReference).catch((storedError) => {
+        console.warn("Unable to load stored quick diagnosis", storedError);
+        return null;
+      });
+      if (stored?.report) {
+        return NextResponse.json({
+          ok: true,
+          report: stored.report,
+          accessUrl: reportAccessUrl,
+          delivery: {
+            emailStatus: stored.emailStatus || "skipped",
+            emailError: stored.emailError,
+          },
+        });
+      }
+    }
 
     const report = await generateBrandReport(
       paidAccess?.reportUrl || body.url || "",
       paidLocale,
     );
+    let emailStatus: "pending" | "sent" | "skipped" | "failed" = "skipped";
+    let emailError: string | null = null;
 
     if (provider && paymentReference && paidEmail) {
       await savePaidReport({
@@ -71,21 +106,62 @@ export async function POST(request: Request) {
         amountTotal: paidAccess?.amountTotal ?? null,
         currency: paidAccess?.currency ?? null,
         report,
-        emailStatus: "skipped",
-        emailError: "quick_diagnosis_no_pdf",
+        emailStatus: "pending",
         dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
         marketingConsent: paidAccess?.marketingConsent ?? false,
       }).catch((saveError) => {
         console.warn("Unable to save quick diagnosis", saveError);
+      });
+
+      const delivery = isReportEmailConfigured()
+        ? await sendQuickDiagnosisEmail({
+            to: paidEmail,
+            report,
+            locale: paidLocale,
+            reportUrl: reportAccessUrl,
+            fullReportUrl: fullReportUrl.toString(),
+          }).catch((emailSendError) => ({
+            status: "failed" as const,
+            error:
+              emailSendError instanceof Error
+                ? emailSendError.message
+                : "Unable to email the quick diagnosis.",
+          }))
+        : { status: "skipped" as const, reason: "not_configured" as const };
+
+      emailStatus = delivery.status;
+      emailError =
+        delivery.status === "failed"
+          ? delivery.error
+          : delivery.status === "skipped"
+            ? delivery.reason
+            : null;
+
+      await savePaidReport({
+        email: paidEmail,
+        url: report.url,
+        locale: paidLocale,
+        provider,
+        paymentReference,
+        amountTotal: paidAccess?.amountTotal ?? null,
+        currency: paidAccess?.currency ?? null,
+        report,
+        emailStatus,
+        emailError,
+        dataProcessingConsent: paidAccess?.dataProcessingConsent ?? false,
+        marketingConsent: paidAccess?.marketingConsent ?? false,
+      }).catch((saveError) => {
+        console.warn("Unable to save quick diagnosis email status", saveError);
       });
     }
 
     return NextResponse.json({
       ok: true,
       report,
+      accessUrl: reportAccessUrl,
       delivery: {
-        emailStatus: "skipped",
-        emailError: "quick_diagnosis_no_pdf",
+        emailStatus,
+        emailError,
       },
     });
   } catch (error) {
