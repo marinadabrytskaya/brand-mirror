@@ -25,6 +25,19 @@ function recipientsFromEnv() {
     .filter(Boolean);
 }
 
+function publicErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (typeof error === "object" && error !== null) {
+    const candidate = error as { message?: unknown; error?: unknown; code?: unknown };
+    if (typeof candidate.message === "string") {
+      return candidate.code ? `${candidate.message} (${String(candidate.code)})` : candidate.message;
+    }
+    if (typeof candidate.error === "string") return candidate.error;
+  }
+  return "Unable to send BrandMirror digest.";
+}
+
 export async function GET(request: Request) {
   try {
     const cronSecret = process.env.CRON_SECRET;
@@ -69,13 +82,11 @@ export async function GET(request: Request) {
       delivery,
     });
   } catch (error) {
+    console.error("Unable to send BrandMirror digest", error);
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to send BrandMirror digest.",
+        error: publicErrorMessage(error),
       },
       { status: 500 },
     );

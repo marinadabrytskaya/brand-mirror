@@ -13,6 +13,11 @@ type ConsentFields = {
   marketingConsent: boolean;
 };
 
+type DigestQueryResult = {
+  data: Record<string, unknown>[] | null;
+  error: unknown;
+};
+
 export type BrandMirrorDigestFirstRead = {
   id: string;
   email: string;
@@ -43,6 +48,18 @@ let adminClient: SupabaseClient | null = null;
 
 function cleanEnvValue(value?: string) {
   return (value || "").trim();
+}
+
+function isMissingConsentColumn(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "42703" &&
+    "message" in error &&
+    typeof error.message === "string" &&
+    /marketing_consent|data_processing_consent|consent_/i.test(error.message)
+  );
 }
 
 function getSupabaseUrl() {
@@ -102,6 +119,22 @@ async function upsertCustomer(email: string, consent?: Partial<ConsentFields>) {
     .select("id")
     .single();
 
+  if (isMissingConsentColumn(error)) {
+    const fallback = await supabase
+      .from("brandmirror_customers")
+      .upsert(
+        {
+          email,
+          last_seen_at: new Date().toISOString(),
+        },
+        { onConflict: "email" },
+      )
+      .select("id")
+      .single();
+    if (fallback.error) throw fallback.error;
+    return fallback.data?.id as string | undefined;
+  }
+
   if (error) throw error;
   return data?.id as string | undefined;
 }
@@ -139,6 +172,18 @@ export async function saveFirstReadLead({
     data_processing_consent: dataProcessingConsent,
     marketing_consent: marketingConsent,
   });
+
+  if (isMissingConsentColumn(error)) {
+    const fallback = await getSupabaseAdmin().from("brandmirror_first_reads").insert({
+      customer_id: customerId,
+      email: normalizedEmail,
+      url,
+      locale,
+      result,
+    });
+    if (fallback.error) throw fallback.error;
+    return { saved: true, consentSaved: false };
+  }
 
   if (error) throw error;
   return { saved: true };
@@ -219,6 +264,28 @@ export async function savePaidReport({
     { onConflict: "payment_reference" },
   );
 
+  if (isMissingConsentColumn(error)) {
+    const fallback = await getSupabaseAdmin().from("brandmirror_paid_reports").upsert(
+      {
+        customer_id: customerId,
+        email: normalizedEmail,
+        url,
+        locale,
+        provider,
+        payment_reference: paymentReference,
+        amount_total: amountTotal,
+        currency,
+        report,
+        email_status: emailStatus,
+        email_error: emailError || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "payment_reference" },
+    );
+    if (fallback.error) throw fallback.error;
+    return { saved: true, consentSaved: false };
+  }
+
   if (error) throw error;
   return { saved: true };
 }
@@ -238,28 +305,54 @@ export async function getBrandMirrorDigest({
   const sinceIso = since.toISOString();
   const untilIso = until.toISOString();
 
-  const [firstReadsResult, paidReportsResult] = await Promise.all([
+  let [firstReadsResult, paidReportsResult]: [DigestQueryResult, DigestQueryResult] = await Promise.all([
     supabase
       .from("brandmirror_first_reads")
       .select("id,email,url,locale,result,marketing_consent,created_at")
       .gte("created_at", sinceIso)
       .lt("created_at", untilIso)
       .order("created_at", { ascending: false })
-      .limit(500),
+      .limit(500) as unknown as Promise<DigestQueryResult>,
     supabase
       .from("brandmirror_paid_reports")
       .select("id,email,url,locale,provider,payment_reference,amount_total,currency,report,email_status,email_error,marketing_consent,created_at")
       .gte("created_at", sinceIso)
       .lt("created_at", untilIso)
       .order("created_at", { ascending: false })
-      .limit(500),
+      .limit(500) as unknown as Promise<DigestQueryResult>,
   ]);
+
+  if (isMissingConsentColumn(firstReadsResult.error)) {
+    firstReadsResult = await (supabase
+      .from("brandmirror_first_reads")
+      .select("id,email,url,locale,result,created_at")
+      .gte("created_at", sinceIso)
+      .lt("created_at", untilIso)
+      .order("created_at", { ascending: false })
+      .limit(500) as unknown as Promise<DigestQueryResult>);
+  }
+
+  if (isMissingConsentColumn(paidReportsResult.error)) {
+    paidReportsResult = await (supabase
+      .from("brandmirror_paid_reports")
+      .select("id,email,url,locale,provider,payment_reference,amount_total,currency,report,email_status,email_error,created_at")
+      .gte("created_at", sinceIso)
+      .lt("created_at", untilIso)
+      .order("created_at", { ascending: false })
+      .limit(500) as unknown as Promise<DigestQueryResult>);
+  }
 
   if (firstReadsResult.error) throw firstReadsResult.error;
   if (paidReportsResult.error) throw paidReportsResult.error;
 
   return {
-    firstReads: (firstReadsResult.data || []) as BrandMirrorDigestFirstRead[],
-    paidReports: (paidReportsResult.data || []) as BrandMirrorDigestPaidReport[],
+    firstReads: (firstReadsResult.data || []).map((item) => ({
+      ...item,
+      marketing_consent: Boolean("marketing_consent" in item && item.marketing_consent),
+    })) as BrandMirrorDigestFirstRead[],
+    paidReports: (paidReportsResult.data || []).map((item) => ({
+      ...item,
+      marketing_consent: Boolean("marketing_consent" in item && item.marketing_consent),
+    })) as BrandMirrorDigestPaidReport[],
   };
 }
