@@ -280,6 +280,12 @@ export default async function Home({
     href.startsWith("/") ? siteI18n.withLang(href, locale) : href;
   const offersGuarantee = "guarantee" in copy.offers ? copy.offers.guarantee : undefined;
   const offersLogicLine = "logicLine" in copy.offers ? copy.offers.logicLine : undefined;
+  const productOffers = copy.offers.rows.filter(
+    (offer) => !offer.layer.toLowerCase().includes("implementation"),
+  );
+  const implementationOffers = copy.offers.rows.filter((offer) =>
+    offer.layer.toLowerCase().includes("implementation"),
+  );
 
   return (
     <main className="page-shell homepage-shell bg-[color:var(--background)]">
@@ -411,8 +417,8 @@ export default async function Home({
               title={copy.offers.title}
               body={copy.offers.body}
             />
-          <div className="editorial-rule mt-14 grid gap-5 pt-8 lg:grid-cols-3">
-            {copy.offers.rows.map((offer) => {
+          <div className="editorial-rule mt-14 grid items-stretch gap-5 pt-8 lg:grid-cols-3">
+            {productOffers.map((offer) => {
               const isFixedPrice = offer.price.startsWith("$");
               const badge = "badge" in offer ? offer.badge : undefined;
               const items = "items" in offer ? offer.items : undefined;
@@ -422,17 +428,19 @@ export default async function Home({
               return (
                 <div
                   key={offer.name}
-                  className={`relative flex min-h-full flex-col rounded-[1.5rem] border p-6 ${
+                  className={`relative flex min-h-full flex-col rounded-[1.5rem] border p-6 sm:p-7 ${
                     badge
                       ? "border-[rgba(111,224,194,0.42)] bg-[rgba(111,224,194,0.055)]"
                       : "border-[color:var(--line)] bg-[rgba(255,255,255,0.018)]"
                   }`}
                 >
-                  {badge ? (
-                    <span className="mb-5 w-fit rounded-full border border-[rgba(111,224,194,0.3)] px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-[#6FE0C2]">
-                      {badge}
-                    </span>
-                  ) : null}
+                  <div className="mb-5 h-7">
+                    {badge ? (
+                      <span className="inline-flex w-fit rounded-full border border-[rgba(111,224,194,0.3)] px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-[#6FE0C2]">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </div>
                   <div>
                     <h3 className="font-serif text-4xl leading-[0.95] tracking-[-0.04em] text-[color:var(--foreground)]">
                       {offer.name}
@@ -441,9 +449,9 @@ export default async function Home({
                       {offer.layer}
                     </p>
                   </div>
-                  <div className="mt-8 flex flex-wrap items-end gap-x-3 gap-y-2">
+                  <div className="mt-8 flex min-h-[4.4rem] flex-wrap items-end gap-x-3 gap-y-2">
                     {priceWas ? (
-                      <span className="font-serif text-3xl leading-none tracking-[-0.04em] text-[rgba(212,196,220,0.46)] line-through">
+                      <span className="font-serif text-2xl leading-none tracking-[-0.04em] text-[rgba(212,196,220,0.42)] line-through sm:text-3xl">
                         {priceWas}
                       </span>
                     ) : null}
@@ -478,21 +486,62 @@ export default async function Home({
                     {"actionHref" in offer && offer.actionHref ? (
                       <a
                         href={localizedHref(offer.actionHref)}
-                        className="mt-auto inline-flex items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                        className="mt-auto inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
                       >
                         {offer.actionLabel}
                       </a>
                     ) : null}
                     {footnote ? (
-                      <p className="mt-3 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.46)]">
+                      <p className="mt-3 min-h-4 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-[rgba(237,237,242,0.46)]">
                         {footnote}
                       </p>
-                    ) : null}
+                    ) : (
+                      <span className="mt-3 min-h-4" aria-hidden="true" />
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
+          {implementationOffers.map((offer) => {
+            const actionHref = "actionHref" in offer ? offer.actionHref : undefined;
+            const actionLabel = "actionLabel" in offer ? offer.actionLabel : undefined;
+
+            return (
+              <div
+                key={offer.name}
+                className="mt-5 rounded-[1.5rem] border border-[color:var(--line)] bg-[rgba(255,255,255,0.018)] p-6 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:items-end lg:gap-12"
+              >
+                <div>
+                  <h3 className="font-serif text-4xl leading-[0.95] tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl">
+                    {offer.name}
+                  </h3>
+                  <p className="mt-4 text-xs uppercase tracking-[0.22em] text-[color:var(--foreground-soft)]">
+                    {offer.layer}
+                  </p>
+                  <p className="mt-7 max-w-3xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
+                    {offer.summary}
+                  </p>
+                  <p className="mt-5 max-w-3xl text-sm leading-6 text-[color:var(--foreground-soft)]">
+                    {offer.detail}
+                  </p>
+                </div>
+                <div className="mt-8 flex flex-col gap-5 lg:mt-0">
+                  <p className="font-serif text-4xl leading-none tracking-[-0.04em] text-[color:var(--accent)] sm:text-5xl">
+                    {offer.price}
+                  </p>
+                  {actionHref && actionLabel ? (
+                    <a
+                      href={localizedHref(actionHref)}
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--line-strong)] px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                    >
+                      {actionLabel}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
           {offersGuarantee ? (
             <p className="mt-7 rounded-2xl border border-[rgba(111,224,194,0.22)] bg-[rgba(111,224,194,0.045)] px-5 py-4 text-sm font-medium leading-6 text-[color:var(--foreground)]">
               ✦ {offersGuarantee}
