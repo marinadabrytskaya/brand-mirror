@@ -1713,43 +1713,6 @@ function applyBenchmarkScoreFloors(
   };
 }
 
-function buildAiVisibilityTechnicalNote(aeoAudit: AeoAudit | null) {
-  if (!aeoAudit) {
-    return "";
-  }
-
-  const technical = aeoAudit.breakdown?.technical?.details || {};
-  const schema = aeoAudit.breakdown?.schema?.details || {};
-  const blocksGpt = technical.hasOwnProperty("blocksGpt")
-    ? Boolean(technical.blocksGpt)
-    : false;
-  const blocksClaude = technical.hasOwnProperty("blocksClaude")
-    ? Boolean(technical.blocksClaude)
-    : false;
-  const hasLlmsTxt = technical.hasOwnProperty("hasLlmsTxt")
-    ? Boolean(technical.hasLlmsTxt)
-    : false;
-  const schemaCount =
-    typeof schema.schemaBlockCount === "number" ? schema.schemaBlockCount : 0;
-
-  const lines = [
-    `Technical AEO layer: external audit ${aeoAudit.totalScore}/100${aeoAudit.grade ? ` (${aeoAudit.grade})` : ""}.`,
-    blocksGpt || blocksClaude
-      ? "AI crawler access is partially blocked and needs fixing."
-      : "AI crawlers are not visibly blocked.",
-    hasLlmsTxt ? "llms.txt is present." : "llms.txt is missing.",
-    schemaCount > 0
-      ? `Structured data exists (${schemaCount} schema blocks), but the page still needs cleaner AI-readable signals.`
-      : "Structured data is currently too thin for strong AI visibility.",
-  ];
-
-  if (aeoAudit.issues.length > 0) {
-    lines.push(`Main technical blockers: ${aeoAudit.issues.slice(0, 2).join("; ")}.`);
-  }
-
-  return lines.join(" ");
-}
-
 function mergeAeoVisibilityScore(
   semanticScore: number,
   aeoAudit: AeoAudit | null,
@@ -1910,7 +1873,6 @@ function normalizeResult(
     toneCoherence: mergeAeoVisibilityScore(calibratedScores.toneCoherence, aeoAudit),
   };
   const benchmarkedScores = applyBenchmarkScoreFloors(scoresWithAeo, sourceUrl);
-  const aiVisibilityNote = buildAiVisibilityTechnicalNote(aeoAudit);
 
   return enrichPosterSystem(
     {
