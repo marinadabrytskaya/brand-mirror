@@ -314,7 +314,7 @@ export const siteCopy = {
         ],
       },
       final: {
-        label: "Final cue",
+        label: "",
         title:
           "Your brand is already being read.",
         body:
@@ -346,7 +346,7 @@ export const siteCopy = {
       emailPlaceholder: "you@example.com",
       emailRequired: "Enter a valid email address to receive the report.",
       scanConsentNotice:
-        "By running the scan, you agree that BrandMirror may analyse this public URL. We ask for email only if you choose to send, download, or unlock a report.",
+        "By running the scan, you agree that BrandMirror may analyse this public URL.",
       dataConsentLabel:
         "I agree that SAHAR/BrandMirror may process my email and website URL to generate and send my report.",
       dataConsentRequired:
@@ -735,7 +735,7 @@ export const siteCopy = {
         ],
       },
       final: {
-        label: "Cierre",
+        label: "",
         title:
           "Empieza gratis. Luego paga solo si quieres la respuesta dura sobre qué funciona, qué está roto y por qué los compradores dudan.",
         body:
@@ -766,7 +766,7 @@ export const siteCopy = {
       emailPlaceholder: "tu@email.com",
       emailRequired: "Introduce un email válido para recibir el reporte.",
       scanConsentNotice:
-        "Al ejecutar el scan, aceptas que BrandMirror analice esta URL pública. Solo pedimos email si decides enviar, descargar o desbloquear un reporte.",
+        "Al ejecutar el scan, aceptas que BrandMirror analice esta URL pública.",
       dataConsentLabel:
         "Acepto que SAHAR/BrandMirror procese mi email y la URL del sitio para generar y enviar mi reporte.",
       dataConsentRequired:
@@ -1218,7 +1218,7 @@ export const siteCopy = {
         ],
       },
       final: {
-        label: "Финальный акцент",
+        label: "",
         title:
           "Начни бесплатно. А потом плати только если хочешь жёсткий ответ на то, что работает, что сломано и почему покупатель сомневается.",
         body:
@@ -1249,7 +1249,7 @@ export const siteCopy = {
       emailPlaceholder: "you@example.com",
       emailRequired: "Введите корректный email, чтобы получить отчёт.",
       scanConsentNotice:
-        "Запуская скан, вы соглашаетесь, что BrandMirror может проанализировать этот публичный URL. Email мы попросим только если вы захотите отправить, скачать или открыть отчёт.",
+        "Запуская скан, вы соглашаетесь, что BrandMirror может проанализировать этот публичный URL.",
       dataConsentLabel:
         "Я согласен/согласна, что SAHAR/BrandMirror может обработать мой email и URL сайта, чтобы сгенерировать и отправить отчёт.",
       dataConsentRequired:

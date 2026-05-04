@@ -785,7 +785,7 @@ export default function FirstReadExperience({ locale }: { locale: SiteLocale }) 
                 }}
               >
                 {copy.scanConsentNotice ??
-                  "By running the scan, you agree that BrandMirror may analyse this public URL. We ask for email only if you choose to send, download, or unlock a report."}
+                  "By running the scan, you agree that BrandMirror may analyse this public URL."}
               </p>
             </div>
 

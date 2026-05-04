@@ -613,10 +613,12 @@ export default async function Home({
 
       <section className="px-6 py-20 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl rounded-[2rem] border border-[rgba(111,224,194,0.22)] bg-[#090A0D] p-8 text-center sm:p-12">
-          <p className="section-label text-[rgba(111,224,194,0.78)]">
-            {copy.final.label}
-          </p>
-          <h2 className="mx-auto mt-5 max-w-3xl font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl">
+          {copy.final.label ? (
+            <p className="section-label text-[rgba(111,224,194,0.78)]">
+              {copy.final.label}
+            </p>
+          ) : null}
+          <h2 className={`mx-auto max-w-3xl font-serif text-4xl leading-tight tracking-[-0.04em] text-[color:var(--foreground)] sm:text-5xl ${copy.final.label ? "mt-5" : ""}`}>
             {copy.final.title}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[color:var(--foreground-soft)] sm:text-lg">
