@@ -534,7 +534,7 @@ export default async function Home({
               {copy.legalLine}
             </p>
           </div>
-          <div className="grid gap-3 text-sm leading-6 sm:grid-cols-2 lg:grid-cols-1 lg:justify-items-end">
+          <div className="grid gap-x-5 gap-y-2 text-[0.78rem] leading-5 text-[rgba(237,237,242,0.74)] sm:grid-cols-2 lg:justify-items-end">
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
@@ -553,7 +553,6 @@ export default async function Home({
             >
               LinkedIn
             </a>
-            <span className="hidden h-px w-full bg-[color:var(--line)] sm:block lg:my-1" />
             <Link
               href={siteI18n.withLang("/ai-brand-audit", locale)}
               className="text-[color:var(--foreground)] hover:text-[#6FE0C2]"
